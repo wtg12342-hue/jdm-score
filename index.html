@@ -988,6 +988,14 @@ body.hosted .devonly{display:none!important}
   body .ytbox:not(.mini) .ytframe{height:200px;min-height:200px;aspect-ratio:auto}
   body .drawer{max-height:none!important;top:0;bottom:0;left:auto;right:0;width:min(380px,60%);border-radius:0}
 }
+
+.zoombtns{display:none}
+@media (pointer:coarse),(max-width:760px){
+  .zoombtns{display:flex;position:absolute;right:10px;top:10px;z-index:6;gap:0;border-radius:99px;overflow:hidden;border:1px solid var(--line);background:rgba(8,8,8,.72);backdrop-filter:blur(10px)}
+  .zoombtns button{width:40px;height:36px;border:0;background:none;color:var(--gold-hi);font:500 20px/1 var(--f-ui);cursor:pointer}
+  .zoombtns button+button{border-left:1px solid var(--line)}
+  body:has(#welcome:not([hidden])) .zoombtns{display:none}
+}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1048,15 +1056,16 @@ body.hosted .devonly{display:none!important}
   <div class="syncask" id="syncAsk" hidden role="status">
     <div class="sa-text"><b id="saTitle">자동으로 맞췄어요</b><span id="saSub"></span></div>
     <div class="sa-btns"><button class="btn play" id="saTap">다시 찍기</button><button class="btn" id="saBeat">박마다 탭</button>
-      <button class="btn" data-shift="-bar" title="악보가 음악보다 늦으면: 악보를 1마디 앞으로">1마디 앞으로</button><button class="btn" data-shift="bar" title="악보가 음악보다 빠르면: 악보를 1마디 뒤로">1마디 뒤로</button>
+      <button class="btn" data-shift="-bar" title="악보가 늦으면">◀ 1마디</button><button class="btn" data-shift="bar" title="악보가 빠르면">1마디 ▶</button>
       <button class="btn" id="saUndo" hidden>되돌리기</button><button class="btn quiet" id="saOk">맞아요</button></div></div>
   <div class="tapfix" id="tapFix" hidden><div class="tf-card">
-    <p class="tf-bar">악보 <b id="tfBar">1</b>마디 첫 박</p>
+    <p class="tf-bar"><b id="tfBar">1</b>마디</p>
     <p class="tf-main" id="tfMain">드럼이 들어오는 순간 누르세요</p>
     <div class="tf-dots" id="tfDots" hidden></div>
-    <button class="tf-hit" id="tfHit">지금 <small>스페이스바</small></button>
-    <div class="tf-row"><span class="num" id="tfTime">0:00</span><button class="btn" id="tfBack" title="5초 앞으로 되감기">◀ 5초</button><button class="btn" id="tfFwd" title="5초 건너뛰기">5초 ▶</button><button class="btn" id="tfFromStart">처음부터</button><button class="btn" id="tfCancel">취소</button></div>
+    <button class="tf-hit" id="tfHit">탭 <small>스페이스바</small></button>
+    <div class="tf-row"><span class="num" id="tfTime">0:00</span><button class="btn" id="tfBack" title="5초 앞으로 되감기">◀ 5초</button><button class="btn" id="tfFwd" title="5초 건너뛰기">5초 ▶</button><button class="btn" id="tfFromStart">처음</button><button class="btn" id="tfCancel">취소</button></div>
     <p class="tf-note" id="tfNote">조금 늦거나 빨라도 괜찮아요. 가장 가까운 박에 정확히 맞춰요.</p></div></div>
+  <div class="zoombtns" id="zoomBtns"><button id="zOut" aria-label="작게">−</button><button id="zIn" aria-label="크게">+</button></div>
   <div class="spread" id="spread" hidden>
     <div class="col" id="colL"></div>
     <div class="col" id="colR"></div>
@@ -1098,42 +1107,42 @@ body.hosted .devonly{display:none!important}
         <button class="btn play" id="extStart" style="justify-content:center;padding:12px">▶ 첫 박에 맞춰 시작</button></div></div>
     <section class="sync" id="syncBox">
       <h3>음악에 맞추기</h3>
-      <p class="hint" id="syncHint">음원을 열면 템포와 첫 박을 자동으로 찾아요. 틀릴 때만 고치세요.</p>
+      <p class="hint" id="syncHint">틀릴 때만 고치세요.</p>
       <div class="step"><b>1</b><div class="body"><span class="st">템포</span>
         <div class="row"><input type="number" id="bpm" min="20" max="320" step="0.01" value="100"><span class="lbl">BPM</span>
           <button class="btn" id="autoBtn">자동 측정</button><button class="btn" id="tapBtn" title="박자에 맞춰 여러 번 누르세요">탭</button></div>
         <div class="row"><button class="btn sm" id="halfBtn">절반으로 (÷2)</button><button class="btn sm" id="dblBtn">두 배로 (×2)</button><button class="btn sm" id="scoreTempoBtn" hidden>악보 템포 쓰기</button></div>
-        <p id="bpmNote">두 배나 절반으로 나오면 버튼으로 고치세요.</p></div></div>
+        <p id="bpmNote">두 배·절반이면 버튼으로.</p></div></div>
       <div class="step"><b>2</b><div class="body"><span class="st">첫 박 위치</span>
                 <div class="row"><span class="lbl">악보 1마디가 노래의</span><input type="text" id="startAt" placeholder="0:00" inputmode="numeric" style="width:76px;text-align:center"><span class="lbl">쯤에 나와요</span></div>
-        <p class="hint" id="startAtNote" style="margin-top:2px">노래 중간부터 시작하는 악보면 그 시간을 적으세요 (예: 1:35). 그 근처에서 첫 박을 다시 찾아요.</p>
+        <p class="hint" id="startAtNote" style="margin-top:2px">노래 중간부터면 시간을 적어요 (예: 1:35)</p>
         <div class="row"><span class="offv num" id="offsetView">0:00.00</span><button class="btn" id="markBtn">탭으로 지정</button></div>
         <div class="row nud"><button class="btn sm" data-nudge="-bar">◀◀ 한 마디 앞</button><button class="btn sm" data-nudge="-beat">◀ 한 박 앞</button><button class="btn sm" data-nudge="-0.05">−0.05초</button><button class="btn sm" data-nudge="0.05">+0.05초</button><button class="btn sm" data-nudge="beat">한 박 뒤 ▶</button><button class="btn sm" data-nudge="bar">한 마디 뒤 ▶▶</button></div>
-        <p>음악에서 <strong>1마디 첫 박</strong>이 나오는 시간이에요. '탭으로 지정' 후 첫 박에 스페이스바.</p></div></div>
+        <p>1마디 첫 박 시간이에요.</p></div></div>
       <div class="step"><b>3</b><div class="body"><span class="st">듣고 확인</span>
         <div class="row"><button class="btn" id="checkBtn">▶ 첫 박부터 딸깍 소리와 같이 듣기</button></div>
-        <p>딸깍이 늦게 들리면 −, 먼저 들리면 +.</p></div></div>
+        <p>딸깍이 늦으면 −, 빠르면 +</p></div></div>
     </section>
     <div class="field"><span>예비박</span>
       <div class="seg" role="group" id="ciSeg"><button data-ci="0">끄기</button><button data-ci="1">1마디</button><button data-ci="2">2마디</button></div>
-      <p>재생을 누를 때마다 시작 마디 앞에서 딸깍 소리로 박을 세어 줘요. 메트로놈을 꺼도 들려요. 아래 막대의 '예비박' 버튼으로도 켜고 꺼요.</p></div>
+      <p>재생 전에 딸깍으로 박을 세어 줘요.</p></div>
     <div class="field"><span>점점 느리게 (rit.)</span>
       <div class="seg" role="group" id="ritSeg"><button data-rit="0">끄기</button><button data-rit="0.15">조금</button><button data-rit="0.3">보통</button><button data-rit="0.45">많이</button></div>
       <div class="row"><span class="lbl">마디</span><input type="text" id="ritBars" placeholder="악보 글씨대로 (예: 35-38)" style="flex:1;min-width:0"></div>
       <p id="ritNote">악보에 rit.·점점 느리게가 있으면 그 마디부터 4마디 동안 느려져요. 스캔 악보처럼 글씨를 못 읽으면 마디 번호를 적으세요.</p></div>
     <div class="field"><span>메트로놈 박 나누기</span>
       <div class="seg" role="group" id="subSeg"><button data-sub="1">4분음표</button><button data-sub="2">8분음표</button><button data-sub="4">16분음표</button><button data-sub="3">셋잇단</button></div>
-      <p>높은 소리 = 마디 첫 박, 작은 소리 = 나눈 박.</p></div>
+      <p>높은 소리 = 첫 박</p></div>
     <div class="field"><span>연주 순서</span>
       <textarea id="order" spellcheck="false" style="min-height:48px"></textarea>
       <div class="row"><button class="btn sm" id="orderRep" hidden>도돌이표대로</button><button class="btn sm" id="orderLin">처음부터 끝까지</button></div>
-      <p id="orderNote">마디 번호로 연주 순서를 적어요. 예: 1-20, 13-20, 21-80</p></div>
+      <p id="orderNote">예: 1-20, 13-20, 21-80</p></div>
     <div class="field"><span>보기 방식</span>
       <div class="seg" role="group"><button id="dSpread" aria-pressed="true">두 장씩 (폰 세로: 한 장씩)</button><button id="dScroll" aria-pressed="false">스크롤</button></div></div>
     <details class="adv"><summary>고급 설정</summary>
     <label class="field webonly"><span>유튜브 검색 키</span>
       <div class="row"><input type="text" id="ytKeyIn" placeholder="AIza..." autocomplete="off" spellcheck="false" style="flex:1;min-width:0"><button class="btn sm" id="ytKeySave">저장</button></div>
-      <p>유튜브 검색을 쓰려면 구글에서 받은 'YouTube Data API' 키가 필요해요. 한 번만 넣으면 돼요.</p></label>
+      <p>검색에 필요한 키예요. 한 번만 넣으면 돼요.</p></label>
     <label class="field"><span>한 마디 박 수</span>
       <div class="row"><input type="number" id="bpb" min="1" max="16" value="4"><span class="lbl" id="bpbNote">PDF 악보에 적용</span></div></label>
     <label class="field"><span>줄마다 마디 수</span>
@@ -3580,6 +3589,13 @@ function layoutSpread(W,H){
   const maxW=Math.max(...sys.map(s=>s.w)),maxH=Math.max(...sys.map(s=>s.h));
   // zoom: lines grow past the column width and the column pans sideways with the cursor
   const k=Math.min(colW/maxW*zoom,colH/maxH);built.k=k;built.colW=colW;built.colH=colH;
+  if(single&&H<480&&W>H){ // phone on its side
+    const nl=zoom>1.2?1:2,k2=Math.min(colW/maxW*zoom,(colH-8)/(nl*maxH));built.k=k2; // zoomed: one big line at a time
+    sys.forEach((s,i)=>{const a=s,b=sys[i+1];const items=[{s:a,h:a.h*k2,w:a.w*k2}];if(b)items.push({s:b,h:b.h*k2,w:b.w*k2});
+      const extra=colH-items.reduce((q,it)=>q+it.h,0);let y=0;items.forEach(it=>{it.y=y;it.x=Math.max(0,(colW-it.w)/2);y+=it.h+Math.max(0,extra)});
+      built.vpages.push({items});built.sysV[a.sys]={vp:i,it:items[0]}});
+    built.rolling=true;['colL','colR'].forEach(id=>{const c=$(id);c.style.width=colW+'px';c.style.height=colH+'px';c.classList.toggle('zoomed',zoom>1.01)});return}
+  built.rolling=false;
   let cur=null;
   sys.forEach(s=>{const h=s.h*k;
     if(!cur||cur.sum+h>colH+0.5){cur={items:[],sum:0};built.vpages.push(cur)}
@@ -3618,7 +3634,7 @@ function placeSpread(L,R,cur){
     const mh=document.createElement('div');mh.className='mhl';Hd(mh,!!(true));el.appendChild(mh);
     const cu=document.createElement('div');cu.className='cur';Hd(cu,!!(true));el.appendChild(cu);
     addMarks(el);
-    if(el.id==='colL'&&vi>cur){const b=document.createElement('div');b.className='badge';b.textContent='다음';el.appendChild(b)}
+    if(el.id==='colL'&&vi>cur&&!built.rolling){const b=document.createElement('div');b.className='badge';b.textContent='다음';el.appendChild(b)}
     const pg=document.createElement('div');pg.className='pg';pg.textContent=`${vi+1} / ${built.vpages.length}`;el.appendChild(pg);
   });
 }
@@ -3820,7 +3836,7 @@ const M={type:'none',hold:null,
 let ac=null,gainNode=null;
 const transport={playing:false,beat:0,t0:0,b0:0,nextClick:0,timer:null};
 const metroGain=v=>3.2*v*v; // slider 0..1 -> up to 3.2x, louder than before at the same position
-function ensureAC(){if(!ac){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}ac=new (window.AudioContext||window.webkitAudioContext)();gainNode=ac.createGain();gainNode.gain.value=metroGain(P.vol);
+function ensureAC(){if(ac&&ac.state!=='running'){try{ac.resume()}catch(e){}}if(!ac){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}ac=new (window.AudioContext||window.webkitAudioContext)();gainNode=ac.createGain();gainNode.gain.value=metroGain(P.vol);
   const lim=ac.createDynamicsCompressor();lim.threshold.value=-3;lim.knee.value=0;lim.ratio.value=20;lim.attack.value=0.001;lim.release.value=0.05;
   gainNode.connect(lim);lim.connect(ac.destination);
   // the song plays through the same audio engine as the clicks: both reach the speakers with the same delay
@@ -3886,7 +3902,7 @@ function mediaDur(){try{if(M.type==='file')return isFinite(audio.duration)?audio
   if(M.type==='yt'&&yt.ready&&yt.player&&yt.player.getDuration)return +yt.player.getDuration()||0}catch(e){}return 0}
 function play(){
   if(!S.measures.length)return;
-  ensureAC();clearTimeout(transport.waitT);transport.wait=0;transport.expStart=null;
+  ensureAC();if(ac&&ac.state!=='running'){ac.resume().then(()=>{if(!transport.playing)play()}).catch(()=>{});return}clearTimeout(transport.waitT);transport.wait=0;transport.expStart=null;
   let b=currentBeat();const b1=b;const atEnd=b>=S.totalBeats-1e-3;if(atEnd||(b<0&&!hasAudio()))b=0;
   const lr=loopRange();if(lr&&(b<lr[0]-1e-6||b>=lr[1]-1e-3))b=lr[0];
   const ci=countInBeats(b);transport.ci=ci>0?[b-ci,b]:null;transport.noCi=false;
@@ -4089,7 +4105,7 @@ async function loadYouTube(url){
     songKey='y:'+(yt.id||'');applySong();
     if(loadSync()){follow.start()}
     else if(window.jdm&&window.jdm.ytRecStart){toast('유튜브를 불러왔어요. 템포와 첫 박을 자동으로 찾을게요.',3000);setTimeout(autoSync,300)}
-    else if(!desktop){$('drawer').hidden=true;document.body.classList.remove('mixopen');showSyncAsk('tap');toast('영상이 나왔어요. 아래 안내대로 탭해서 맞춰 주세요.',3800)}
+    else if(!desktop){$('drawer').hidden=true;document.body.classList.remove('mixopen');showSyncAsk('tap')}
     else{openSync();toast('유튜브를 불러왔어요. 첫 박을 탭으로 맞춰 주세요.',3800)}};
   const desktop=!!(window.jdm&&window.jdm.desktop);
   if(yt.player&&yt.player.cueVideoById){if(desktop){yt.player.cueVideoById(id);return}yt.player.cueVideoById(id);done();return}
@@ -4116,6 +4132,8 @@ async function loadYouTube(url){
   yt.poll=setInterval(()=>{if(M.type!=='yt'||!yt.ready||!yt.playing)return;let t;try{t=yt.player.getCurrentTime()}catch(e){return}
     const pred=M.time(),err=t-pred;if(M.hold)return;
     // a big gap (buffering, a jump): go there at once; a small drift is caught up gently, without a hop of the cursor
+    if(!(window.jdm&&window.jdm.desktop)){ // web: never bend the tempo; jump only when really off (twice in a row)
+      if(Math.abs(err)>0.09){yt.off=(yt.off||0)+1;if(yt.off>=2||Math.abs(err)>0.4){yt.last=t;yt.stamp=performance.now();yt.k=1;yt.off=0}}else yt.off=0;return}
     if(Math.abs(err)>0.4){yt.last=t;yt.stamp=performance.now();yt.k=1}else{yt.last=pred;yt.stamp=performance.now();yt.k=Math.max(0.95,Math.min(1.05,1+err/1.0))}},250);
 }
 function dropYouTube(){follow.stop();if(M.type==='yt'&&yt.ready){try{yt.player.stopVideo()}catch(e){}}
@@ -4590,16 +4608,16 @@ function entryBar(){const T=S.tl;if(!T||!T.length)return {ti:0,mi:0};const sm=sc
 function snapSync(){return {offset:P.offset,map:P.map?{i0:P.map.i0,t:Float64Array.from(P.map.t)}:null,synced:P.synced}}
 function restoreSync(v){P.map=v.map?{i0:v.map.i0,t:Float64Array.from(v.map.t)}:null;P.offset=v.offset;$('offsetView').textContent=fmtT(P.offset);P.synced=v.synced;updateChip();saveSync();follow.reset();render(true)}
 function showSyncAsk(kind){if(!hasAudio()||!S.tl||!S.tl.length)return;const eb=entryBar(),no=barNo(eb.mi);saEntry=S.tl[eb.ti].start;
-  $('saTitle').textContent=kind==='fixed'?`${no}마디를 맞췄어요`:kind==='tap'?'탭으로 맞춰 주세요':'자동으로 맞췄어요';$('saTap').textContent=kind==='tap'?'박마다 탭해서 맞추기':'다시 찍기';$('saBeat').hidden=kind==='tap';$('saTap').dataset.k=kind;
-  $('saSub').textContent=kind==='fixed'?'들어 보고 그래도 다르면 1마디씩 옮기세요.':kind==='tap'?`노래가 나오면 드럼이 들어오는 ${no}마디 첫 박부터 박마다 ${TAP_N}번 누르세요. 템포와 첫 박을 같이 맞춰요.`:`드럼이 들어오는 ${no}마디에서 악보가 안 맞으면 '다시 찍기'를 누르세요.`;
+  $('saTitle').textContent=kind==='fixed'?`${no}마디 맞춤`:kind==='tap'?'박자 맞추기':'자동으로 맞췄어요';$('saTap').textContent=kind==='tap'?'탭 시작':'다시';$('saBeat').hidden=kind==='tap';$('saTap').dataset.k=kind;
+  $('saSub').textContent=kind==='fixed'?'다르면 1마디씩 옮겨요':kind==='tap'?`${no}마디부터 박마다 ${TAP_N}번 탭`:`${no}마디가 안 맞으면 '다시'`;
   $('saUndo').hidden=!fixSnap;$('syncAsk').hidden=false}
 function hideSyncAsk(){$('syncAsk').hidden=true;saEntry=null}
 const TAP_N=8;
 function startBeatTap(fromStart){startFix(fromStart,true)}
 function startFix(fromStart,beats){if(!hasAudio()){toast('먼저 음원이나 유튜브를 열어 주세요.');return}if(analysing){toast('자동 맞추기가 끝나면 눌러 주세요.');return}
   $('syncPop').hidden=true;if(!fixSnap)fixSnap=snapSync();const eb=entryBar();fixMode={ti:eb.ti,mi:eb.mi,beats:!!beats,taps:[]};
-  $('tfMain').textContent=beats?`드럼이 들어오는 첫 박부터 박마다 ${TAP_N}번 누르세요`:'드럼이 들어오는 순간 누르세요';$('tfDots').hidden=!beats;$('tfDots').innerHTML=beats?'<u></u>'.repeat(TAP_N):'';
-  $('tfNote').textContent=beats?'메트로놈처럼 쿵·쿵·쿵·쿵 박자에 맞춰서요. 몇 번 어긋나도 평균을 내서 맞춰요.':'조금 늦거나 빨라도 괜찮아요. 가장 가까운 박에 정확히 맞춰요.';
+  $('tfMain').textContent=beats?`박마다 ${TAP_N}번 탭`:'드럼이 시작할 때 탭';$('tfDots').hidden=!beats;$('tfDots').innerHTML=beats?'<u></u>'.repeat(TAP_N):'';
+  $('tfNote').textContent=beats?'쿵·쿵·쿵·쿵 박자대로':'조금 틀려도 괜찮아요';
   $('tfHit').innerHTML=beats?'탭':'지금 <small>스페이스바</small>';
   pause();ensureAC();$('tfBar').textContent=barNo(eb.mi);$('tapFix').hidden=false;$('tfHit').classList.remove('hit');
   // start a little before where the drums should come in (the start of the song if that is where the trouble is)
@@ -4836,6 +4854,7 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
   $('moreBtn').onclick=open;$('msClose').onclick=close;sh.addEventListener('click',e=>{if(e.target===sh)close()});
   const relayout=()=>{};
   $('qTempo').onclick=()=>{document.body.classList.toggle('mixopen');$('qTempo').classList.toggle('on',document.body.classList.contains('mixopen'));relayout()};
+  $('zIn').onclick=()=>setZoom((P.zoom||1)+0.25);$('zOut').onclick=()=>setZoom((P.zoom||1)-0.25);
   $('qZoom').onclick=()=>{const z=P.zoom||1;setZoom(z<1.4?1.5:z<1.9?2:1)};zoomUI();
   {const ki=$('ytKeyIn');if(ki){try{ki.value=store.get('ytKey','')}catch(e){}$('ytKeySave').onclick=()=>{store.set('ytKey',ki.value.trim());toast(ki.value.trim()?'검색 키를 저장했어요.':'검색 키를 지웠어요.')}}}
   $('qSong').onclick=()=>$('songBtn').click();$('qMetro').onclick=()=>$('metroBtn').click();$('qCi').onclick=()=>$('ciBtn').click();$('qSync').onclick=()=>$('syncChip').click();
@@ -4854,7 +4873,9 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 /* on its own web address (not inside Claude, not the PC program) the official YouTube player works: say so */
 (function(){const h=location.hostname;const hosted=!window.jdm&&/^https?:$/.test(location.protocol)&&!/claude|anthropic|usercontent/.test(h);
   if(!hosted)return;document.body.classList.add('hosted');
-  const hint=document.querySelector('#ytExt .hint');if(hint)hint.innerHTML='링크를 넣고 <b>불러오기</b>를 누르면 영상이 화면에 나오고, 악보가 영상에 맞춰 따라가요.<br>다른 기기에서 노래를 틀 때는 1마디 첫 박에 아래 버튼을 누르세요.';
+  const hint=document.querySelector('#ytExt .hint');if(hint)hint.innerHTML='링크 넣고 <b>불러오기</b>.<br>다른 기기로 틀면: 1마디 첫 박에 아래 버튼.';
+  const lead=document.querySelector('.wtext p.lead');if(lead)lead.textContent='악보를 열고 노래를 붙이면, 악보가 노래를 따라가요.';
+  const nt=document.querySelector('#drawer p.note');if(nt)nt.textContent='악보를 누르면 그 마디로 가요.';
   const w=document.querySelector('#wYt small');if(w)w.textContent='링크를 붙여 넣어요'})();
 </script>
 </html>
