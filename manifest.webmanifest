@@ -1,2 +1,39 @@
-{"name":"JDM 악보 플레이어","short_name":"JDM 악보","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#050505","theme_color":"#050505","lang":"ko",
- "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"},{"src":"icon-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
+{
+ "id": "./",
+ "name": "JDM 악보 플레이어",
+ "short_name": "JDM 악보",
+ "description": "드럼 악보를 노래에 맞춰 넘겨 주는 연습 앱",
+ "lang": "ko",
+ "dir": "ltr",
+ "start_url": "./?source=app",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#050505",
+ "theme_color": "#050505",
+ "categories": [
+  "music",
+  "education"
+ ],
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-maskable.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ],
+ "version": "2.26.0"
+}
