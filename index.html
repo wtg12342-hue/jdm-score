@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050505"><link rel="icon" href="/jdm-icon.png"><link rel="apple-touch-icon" href="/jdm-icon.png">
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050505"><link rel="icon" href="jdm-icon.png"><link rel="apple-touch-icon" href="jdm-icon.png">
 <title>JDM 악보 플레이어</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -898,6 +898,12 @@ body .deck .tempo input{font-size:32px!important}
   body .wrlist button:first-child::before{width:64px;height:64px;border-radius:12px;background-size:48px 100%;background-position:8px 4px}
   body .wrlist button:first-child span{font-size:16.5px}
   body .wrlist button:first-child::after{width:40px;height:40px;border-radius:50%;opacity:1;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2317110a' d='M9 6.5v11a.6.6 0 0 0 .9.5l8.4-5.5a.6.6 0 0 0 0-1L9.9 6a.6.6 0 0 0-.9.5z'/%3E%3C/svg%3E") 55% 50%/16px no-repeat,var(--gold)}
+}
+@media (max-width:760px){
+  body .ytbox:not(.mini){left:auto;right:10px;bottom:10px;width:236px;border-radius:14px}
+  body .ytbox:not(.mini) .ytframe{height:200px;min-height:200px;aspect-ratio:auto}
+  body .ytbox .ytbar{padding:6px 6px 6px 10px;font-size:12px}
+  body .ytbox .ytbtns .btn{padding:5px 9px;font-size:12px}
 }
 </style>
 
@@ -3991,6 +3997,7 @@ async function loadYouTube(url){
     songKey='y:'+(yt.id||'');applySong();
     if(loadSync()){follow.start()}
     else if(window.jdm&&window.jdm.ytRecStart){toast('유튜브를 불러왔어요. 템포와 첫 박을 자동으로 찾을게요.',3000);setTimeout(autoSync,300)}
+    else if(!desktop){$('drawer').hidden=true;document.body.classList.remove('mixopen');showSyncAsk('tap');toast('영상이 나왔어요. 아래 안내대로 탭해서 맞춰 주세요.',3800)}
     else{openSync();toast('유튜브를 불러왔어요. 첫 박을 탭으로 맞춰 주세요.',3800)}};
   const desktop=!!(window.jdm&&window.jdm.desktop);
   if(yt.player&&yt.player.cueVideoById){if(desktop){yt.player.cueVideoById(id);return}yt.player.cueVideoById(id);done();return}
