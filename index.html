@@ -906,7 +906,7 @@ body .ytbox{border-radius:var(--r-md);overflow:hidden;box-shadow:var(--shadow);b
 body:has(#welcome:not([hidden])) .dock{display:none}
 
 /* ================= phone ================= */
-@media (max-width:760px){
+@media (max-width:900px){
   :root{--bar:56px}
   body .topbar{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px));gap:8px}
   body .brand::before{font-size:23px;padding-right:12px}
@@ -977,12 +977,12 @@ body:has(#welcome:not([hidden])) .dock{display:none}
 body .deck .lcd .meas b,body .deck .tempo input,.mixbtn button b{font-family:"Noto Serif KR Local","Noto Serif KR",Georgia,serif!important;font-weight:600!important}
 body .deck .lcd .meas b{font-size:36px}
 body .deck .tempo input{font-size:32px!important}
-@media (max-width:760px){body .deck .lcd .meas b{font-size:30px}.mixbtn button b{font-size:15px}}
+@media (max-width:900px){body .deck .lcd .meas b{font-size:30px}.mixbtn button b{font-size:15px}}
 
 /* ===== 2.23 phone home: modern, quiet, thumb-first (2026 patterns: dark surfaces lit by luminance not shadow,
    primary action anchored at the bottom, the last song first) ===== */
 .wgreet,.wempty{display:none}
-@media (max-width:760px){
+@media (max-width:900px){
   body:has(#welcome:not([hidden])) .topbar .titles,body:has(#welcome:not([hidden])) #openScore{display:none!important}
   body:has(#welcome:not([hidden])) .topbar::after{opacity:0}
   body:has(#welcome:not([hidden])) .brand::before{border-right:0}
@@ -1035,7 +1035,7 @@ body .deck .tempo input{font-size:32px!important}
   body .wrlist button:first-child span{font-size:16.5px}
   body .wrlist button:first-child::after{width:40px;height:40px;border-radius:50%;opacity:1;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2317110a' d='M9 6.5v11a.6.6 0 0 0 .9.5l8.4-5.5a.6.6 0 0 0 0-1L9.9 6a.6.6 0 0 0-.9.5z'/%3E%3C/svg%3E") 55% 50%/16px no-repeat,var(--gold)}
 }
-@media (max-width:760px){
+@media (max-width:900px){
   body .ytbox:not(.mini){left:auto;right:10px;bottom:10px;width:236px;border-radius:14px}
   body .ytbox:not(.mini) .ytframe{height:200px;min-height:200px;aspect-ratio:auto}
   body .ytbox .ytbar{padding:6px 6px 6px 10px;font-size:12px}
@@ -1051,7 +1051,7 @@ body.hosted .devonly{display:none!important}
 #stand{touch-action:pan-x pan-y}
 .spread{transition:none}
 /* compact helpers so the score stays visible while tapping or fixing the beat */
-@media (max-width:760px),(orientation:landscape) and (max-height:500px){
+@media (max-width:900px),(orientation:landscape) and (max-height:500px){
   body .syncask{left:8px;right:8px;bottom:8px;transform:none;padding:10px 12px;gap:8px;border-radius:14px;flex-direction:column;align-items:stretch}
   body .syncask .sa-text b{font-size:13.5px}
   body .syncask .sa-text span{font-size:12px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -1126,7 +1126,7 @@ body.hosted .devonly{display:none!important}
 }
 
 .zoombtns{display:none}
-@media (pointer:coarse),(max-width:760px){
+@media (pointer:coarse),(max-width:900px){
   .zoombtns{display:flex;position:absolute;right:10px;top:10px;z-index:6;gap:0;border-radius:99px;overflow:hidden;border:1px solid var(--line);background:rgba(8,8,8,.72);backdrop-filter:blur(10px)}
   .zoombtns button{width:40px;height:36px;border:0;background:none;color:var(--gold-hi);font:500 20px/1 var(--f-ui);cursor:pointer}
   .zoombtns button+button{border-left:1px solid var(--line)}
@@ -1154,6 +1154,29 @@ button,.btn,.ib,.mixbtn,.deck,.topbar{-webkit-user-select:none;user-select:none;
 .lic-e{margin:8px 0 0;font-size:13px;color:#ff8a7a}
 .lic-go{width:100%;height:52px;margin-top:12px;border:0;border-radius:14px;background:var(--gold);color:#17110a;font:700 16px var(--f-ui);cursor:pointer}
 .lic-buy{display:inline-block;margin-top:14px;font-size:13.5px;color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(216,182,122,.35)}
+
+/* ===== 2.28: tablets held upright use the phone layout, with room to breathe ===== */
+@media (max-width:900px) and (orientation:portrait){ .mixbtn #qZoom{display:none} }
+@media (min-width:600px) and (max-width:900px){
+  body .dock.deck{padding-left:28px;padding-right:28px}
+  body .deck .m-transport{justify-content:center;gap:44px}
+  .mixbtn button{padding:0 18px;font-size:14px}
+  body.mixopen .deck .m-tempo,body.mixopen .deck .m-mix{left:auto;right:28px;width:420px}
+  body .welcome{padding-left:max(28px,calc(50% - 300px));padding-right:max(28px,calc(50% - 300px))}
+  body .wprim{left:max(28px,calc(50% - 300px));right:max(28px,calc(50% - 300px))}
+  body .tf-card,body .syncask{max-width:560px;margin:0 auto}
+}
+body .deck .lcd .meas>span:not([id]){display:none}
+@media (min-width:901px){body .deck .m-mix{min-width:230px;grid-template-columns:auto minmax(90px,1fr) auto}body .deck .m-mix #vol{min-width:70px}}
+@media (min-width:901px) and (max-width:1180px){
+  body .dock.deck{padding-left:14px;padding-right:14px}
+  body .deck .mod,body .deck .m-tempo,body .deck .m-mix{padding:0 12px}
+  body .deck .m-transport{padding:0 12px;gap:8px}
+  body .deck .m-mix{min-width:190px}
+  body .deck .lcd{padding:0 0 0 12px;gap:10px}
+  body .deck .lcd .meas b{font-size:30px}
+  body .deck #ciBtn small{display:none}
+}
 </style>
 
 </head><body>
@@ -2121,7 +2144,7 @@ function layoutViews(){
    so nothing is wasted on page margins. Each column is one "page" for turning. */
 function layoutSpread(W,H){
   // (a phone on its side is short: one wide column reads better than two small ones)
-  const single=W<700||H<480;built.single=single;const zoom=Math.max(1,Math.min(2.5,P.zoom||1));built.zoom=zoom;
+  const single=W<700||H<480||(W<H&&W<1000);built.single=single;const zoom=Math.max(1,Math.min(2.5,P.zoom||1));built.zoom=zoom;
   const pad=single?4:6,gap=10,colW=single?W-2*pad:Math.floor((W-2*pad-gap)/2),colH=H-2*pad;
   const sys=built.strips.filter(s=>s.sys>=0);
   built.vpages=[];built.sysV={};
@@ -3421,7 +3444,7 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.27.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.28.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
