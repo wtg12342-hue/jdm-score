@@ -1177,6 +1177,66 @@ body .deck .lcd .meas>span:not([id]){display:none}
   body .deck .lcd .meas b{font-size:30px}
   body .deck #ciBtn small{display:none}
 }
+
+/* ===== 2.29 ===== */
+body{word-break:keep-all;overflow-wrap:anywhere}
+.ytslot{display:none}
+@media (max-width:900px),(orientation:landscape) and (max-height:500px){
+  body .syncask{top:auto!important;width:auto!important;max-width:none!important;height:auto}
+  .zoombtns.inlcd{position:static;display:flex;background:none;backdrop-filter:none;border:1px solid var(--line);margin:0 auto}
+  .zoombtns.inlcd button{width:38px;height:30px;font-size:18px}
+}
+@media (max-width:900px) and (orientation:portrait){
+  body.ytdock .dock.deck{grid-template-columns:208px minmax(0,1fr);grid-template-areas:"vid lcd" "vid tr" "quick quick";grid-template-rows:auto 1fr auto;column-gap:10px;row-gap:8px;padding-left:10px;padding-right:12px}
+  body.ytdock .ytslot{display:block;grid-area:vid;height:236px}
+  body.ytdock .deck .lcd{flex-direction:column;align-items:flex-end;gap:4px;padding:0}
+  body.ytdock .zoombtns.inlcd{display:none}
+  body.ytdock .deck .m-transport{flex-wrap:wrap;justify-content:center;align-content:center;gap:8px 14px;padding:0}
+  body.ytdock .deck .m-transport .playbtn{order:0;width:66px;height:66px;margin:0 calc(50% - 33px)}
+  body.ytdock .deck #toStart{order:1}body.ytdock .deck #loopBtn{order:2}
+  body.ytdock .ytbox{border-radius:12px;z-index:40}
+  body.ytdock .ytbox .ytframe{height:200px!important;min-height:200px!important;aspect-ratio:auto}
+  body.ytdock .ytbox .ytbar{height:34px;box-sizing:border-box;padding:0 4px 0 10px}
+}
+@media (orientation:landscape) and (max-height:500px){
+  body.ytside .stand{margin-right:220px}
+  body.ytside .ytbox{z-index:40;border-radius:12px}
+  body.ytside .ytbox .ytframe{height:200px!important;min-height:200px!important;aspect-ratio:auto}
+  body.ytside .ytbox .ytbar{height:30px;box-sizing:border-box;padding:0 4px 0 10px}
+}
+body.hosted .drawer details.adv>summary{font-weight:600;color:var(--ink);padding:10px 0;cursor:pointer}
+body.hosted>.ytbox{z-index:40}
+@media (min-width:901px){.zoombtns.inlcd{position:fixed;right:18px;top:calc(var(--bar) + 16px);z-index:6;margin:0}}
+@media (orientation:landscape) and (max-height:500px){
+  body .deck .lcd .beats{display:none}
+  .mixbtn #qZoom{display:none}
+  .mixbtn{justify-content:flex-start}
+  body .deck .lcd{gap:8px}
+}
+body .drawer>h2{position:sticky;top:-1px;z-index:30;background:#0a0a0b;margin:0 -2px 6px;padding:12px 2px 10px;display:flex;justify-content:space-between;align-items:center}
+@media (orientation:landscape) and (max-height:500px){
+  body .dock.deck{overflow:visible!important}
+  .mixbtn button{padding:0 7px;font-size:12px}
+  .mixbtn button b{font-size:13px}
+  body .deck .m-transport{padding:0 2px;gap:2px}
+}
+/* settings, simple first (app) */
+body.hosted #syncBox{display:flex;flex-direction:column;gap:10px;padding:16px}
+body.hosted #syncBox h3{margin:0}
+body.hosted #syncBox>p.hint,body.hosted #syncBox .step p,body.hosted #syncBox .step>b,body.hosted #tapBtn,body.hosted #markBtn,body.hosted #startAtNote{display:none!important}
+body.hosted .bigtap{width:100%;height:50px;border-radius:14px!important;font-size:15.5px;justify-content:center}
+body.hosted .tapcap{margin:-2px 0 4px;font-size:12.5px;color:var(--muted);text-align:center}
+body.hosted .finecap{margin:8px 0 0;padding-top:12px;border-top:1px solid var(--line2);font:600 12px var(--f-ui);letter-spacing:.08em;color:var(--muted)}
+body.hosted #syncBox .step{display:block;padding:0;border:0;margin:0}
+body.hosted #syncBox .step .body{display:flex;flex-direction:column;gap:8px}
+body.hosted #syncBox .step .st{font-size:13px;color:#d9d1c2;font-weight:600}
+body.hosted #syncBox .row{flex-wrap:wrap;gap:6px}
+body.hosted #syncBox .row.nud .btn{flex:1 1 30%;justify-content:center;padding:8px 4px}
+body.hosted #syncBox .offv{font:600 22px var(--f-ui);letter-spacing:-.02em}
+body.hosted #ytExt{padding:0!important;border:0;background:none;box-shadow:none}
+body.hosted #ytExt .btn{width:100%;justify-content:center;color:var(--muted);font-size:13px}
+body.hosted #scoreTempoBtn{background:none!important;color:var(--gold-hi)!important;border:1px solid rgba(216,182,122,.45)!important;box-shadow:none!important;font-weight:500}
+body.hosted .drawer details.adv>.field,body.hosted .drawer details.adv>label.field{margin-top:18px}
 </style>
 
 </head><body>
@@ -1345,11 +1405,11 @@ body .deck .lcd .meas>span:not([id]){display:none}
   </aside>
   <div class="ytbox" id="ytBox" hidden><div class="ytbar"><span><svg class="i" style="width:15px;height:15px;color:var(--loop)"><use href="#i-yt"/></svg><span id="ytTitle">유튜브</span></span><span class="ytbtns"><button class="btn" id="ytHide" title="영상 창을 접어요. 소리와 악보는 그대로 계속돼요">숨기기</button><button class="btn" id="ytClose" title="유튜브를 끊고 창을 닫아요">닫기</button></span></div><div class="ytframe" id="ytFrame"><div id="ytPlayer"></div></div></div>
   <div class="pagesov" id="libOv" hidden><div class="pgpanel libpanel">
-    <div class="pghead"><div><h2>내 곡</h2><p>악보, 음원(유튜브·파일), 맞춘 템포·첫 박·연주 순서를 같이 저장해요. 누르면 한 번에 열리고 다시 맞출 필요가 없어요.</p></div>
+    <div class="pghead"><div><h2>내 곡</h2><p>악보·노래·맞춘 박자를 함께 저장해요.</p></div>
       <div class="row"><button class="btn play" id="libSave">지금 곡 저장</button><button class="btn" id="libClose">닫기</button></div></div>
     <div class="libfolders" id="libFolders"></div><div class="liblist" id="libList"></div></div></div>
   <div class="pagesov" id="pagesOv" hidden><div class="pgpanel">
-    <div class="pghead"><div><h2>쪽 선택</h2><p>연주할 곡을 고르세요. 쪽을 누르면 그 곡 전체가 골라지고, 한 번 더 누르면 그 쪽만 골라져요. Shift를 누른 채 누르면 범위를 늘려요. 곡 구분이 틀리면 왼쪽 위 '곡 시작' 표시를 눌러 고치세요.</p></div>
+    <div class="pghead"><div><h2>쪽 고르기</h2><p>연주할 쪽을 누르고 '열기'를 눌러요.</p></div>
       <div class="row"><span class="lbl">쪽</span><input type="number" id="pgFrom" min="1"><span class="lbl">~</span><input type="number" id="pgTo" min="1">
         <button class="btn" id="pgCancel">닫기</button><button class="btn play" id="pgOpen">열기</button></div></div>
     <div class="pgsongs" id="pgSongs"></div>
@@ -1421,6 +1481,7 @@ body .deck .lcd .meas>span:not([id]){display:none}
     <button id="qZoom" title="악보 확대 (두 손가락으로 벌려도 돼요)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M11 8v6M8 11h6"/></svg>확대 <b>100%</b></button>
     <button id="qSync"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>맞추기</button>
   </div>
+  <div class="ytslot" id="ytSlot"></div>
   <div class="lcd" aria-live="off">
     <div class="beats" id="beats"></div>
     <div class="meas"><em id="passNow" class="pass" hidden></em><span>마디</span><b id="measNow">–</b><span id="measTot">/ –</span></div>
@@ -2022,8 +2083,9 @@ async function openRange(a,b){
 }
 /* ---------------- page picker ---------------- */
 let pick=null;
-function showPicker(){
-  if(!LIB.pages.length)return;
+async function showPicker(){
+  if(!LIB.pages.length){toast('먼저 악보(PDF)를 열어 주세요.');return}
+  if(LIB.pages.some(e=>!e.thumb)){$('busy').hidden=false;try{await makeThumbs((i,n)=>{$('busy').textContent=`쪽 미리보기 만드는 중… ${i}/${n}`})}catch(e){}$('busy').hidden=true}
   const sg=songs();pick=LIB.range?[...LIB.range]:[...sg[0]];
   renderPicker();$('pagesOv').hidden=false;
 }
@@ -2034,7 +2096,7 @@ function renderPicker(){
     c.textContent=`${k+1}곡 · ${a+1}${b>a?'–'+(b+1):''}쪽`;c.onclick=()=>{pick=[a,b];renderPicker()};chips.appendChild(c)});
   LIB.pages.forEach((e,i)=>{
     const t=document.createElement('div');t.className='pgthumb'+(pick&&i>=pick[0]&&i<=pick[1]?' sel':'')+(e.start?' start':'');
-    const im=e.thumb;const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;cv.getContext('2d').drawImage(im,0,0);t.appendChild(cv);
+    const im=e.thumb;const cv=document.createElement('canvas');if(im){cv.width=im.width;cv.height=im.height;cv.getContext('2d').drawImage(im,0,0)}else{cv.width=120;cv.height=170}t.appendChild(cv);
     const lb=document.createElement('div');lb.className='pgnum';lb.textContent=`${i+1}쪽`;t.appendChild(lb);
     const st=document.createElement('button');st.className='pgstart';st.textContent=e.start?'곡 시작':'＋곡 시작';st.title='여기서 새 곡이 시작해요 (눌러서 바꾸기)';
     st.onclick=ev=>{ev.stopPropagation();if(i===0)return;e.start=!e.start;renderPicker()};t.appendChild(st);
@@ -2155,7 +2217,7 @@ function layoutSpread(W,H){
   if(single&&H<480&&W>H){ // phone on its side
     const nl=zoom>1.2?1:2,k2=Math.min(colW/maxW*zoom,(colH-8)/(nl*maxH));built.k=k2; // zoomed: one big line at a time
     sys.forEach((s,i)=>{const a=s,b=sys[i+1];const items=[{s:a,h:a.h*k2,w:a.w*k2}];if(b)items.push({s:b,h:b.h*k2,w:b.w*k2});
-      const extra=colH-items.reduce((q,it)=>q+it.h,0);let y=0;items.forEach(it=>{it.y=y;it.x=Math.max(0,(colW-it.w)/2);y+=it.h+Math.max(0,extra)});
+      const extra=Math.max(0,colH-a.h*k2*nl),gp=nl>1?Math.min(extra,a.h*k2*0.18):0;let y=(extra-gp)/2;items.forEach(it=>{it.y=y;it.x=Math.max(0,(colW-it.w)/2);y+=it.h+gp});
       built.vpages.push({items});built.sysV[a.sys]={vp:i,it:items[0]}});
     built.rolling=true;['colL','colR'].forEach(id=>{const c=$(id);c.style.width=colW+'px';c.style.height=colH+'px';c.classList.toggle('zoomed',zoom>1.01)});return}
   built.rolling=false;
@@ -2373,7 +2435,14 @@ function beatDots(beat){
 const audio=new Audio();audio.preservesPitch=true;audio.preload='auto';
 /* one media source at a time: none | file | yt */
 const yt={player:null,ready:false,last:0,stamp:0,rate:1,playing:false,poll:null,apiP:null};
-const M={type:'none',hold:null,
+const M={type:'none',hold:null,fc:null,
+  // the audio element reports its time in coarse steps (10-40 ms on phones): a click placed from it flutters.
+  // This clock runs smoothly on its own and is pulled gently toward the reported time (hard only after a jump or stall)
+  fileClock(){const raw=audio.currentTime;if(global__noFileClock()||audio.paused||audio.seeking||audio.ended){this.fc=null;return raw}
+    const now=performance.now(),rate=audio.playbackRate||1;if(!this.fc||this.fc.r!==rate){this.fc={t:raw,p:now,n:now,r:rate};return raw}
+    const pred=this.fc.t+(now-this.fc.p)/1000*rate,err=raw-pred;
+    if(Math.abs(err)>0.08){this.fc={t:raw,p:now,n:now,r:rate};return raw}
+    const g=Math.min(0.2,(now-this.fc.n)/1000*2);this.fc.t+=err*g;this.fc.n=now;return pred+err*g},
   // after a jump while playing, the player needs a moment to really play from the new place: until it does, the
   // clock stays on the target and no clicks go out (otherwise the metronome stumbles: "tick-tock-tick")
   seeking(){const h=this.hold;if(!h)return false;if(performance.now()>h.until){this.hold=null;return false}
@@ -2384,11 +2453,11 @@ const M={type:'none',hold:null,
     if(rt!=null&&rt>=h.t+0.02&&rt<h.t+1.5){this.hold=null;if(this.type==='yt'){yt.last=rt;yt.stamp=performance.now()}return false}
     return true},
   time(){if(this.hold&&this.seeking())return this.hold.t;
-    if(this.type==='file')return audio.currentTime;
+    if(this.type==='file')return this.fileClock();
     if(this.type==='yt')return yt.playing?yt.last+(performance.now()-yt.stamp)/1000*yt.rate*(yt.k||1):yt.last;return 0},
-  play(){if(this.type==='file')return audio.play();if(this.type==='yt'&&yt.ready){yt.player.playVideo();return Promise.resolve()}return Promise.reject()},
+  play(){this.fc=null;if(this.type==='file')return audio.play();if(this.type==='yt'&&yt.ready){yt.player.playVideo();return Promise.resolve()}return Promise.reject()},
   pause(){if(this.type==='file')audio.pause();if(this.type==='yt'&&yt.ready)yt.player.pauseVideo()},
-  seek(t){t=Math.max(0,t);if(transport.playing&&this.type!=='none')this.hold={t,until:performance.now()+2500};else this.hold=null;
+  seek(t){this.fc=null;t=Math.max(0,t);if(transport.playing&&this.type!=='none')this.hold={t,until:performance.now()+2500};else this.hold=null;
     if(this.type==='file')audio.currentTime=t;
     if(this.type==='yt'&&yt.ready){yt.player.seekTo(t,true);yt.last=t;yt.stamp=performance.now();yt.k=1}},
   rate(r){if(this.type==='file')audio.playbackRate=r;
@@ -2553,9 +2622,14 @@ function resetClicks(){ // metronome-only clock: next click beat and its audio t
   transport.clickB=nextGrid(b);transport.clickT=Math.max(ac.currentTime,(transport.playing?transport.t0:ac.currentTime)+(warpW(transport.clickB)-warpW(transport.b0))*perBeat);
   if(!transport.playing)transport.clickT=ac.currentTime;
 }
+// the sound engine's clock also moves in steps (3-10 ms); the same gentle follow gives an even one for placing clicks
+const acClk={c:null};
+function acNow(){const raw=ac.currentTime,now=performance.now();const c=acClk.c;if(window.__noAcClock||!c||ac.state!=='running'){acClk.c={t:raw,p:now,n:now};return raw}
+  const pred=c.t+(now-c.p)/1000,err=raw-pred;if(Math.abs(err)>0.06){acClk.c={t:raw,p:now,n:now};return raw}
+  const g=Math.min(0.2,(now-c.n)/1000*2);c.t+=err*g;c.n=now;return Math.max(raw,pred+err*g)}
 function schedule(){
   if(!transport.playing||tapMode)return;
-  const now=ac.currentTime;const b=currentBeat();const lr=loopRange();
+  const now=hasAudio()?acNow():ac.currentTime;const b=currentBeat();const lr=loopRange();
   if(!hasAudio()){
     if(!lr&&b>=S.totalBeats){pause();transport.beat=S.totalBeats-1e-3;return}
     if(transport.clickT==null||transport.clickT<now-0.25)resetClicks();
@@ -2600,6 +2674,7 @@ audio.addEventListener('pause',()=>{if(M.type==='file'&&transport.playing&&!audi
 function ytId(u){u=(u||'').trim();if(/^[\w-]{11}$/.test(u))return u;
   const m=u.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/);return m?m[1]:null}
 const YTS={ENDED:0,PLAYING:1,PAUSED:2,BUFFERING:3,CUED:5};
+function global__noFileClock(){return !!window.__noFileClock}
 /* desktop program: the main process plays the real YouTube page in a small view; this mimics the YT.Player interface */
 class DesktopYT{
   constructor(id,ev){this.ev=ev;this.s={t:0,st:-1,rate:1};this.rx=performance.now();this.readyFired=false;
@@ -2696,7 +2771,7 @@ async function loadYouTube(url){
     const pred=M.time(),err=t-pred;if(M.hold)return;
     // a big gap (buffering, a jump): go there at once; a small drift is caught up gently, without a hop of the cursor
     if(!(window.jdm&&window.jdm.desktop)){ // web: never bend the tempo; jump only when really off (twice in a row)
-      if(Math.abs(err)>0.09){yt.off=(yt.off||0)+1;if(yt.off>=2||Math.abs(err)>0.4){yt.last=t;yt.stamp=performance.now();yt.k=1;yt.off=0}}else yt.off=0;return}
+      if(Math.abs(err)>0.09){yt.off=(yt.off||0)+1;if(yt.off>=2||Math.abs(err)>0.4){yt.last=t;yt.stamp=performance.now();yt.k=1;yt.off=0}}else{yt.off=0;yt.last=pred+err*0.1;yt.stamp=performance.now();yt.k=1}return}
     if(Math.abs(err)>0.4){yt.last=t;yt.stamp=performance.now();yt.k=1}else{yt.last=pred;yt.stamp=performance.now();yt.k=Math.max(0.95,Math.min(1.05,1+err/1.0))}},250);
 }
 function dropYouTube(){follow.stop();if(M.type==='yt'&&yt.ready){try{yt.player.stopVideo()}catch(e){}}
@@ -3409,9 +3484,9 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
   const IC={lib:'<path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.5l3.5 1-4 15-3.5-1z"/>',save:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',score:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
     audio:'<path d="M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2"/>',yt:'<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.5 9.5v5l4-2.5z"/>',pages:'<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/>',
     view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'};
-  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 선택','pages'],['vSpread','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['fsBtn','전체 화면','fs']];
+  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['fsBtn','전체 화면','fs']];
   const sh=$('moreSheet'),grid=$('msGrid');
-  function open(){grid.innerHTML='';for(const [id,lb,ic,hot] of items){const t=$(id);if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
+  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){let t=$(id);if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
       b.innerHTML='<svg viewBox="0 0 24 24">'+IC[ic]+'</svg><span></span>';b.lastChild.textContent=lb;b.onclick=()=>{close();setTimeout(()=>t.click(),30)};grid.appendChild(b)}sh.hidden=false}
   function close(){sh.hidden=true}
   $('moreBtn').onclick=open;$('msClose').onclick=close;sh.addEventListener('click',e=>{if(e.target===sh)close()});
@@ -3444,7 +3519,7 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.28.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.29.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -3467,6 +3542,44 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
       reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)ask(w)})});
       setInterval(()=>reg.update().catch(()=>{}),30*60*1000)}).catch(()=>{});
     let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()})}
+})();
+</script>
+<script>
+/* ===== 2.29 phone polish ===== */
+(function(){const $=id=>document.getElementById(id);const hosted=document.body.classList.contains('hosted');
+  const touch=matchMedia('(pointer:coarse)').matches||innerWidth<=900;
+  // zoom buttons: next to the measure number, never on top of the notes
+  if(touch){const z=$('zoomBtns'),lcd=document.querySelector('.dock .lcd');if(z&&lcd){lcd.insertBefore(z,lcd.querySelector('.meas'));z.classList.add('inlcd')}}
+  // the video sits inside the player on a phone (never over the score); YouTube needs at least 200x200
+  const box=$('ytBox'),slot=$('ytSlot');let last='';
+  function place(){const on=!box.hidden&&!box.classList.contains('mini')&&innerWidth<=900;const land=on&&innerWidth>innerHeight;
+    const cls=on?(land?'ytside':'ytdock'):'';if(cls!==last){document.body.classList.remove('ytdock','ytside');if(cls)document.body.classList.add(cls);last=cls;setTimeout(()=>{window.dispatchEvent(new Event('resize'));place2()},60)}place2()}
+  function place2(){if(last==='ytdock'){const r=slot.getBoundingClientRect();Object.assign(box.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',right:'auto',bottom:'auto'})}
+    else if(last==='ytside'){const tb=document.querySelector('.topbar').getBoundingClientRect();Object.assign(box.style,{position:'fixed',left:'auto',right:'6px',top:(tb.bottom+6)+'px',width:'208px',bottom:'auto'})}
+    else if(hosted){const sr=$('stand').getBoundingClientRect();Object.assign(box.style,{position:'fixed',left:'14px',top:'auto',right:'auto',width:'',bottom:(innerHeight-sr.bottom+14)+'px'})}
+    else{['position','left','top','width','right','bottom'].forEach(k=>box.style[k]='')}}
+  if(hosted)document.body.appendChild(box); // out of the score area, so it can sit in the player
+  new MutationObserver(place).observe(box,{attributes:true,attributeFilter:['hidden','class']});addEventListener('resize',()=>setTimeout(place,80));addEventListener('orientationchange',()=>setTimeout(place,250));
+  if(hosted){const h=$('ytHide');if(h)h.hidden=true;try{store.set('ytMini',false)}catch(e){}box.classList.remove('mini')}
+  // settings, in the order people need them (web/phone build)
+  if(hosted){const d=$('drawer'),adv=d.querySelector('details.adv');
+    const yf=$('ytField'),sb=$('syncBox');if(yf&&sb)d.insertBefore(sb,yf);
+    const rit=$('ritSeg')&&$('ritSeg').closest('.field');if(rit&&adv)adv.insertBefore(rit,adv.children[1]||null);
+    const ord=$('order')&&$('order').closest('.field');if(ord&&adv)adv.insertBefore(ord,adv.children[1]||null);
+    const h3=sb&&sb.querySelector('h3');if(h3)h3.textContent='박자 맞추기';
+    const yl=yf&&yf.querySelector(':scope>span');if(yl)yl.textContent='유튜브';
+    const sm=adv&&adv.querySelector('summary');if(sm)sm.textContent='더 보기 (연주 순서 · 느려지기 · 마디 수)';
+    const ds=$('dSpread');if(ds)ds.textContent='쪽으로';const dc=$('dScroll');if(dc)dc.textContent='스크롤로';
+    // one clear way first (tap along), the fine controls under it with short labels
+    if(sb){const big=document.createElement('button');big.className='btn play bigtap';big.id='setTap';big.textContent='탭으로 맞추기';
+      big.onclick=()=>{$('closeDrawer').click();setTimeout(()=>$('saBeat').click(),80)};const cap=document.createElement('p');cap.className='tapcap';cap.textContent='노래를 틀고 박자에 맞춰 8번 누르면 끝나요.';
+      const hint=$('syncHint');sb.insertBefore(big,hint);sb.insertBefore(cap,hint);
+      const T={'-bar':'◀ 1마디','-beat':'◀ 1박','beat':'1박 ▶','bar':'1마디 ▶','-0.05':'− 0.05초','0.05':'+ 0.05초'};
+      sb.querySelectorAll('[data-nudge]').forEach(b=>{const t=T[b.dataset.nudge];if(t)b.textContent=t});
+      $('halfBtn').textContent='÷ 2';$('dblBtn').textContent='× 2';$('checkBtn').textContent='▶ 딸깍과 같이 들어 보기';
+      const fine=document.createElement('p');fine.className='finecap';fine.textContent='직접 고치기';sb.insertBefore(fine,sb.querySelector('.step'))}
+    const ex=$('extStart');if(ex){ex.className='btn';ex.removeAttribute('style');ex.textContent='다른 기기로 틀 때: 첫 박에 맞춰 시작'}
+    const eh=document.querySelector('#ytExt .hint');if(eh)eh.remove();}
 })();
 </script>
 <div class="updbar" id="updBar" hidden><span>새 버전이 있어요</span><button id="updGo">업데이트</button></div>
