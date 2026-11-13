@@ -484,6 +484,8 @@ body.aligning .col canvas,body.aligning .strip{cursor:crosshair}
 body.focus .strip.away::after{opacity:1}
 body:not(.focus) .dimT,body:not(.focus) .dimB{display:none}
 .col.turned>canvas{animation:pageIn .26s ease-out}
+body.glide .cur{transition:transform .22s cubic-bezier(.2,.7,.2,1),top .22s,height .22s}body.glide .mhl{transition:left .22s cubic-bezier(.2,.7,.2,1),width .22s,top .22s,height .22s}body.glide .hl{transition:top .22s,height .22s}
+@media (prefers-reduced-motion:reduce){body.glide .cur,body.glide .mhl,body.glide .hl{transition:none}}
 @keyframes pageIn{from{opacity:.25}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.col.turned>canvas{animation:none}}
 /* ---------- phone ---------- */
@@ -2210,6 +2212,7 @@ function loopMarks(box,first,last){
 function loopLabel(lb,on){const l0=lb.querySelector('.lab');if(l0)lb.querySelectorAll('.lab,.ab').forEach(e=>e.style.display=on?'':'none');if(!on)return;if(!lb.querySelector('.lab')){lb.innerHTML='<span class="lab"></span><span class="ab" style="left:0">A</span><span class="ab" style="left:100%">B</span>'}
   const a=S.tl[P.loop.a],b=S.tl[P.loop.b];lb.querySelector('.lab').innerHTML=LOOP_ICO+`${barNo(a.mi)}–${barNo(b.mi)}마디 반복`}
 function layoutViews(){
+  built.holdY=null;
   const st=$('stand');const W=st.clientWidth,H=st.clientHeight;
   $('spread').hidden=P.view!=='spread'||!S.pages.length;$('scrollview').hidden=P.view!=='scroll'||!S.pages.length;
   $('empty').hidden=!!S.pages.length;
@@ -2229,7 +2232,7 @@ function layoutSpread(W,H){
   const single=W<700||H<480||(W<H&&W<1000);built.single=single;const zoom=Math.max(1,Math.min(2.5,P.zoom||1));built.zoom=zoom;
   const pad=single?4:6,gap=10,colW=single?W-2*pad:Math.floor((W-2*pad-gap)/2),colH=H-2*pad;
   const sys=built.strips.filter(s=>s.sys>=0);
-  built.vpages=[];built.sysV={};
+  built.vpages=[];built.sysV={};built.hold=null;built.holdY=null;
   if(!sys.length)return;
   const maxW=Math.max(...sys.map(s=>s.w)),maxH=Math.max(...sys.map(s=>s.h));
   // zoom: lines grow past the column width and the column pans sideways with the cursor
@@ -2290,7 +2293,9 @@ function clickSystem(si,fx,xAbs){
   if(performance.now()-swipeAt<450)return;
   if(P.alignPick&&hasAudio()){alignBarNow(mi);setAlignPick(false);return}
   if(P.loopPick){pickLoop(mi);return}
-  seekBeat(measureStart(mi));
+  if(P.view==='spread'&&!built.single){const a=$('colL').dataset.vp,b=$('colR').hidden?'':$('colR').dataset.vp;built.hold={a:a===''||a==null?null:+a,b:b===''||b==null?null:+b,sys:si}}
+  else if(P.view!=='spread'&&!transport.playing&&built.curY!=null)built.holdY=built.curY;
+  built.clickSeek=true;seekBeat(measureStart(mi));
 }
 
 /* ---------------- section repeat ---------------- */
@@ -2338,6 +2343,9 @@ function render(force){
     if(P.loop.on&&S.tl[P.loop.a]){const va=built.sysV[S.measures[S.tl[P.loop.a].mi].sys],vb=built.sysV[S.measures[S.tl[P.loop.b].mi].sys];
       // a loop across two neighbouring columns: keep both on screen, no page turns
       if(!built.single&&va&&vb&&vb.vp===va.vp+1&&V.vp>=va.vp&&V.vp<=vb.vp){a=va.vp;b=vb.vp}}
+    // a click on the score keeps both pages where they are (no page jumps under the mouse); once the music has
+    // moved on from the clicked line the pages turn as usual
+    {const h=built.hold;if(h){if(P.loop.on||(h.a!==V.vp&&h.b!==V.vp)||(transport.playing&&m.sys!==h.sys)||h.a==null||h.a>=built.vpages.length||(h.b!=null&&h.b>=built.vpages.length))built.hold=null;else{a=h.a;b=h.b}}}
     const key=a+'|'+b+'|'+built.vpages.length;
     if(key!==lastSpreadKey||force){placeSpread(a,b,V.vp);lastSpreadKey=key}
     const k=built.k;
@@ -2377,11 +2385,16 @@ function render(force){
       // the whole loop fits on screen: hold it still in the middle
       if(sa&&sb&&m.sys>=sa.sys&&m.sys<=sb.sys&&(sb.top+sb.hpx-sa.top)<=vh-24)y=sa.top-(vh-(sb.top+sb.hpx-sa.top))/2}
     y=Math.max(0,y);
+    // paused, after a click on a line that is on screen: the page stays put under the mouse; it glides to the reading
+    // place when the music starts
+    if(built.holdY!=null){const vh=standH||(standH=$('stand').clientHeight);
+      if(!transport.playing&&st&&st.top!=null&&st.top-built.holdY>=-2&&st.top+st.hpx-built.holdY<=vh+2)y=built.holdY;else{built.holdY=null;built.seekGlide=true}}
     // a jump in the music (repeat, D.S., coda): one quick glide to the new place instead of a cut or a long drift
     {const now=performance.now(),J=built.jump,jumped=built.lastTi!=null&&!L.before&&L.ti!==built.lastTi&&L.ti!==built.lastTi+1||(built.lastTi!=null&&L.ti===built.lastTi+1&&S.tl[L.ti].mi!==S.tl[built.lastTi].mi+1);
      built.lastTi=L.before?null:L.ti;
-     if(built.lastY!=null&&Math.abs(y-built.lastY)>2&&(jumped||Math.abs(y-built.lastY)>200)&&(!J||now-J.t0>J.d)){const dist=Math.abs(y-built.lastY);built.jump={from:built.lastY,t0:now,d:Math.min(560,300+dist*0.25)}}
-     const j=built.jump;if(j&&now-j.t0<j.d){const u=(now-j.t0)/j.d,e=u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;built.lastY=y;y=j.from+(y-j.from)*e}else built.lastY=y}
+     if(built.lastY!=null&&Math.abs(y-built.lastY)>2&&(jumped||built.seekGlide||Math.abs(y-built.lastY)>200)&&(!J||now-J.t0>J.d||built.seekGlide)){const dist=Math.abs(y-built.lastY),cur=J&&now-J.t0<J.d&&built.curY!=null?built.curY:built.lastY;built.jump={from:cur,t0:now,d:Math.min(560,300+dist*0.25)}}
+     built.seekGlide=false;
+     const j=built.jump;if(j&&now-j.t0<j.d){const u=(now-j.t0)/j.d,e=u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;built.lastY=y;y=j.from+(y-j.from)*e}else built.lastY=y;built.curY=y}
     _sw($('strips'),'transform',`translate3d(0,${(-y).toFixed(1)}px,0)`);
     // only the line being played (and the one just left) changes from frame to frame: the others are redone on a full redraw
     const prevOn=built.onIdx;built.onIdx=idx;
@@ -2475,11 +2488,11 @@ const M={type:'none',hold:null,fc:null,
   time(){if(this.hold&&this.seeking())return this.hold.t;
     if(this.type==='file')return this.fileClock();
     if(this.type==='yt')return yt.playing?yt.last+(performance.now()-yt.stamp)/1000*yt.rate*(yt.k||1):yt.last;return 0},
-  play(){this.fc=null;if(this.type==='file')return audio.play();if(this.type==='yt'&&yt.ready){yt.player.playVideo();return Promise.resolve()}return Promise.reject()},
+  play(){this.fc=null;yt.pin=null;if(this.type==='file')return audio.play();if(this.type==='yt'&&yt.ready){yt.player.playVideo();return Promise.resolve()}return Promise.reject()},
   pause(){if(this.type==='file')audio.pause();if(this.type==='yt'&&yt.ready)yt.player.pauseVideo()},
   seek(t){this.fc=null;t=Math.max(0,t);if(transport.playing&&this.type!=='none')this.hold={t,until:performance.now()+2500};else this.hold=null;
     if(this.type==='file')audio.currentTime=t;
-    if(this.type==='yt'&&yt.ready){yt.player.seekTo(t,true);yt.last=t;yt.stamp=performance.now();yt.k=1}},
+    if(this.type==='yt'&&yt.ready){yt.pin=transport.playing||yt.playing?null:{t,until:performance.now()+2500};yt.player.seekTo(t,true);yt.last=t;yt.stamp=performance.now();yt.k=1}},
   rate(r){if(this.type==='file')audio.playbackRate=r;
     if(this.type==='yt'&&yt.ready){let rates=[];try{rates=yt.player.getAvailablePlaybackRates()||[]}catch(e){}
       let best=r;if(rates.length&&!rates.includes(r)){best=rates.reduce((a,b)=>Math.abs(b-r)<Math.abs(a-r)?b:a)}
@@ -2531,14 +2544,20 @@ function ritBuild(){RW.grid=null;RW.regions=ritRegions();if(!RW.regions.length||
 function warpW(b){const g=RW.grid;if(!g||b<=0)return b;const x=b/g.step,i=Math.floor(x);if(i>=g.n-1)return g.W[g.n-1]+(b-(g.n-1)*g.step);return g.W[i]+(g.W[i+1]-g.W[i])*(x-i)}
 function warpB(w){const g=RW.grid;if(!g||w<=0)return w;const W=g.W;if(w>=W[g.n-1])return (g.n-1)*g.step+(w-W[g.n-1]);let lo=0,hi=g.n-1;while(hi-lo>1){const h=(lo+hi)>>1;if(W[h]<=w)lo=h;else hi=h}return (lo+(w-W[lo])/(W[hi]-W[lo]))*g.step}
 function currentBeat(){
-  if(hasAudio())return tToB(M.time());
+  if(hasAudio()){const t=M.time(),sp=transport.seekPin;
+    // paused on a clicked bar: stay exactly on its first beat (the player's clock is a hair coarse, and a hair early
+    // would show the end of the bar before, often on the line above)
+    if(sp){if(!transport.playing&&Math.abs(t-sp.t)<0.05&&Math.abs(bToT(sp.b)-sp.t)<1e-6)return sp.b;transport.seekPin=null}
+    return tToB(t)}
   if(transport.playing&&ac){
     if(transport.pend&&ac.currentTime>=transport.pend.t0){transport.b0=transport.pend.b0;transport.t0=transport.pend.t0;transport.pend=null}
     return warpB(warpW(transport.b0)+(ac.currentTime-transport.t0)*effBpm()/60)}
   return transport.beat;
 }
 function seekBeat(b,silent){if(follow.on)follow.reset();
-  if(hasAudio()){M.seek(Math.max(0,bToT(b)))}
+  if(!built.clickSeek){built.hold=null;built.holdY=null}built.clickSeek=false;
+  if(!transport.playing){built.seekGlide=true;built.settleUntil=performance.now()+800;document.body.classList.add('glide');clearTimeout(seekBeat.gt);seekBeat.gt=setTimeout(()=>document.body.classList.remove('glide'),320)}
+  if(hasAudio()){const t=bToT(b),d=mediaDur();transport.seekPin=!transport.playing&&t>=0&&(!d||t<d-0.05)?{b,t}:null;M.seek(Math.max(0,t))}
   else{transport.beat=b;transport.pend=null;if(transport.playing&&ac){transport.b0=b;transport.t0=ac.currentTime}}
   transport.nextClick=nextGrid(currentBeat());resetClicks();
   if(!silent)render();else render();
@@ -2772,7 +2791,10 @@ async function loadYouTube(url){
     playerVars:{playsinline:1,rel:0,modestbranding:1,controls:1,origin:location.origin},
     events:{onReady:done,
       onStateChange:e=>{const st=e.data;let ct=0;try{ct=yt.player.getCurrentTime()}catch(_){}
-        if(st===YTS.PLAYING){yt.last=ct;yt.stamp=performance.now();yt.k=1;yt.playing=true;
+        {const pn=yt.pin;if(pn&&performance.now()<pn.until){ // the video was put somewhere while paused
+          if(st===YTS.PLAYING&&!transport.playing&&performance.now()<pn.until-1300){try{yt.player.pauseVideo()}catch(_){}yt.last=pn.t;yt.playing=false;return}
+          if(st!==YTS.PLAYING&&Math.abs(ct-pn.t)>0.3)ct=pn.t}else yt.pin=null}
+        if(st===YTS.PLAYING){yt.pin=null;yt.last=ct;yt.stamp=performance.now();yt.k=1;yt.playing=true;
           if(!transport.playing){ensureAC();transport.playing=true;setPlayUI();wake(true);transport.nextClick=nextGrid(currentBeat());clearInterval(transport.timer);transport.timer=setInterval(schedule,25)}}
         else{yt.last=ct;yt.playing=false;
           if(st===YTS.PAUSED||st===YTS.ENDED){if(transport.playing){transport.playing=false;clearInterval(transport.timer);setPlayUI();wake(false)}}
@@ -2799,7 +2821,7 @@ function dropYouTube(){follow.stop();if(M.type==='yt'&&yt.ready){try{yt.player.s
   $('ytBox').hidden=true;$('ytBtn').classList.remove('on');if(M.type==='yt')M.type='none'}
 let wl=null;async function wake(on){try{if(on&&'wakeLock'in navigator)wl=await navigator.wakeLock.request('screen');else if(wl){wl.release();wl=null}}catch(e){}}
 
-let lastVB=null;(function loop(){if(S.measures.length){if(transport.playing)render();else if(hasAudio()){const vb=viewBeat();if(vb!==lastVB){lastVB=vb;render()}}}requestAnimationFrame(loop)})();
+let lastVB=null;(function loop(){if(S.measures.length){if(transport.playing)render();else if(performance.now()<(built.settleUntil||0))render();else if(hasAudio()){const vb=viewBeat();if(vb!==lastVB){lastVB=vb;render()}}}requestAnimationFrame(loop)})();
 
 /* ---------------- controls ---------------- */
 $('play').onclick=()=>transport.playing?pause():play();
@@ -3022,7 +3044,7 @@ document.addEventListener('paste',e=>{if(e.target.matches&&e.target.matches('inp
 
 /* ---------------- flip the view up / down ---------------- */
 function flip(dir){
-  if(!S.measures.length)return;
+  if(!S.measures.length)return;built.hold=null;
   const L=locate(Math.max(0,currentBeat()));const curSys=L.m.sys;let target;
   if(P.view==='spread'){const V=built.sysV[curSys];if(!V)return;
     const [a,b]=spreadPages(V.vp);const hi=Math.max(a,b==null?a:b),lo=Math.min(a,b==null?a:b);
@@ -3539,7 +3561,7 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.29.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.30.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
