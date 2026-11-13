@@ -104,8 +104,8 @@ function prepPage(src,opts){
 /* ---------- staff + barline detection ---------- */
 function median(a){if(!a.length)return 0;const s=[...a].sort((x,y)=>x-y);return s[s.length>>1]}
 
-function findStaves(c){
-  const W=c.width,H=c.height,m=inkMask(c,150),m2=inkMask(c,185);
+function findStaves(c,_boost){
+  const W=c.width,H=c.height,m=_boost||inkMask(c,150),m2=inkMask(c,185);if(_boost)for(let i=0;i<m2.length;i++)if(_boost[i])m2[i]=1;
   // content x-range
   let cx0=W,cx1=0;
   { const colInk=new Uint32Array(W);for(let y=0;y<H;y+=2)for(let x=0;x<W;x++)colInk[x]+=m[y*W+x];
@@ -162,7 +162,13 @@ function findStaves(c){
   const clusters=[];
   cands.forEach(cd=>{const cl=clusters.find(q=>Math.abs(q.c-cd.c)<sp*2.2&&!q.items.some(it=>it.k===cd.k));
     if(cl){cl.items.push(cd);cl.c=cl.items.reduce((s,x)=>s+x.c,0)/cl.items.length}else clusters.push({c:cd.c,items:[cd]})});
-  let staves=clusters.filter(q=>q.items.length>=Math.max(3,Math.round(K*0.16))).map(q=>{
+  // (the last line of a song can be a single short bar: fewer strips are enough for a line below all the others, when
+  // its strips sit side by side and each shows all five lines)
+  const need=Math.max(3,Math.round(K*0.16)),lowest=Math.max(-1,...clusters.filter(q=>q.items.length>=need).map(q=>q.c));
+  const shortLast=q=>{if(global.__noShortLast||lowest<0||q.c<lowest+sp*6||q.c>lowest+sp*40||q.items.length<2)return false;
+    const ks=q.items.map(it=>it.k).sort((a,b)=>a-b);return ks[ks.length-1]-ks[0]<=(_boost?ks.length*2:ks.length-1)&&q.items.every(it=>it.n===5)};
+  if(global.__cl)global.__cl.push(clusters.map(q=>[Math.round(q.c),q.items.length,q.items.map(it=>it.k+':'+it.n).join(',')]));
+  let staves=clusters.filter(q=>q.items.length>=need||shortLast(q)).map(q=>{
     const by=new Array(K).fill(null);
     q.items.forEach(it=>{let t=it.top,b=it.bot;if(it.n===4){const h=b-t;if(h<it.g*3.6){b=t+4*it.g}}by[it.k]={t,b}});
     // fill 4-line strips using neighbours' centre
@@ -319,6 +325,8 @@ function findStaves(c){
        const inside=Math.max(L,R)>0.8&&Math.min(L,R)>0.45&&Math.max(frac(x-sp*3,x-3),frac(x+3,x+sp*3))>0.9,headTick=x<s.x0+sp*9&&frac(x+3,x+sp*2)>0.85&&frac(x-sp*1.2,x-3)<0.3;
        if(global.__mrdbg)global.__mrdbg.push([Math.round(x),+L.toFixed(2),+R.toFixed(2),+frac(x-sp*2,x-3).toFixed(2),+frac(x+3,x+sp*2).toFixed(2),+frac(x-sp*3,x-3).toFixed(2),+frac(x+3,x+sp*3).toFixed(2)]);
        if(headTick&&!global.__offHead){bx.splice(i,1);i--}}}
+    // (a line found only by its pale ink: a note's stem right after the clef is not a barline)
+    if(_boost&&_boost.fromY!=null&&s.top>_boost.fromY)while(bx.length&&bx[0]-s.x0<sp*6)bx.shift();
     // merge measures that are implausibly narrow (stray detections)
     const edges=[s.x0,...bx,s.x1];
     let changed=true;
@@ -506,6 +514,17 @@ function findStaves(c){
     const xm=Math.min(a.x0,b.x0);let best=0;
     for(let x=Math.round(xm-sp*2.5);x<=Math.round(xm+sp*0.6);x++){let k=0;for(let y=ya;y<=yb;y++){let h=false;for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx>=0&&xx<W&&m[y*W+xx])h=true}if(h)k++}best=Math.max(best,k/(yb-ya+1))}
     a.joinDbg=a.joinDbg||0;b.joinDbg=+best.toFixed(2);if(best>0.92)b.joinPrev=true}
+  // a last short line printed (or scanned) so faintly that its staff lines are lost, while its notes and the final
+  // barline are there: a tall upright stroke standing alone below the last line. Look again with the pale ink of that
+  // band counted in.
+  if(!_boost&&!global.__noFaint&&staves.length&&sp>0){
+    const last=staves.reduce((a,b)=>a.bot>b.bot?a:b),ya=Math.round(last.bot+sp*5),yb=Math.min(H-1,Math.round(last.bot+sp*45));
+    const xa=Math.max(0,Math.round(Math.min(...staves.map(s=>s.x0)))),xb=Math.min(W-1,Math.round(Math.max(...staves.map(s=>s.x1))));
+    let found=-1;for(let x=xa;x<=xb&&found<0;x++){let run=0;for(let y=ya;y<=yb;y++){if(m[y*W+x]){run++;if(run>=sp*3.3){found=y;break}}else run=0}}
+    if(found>=0){const g=gray(c.getContext('2d',{willReadFrequently:true}),W,H),mb=m.slice(),y0=Math.max(ya,Math.round(found-sp*7)),y1=Math.min(yb,Math.round(found+sp*3));
+      for(let y=y0;y<=y1;y++)for(let x=Math.max(0,xa-Math.round(sp));x<=Math.min(W-1,xb+Math.round(sp));x++)if(g[y*W+x]<236)mb[y*W+x]=1;
+      mb.fromY=last.bot+sp*4;const r2=findStaves(c,mb);
+      if(r2.staves.length>staves.length&&r2.staves.some(s2=>s2.top>last.bot+sp*4))return r2}}
   return {sp,staves,debug:clusters.map(q=>({c:Math.round(q.c),n:q.items.length})),strips};
 }
 /* ending brackets: a thin straight line above the staff, a few spaces long, with a hook down at its left end (and
@@ -682,8 +701,10 @@ function timeSigAt(m,W,H,s,xa,xb,loose){
     let top=readStack(m,W,H,s,u,q.t,q.t+2*g,g,lt),bot=readStack(m,W,H,s,d,q.t+2*g,q.b,g,lt);
     // thin digits in some engravings read with less certainty: a weaker reading still counts when it makes a usual
     // time signature (2, 3, 4 or 6 over 4 or 8) - nothing else stacks two digits in the staff right after a barline
-    if((top<1||![1,2,4,8,16].includes(bot))&&!global.__tsStrict){const t2=readStack(m,W,H,s,u,q.t,q.t+2*g,g,lt,0.15),b2=readStack(m,W,H,s,d,q.t+2*g,q.b,g,lt,0.15);
-      if([2,3,4,6].includes(t2)&&[4,8].includes(b2)){top=t2;bot=b2}}
+    if((top<1||![1,2,4,8,16].includes(bot))&&!global.__tsStrict){readStack.conf=null;const t2=readStack(m,W,H,s,u,q.t,q.t+2*g,g,lt,0.15),c1=readStack.conf;readStack.conf=null;const b2=readStack(m,W,H,s,d,q.t+2*g,q.b,g,lt,0.15),c2=readStack.conf;
+      // (one of the two has to look clearly like its digit: a cymbal note over a bass-drum note after a barline reads
+      // weakly as '2 over 4' too, and turned a whole 4/4 song into 2/4)
+      if([2,3,4,6].includes(t2)&&[4,8].includes(b2)&&(global.__tsWeakOld||Math.max(c1||0,c2||0)>=0.38)){top=t2;bot=b2}}
     if(global.__tsdbg)global.__tsdbg.push({u,d,top,bot});
     if(top<1||top>16||![1,2,4,8,16].includes(bot)){const c=commonTime(m,W,H,s,x0,x1,g,lt);if(c)return [c[0],c[1],x1,x0];
       // (loose: numbers we could not read. A digit has a stroke across it somewhere - the bar of a 4, the base of a 2 -
@@ -735,7 +756,7 @@ function readStack(m,W,H,s,r,ya,yb,g,lt,minConf){
     // digits touch the lines at top and bottom: include those rows
     const r1=classifyS(m,W,{x0,y0:Math.max(ya,Math.round(y0-lt*2)),x1,y1:Math.min(yb,Math.round(y1+lt*2))});
     if(global.__tsdbg)global.__tsdbg.push({dig:[x0,x1,y0,y1],r1});
-    if(r1[1]<(minConf!=null?minConf:0.45))return -1;v=v*10+r1[0]}
+    if(r1[1]<(minConf!=null?minConf:0.45))return -1;v=v*10+r1[0];readStack.conf=Math.min(readStack.conf==null?1:readStack.conf,r1[1])}
   return v;
 }
 /* an empty measure holding only a short text like "7bars": read the leading number */
@@ -799,7 +820,12 @@ function grid(m,W,b){const g=new Float32Array(GW*GH),w=b.x1-b.x0+1,h=b.y1-b.y0+1
     const ya=b.y0+Math.floor(gy*h/GH),yb=b.y0+Math.max(Math.floor(gy*h/GH)+1,Math.floor((gy+1)*h/GH)),xa=b.x0+Math.floor(gx*w/GW),xb=b.x0+Math.max(Math.floor(gx*w/GW)+1,Math.floor((gx+1)*w/GW));
     for(let y=ya;y<yb;y++)for(let x=xa;x<xb;x++){c++;k+=m[y*W+x]}g[gy*GW+gx]=c?k/c:0}
   return {g,ar:w/h}}
-function classify(m,W,b){const r=classifyS(m,W,b);return r[1]>0.45?r[0]:-1}
+function classify(m,W,b){const r=classifyS(m,W,b);if(r[1]<=0.45)return -1;
+  // a heavy 3 with round ends fills its box almost like an 8: but its waist is open on the left
+  if(r[0]===8&&!global.__no38){const w=b.x1-b.x0+1,h=b.y1-b.y0+1;let open=0;
+    for(let y=b.y0+Math.round(h*0.38);y<=b.y0+Math.round(h*0.62);y++){let x=b.x0;while(x<=b.x1&&!m[y*W+x])x++;if(x-b.x0>w*0.22)open++}
+    if(open>=Math.max(2,h*0.12))return 3}
+  return r[0]}
 function classifyS(m,W,b){
   const q=grid(m,W,b);let best=-1,bd=-1;
   const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;const mq=mean(q.g);
@@ -854,10 +880,16 @@ function readNumber(m,W,H,xa,xb,ya,yb,g){
   if(!comps.length)return -1;
   // keep the tallest group that sits on one baseline, nearest the centre
   const cx=(xa+xb)/2;comps.sort((a,b)=>Math.abs((a.x0+a.x1)/2-cx)-Math.abs((b.x0+b.x1)/2-cx));
-  const ref=comps[0];const grp=comps.filter(c=>Math.abs(c.y1-ref.y1)<g*0.5&&Math.abs((c.y1-c.y0)-(ref.y1-ref.y0))<g*0.6&&Math.abs((c.x0+c.x1)/2-(ref.x0+ref.x1)/2)<g*4).sort((a,b)=>a.x0-b.x0);
-  let v=0;for(const c of grp){const d=classify(m,W,c);
-    if(global.__digits){const w=c.x1-c.x0+1,h=c.y1-c.y0+1,cv=document.createElement('canvas');cv.width=w;cv.height=h;const x=cv.getContext('2d');const im=x.createImageData(w,h);for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const v2=m[(c.y0+yy)*W+c.x0+xx]?0:255,i=(yy*w+xx)*4;im.data[i]=im.data[i+1]=im.data[i+2]=v2;im.data[i+3]=255}x.putImageData(im,0,0);global.__digits.push([d,cv.toDataURL()])}
-    if(d<0)return -1;v=v*10+d}
+  const read=ref=>{const grp=comps.filter(c=>Math.abs(c.y1-ref.y1)<g*0.5&&Math.abs((c.y1-c.y0)-(ref.y1-ref.y0))<g*0.6&&Math.abs((c.x0+c.x1)/2-(ref.x0+ref.x1)/2)<g*4).sort((a,b)=>a.x0-b.x0);
+    let v=0;for(const c of grp){const d=classify(m,W,c);
+      // (a thin upright stroke we cannot read beside the number is the bracket of a label, not a digit)
+      if(d<0){if(c!==ref&&!global.__noLabelSkip&&(c.x1-c.x0+1)<=(c.y1-c.y0+1)*0.3)continue;return -1}v=v*10+d}
+    return v};
+  let v=read(comps[0]);
+  // a section label stands beside the number ("[전주] 2") and can be nearer the middle: the number is the one written
+  // lowest, right above the staff
+  if(v<0&&!global.__noLabelSkip){const low=Math.max(...comps.map(c=>c.y1));
+    for(const c of comps.filter(c=>c!==comps[0]&&c.y1>=low-g*0.3&&c.y1>comps[0].y1+g*0.2)){v=read(c);if(v>=0)break}}
   return v;
 }
 
