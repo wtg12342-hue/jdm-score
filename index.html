@@ -1050,6 +1050,9 @@ body.hosted .webonly{display:flex}
 body.hosted .devonly{display:none!important}
 .col.zoomed{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .col.zoomed::-webkit-scrollbar{display:none}
+.col.reel{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y}
+.col.reel::-webkit-scrollbar{display:none}
+.col.reel .dimT,.col.reel .dimB{display:none}
 #stand{touch-action:pan-x pan-y}
 .spread{transition:none}
 /* compact helpers so the score stays visible while tapping or fixing the beat */
@@ -2227,6 +2230,7 @@ function loopLabel(lb,on){const l0=lb.querySelector('.lab');if(l0)lb.querySelect
 function layoutViews(){
   built.holdY=null;
   const st=$('stand');const W=st.clientWidth,H=st.clientHeight;
+  if((W<700||H<480||(W<H&&W<1000))&&P.view!=='spread')P.view='spread'; // a phone: one view, the reel
   $('spread').hidden=P.view!=='spread'||!S.pages.length;$('scrollview').hidden=P.view!=='scroll'||!S.pages.length;
   $('empty').hidden=!!S.pages.length;
   // scroll strips
@@ -2245,8 +2249,10 @@ function layoutSpread(W,H){
   const single=W<700||H<480||(W<H&&W<1000);built.single=single;const zoom=Math.max(1,Math.min(2.5,P.zoom||1));built.zoom=zoom;
   const pad=single?4:6,gap=10,colW=single?W-2*pad:Math.floor((W-2*pad-gap)/2),colH=H-2*pad;
   const sys=built.strips.filter(s=>s.sys>=0);
-  built.vpages=[];built.sysV={};built.hold=null;built.holdY=null;
+  built.vpages=[];built.sysV={};built.pieces=null;built.hold=null;built.holdY=null;built.reel=false;
+  $('colL').classList.toggle('reel',single&&sys.length>0);
   if(!sys.length)return;
+  if(single){layoutReel(sys,W,H,colW,colH);return}
   const maxW=Math.max(...sys.map(s=>s.w)),maxH=Math.max(...sys.map(s=>s.h));
   // zoom: lines grow past the column width and the column pans sideways with the cursor
   const k=Math.min(colW/maxW*zoom,colH/maxH);built.k=k;built.colW=colW;built.colH=colH;
@@ -2268,6 +2274,35 @@ function layoutSpread(W,H){
   ['colL','colR'].forEach(id=>{const c=$(id);c.style.width=colW+'px';c.style.height=colH+'px';c.classList.toggle('zoomed',zoom>1.01)});
 }
 window.addEventListener('resize',()=>{if(S.pages.length)layoutViews()});
+/* A phone: the lines are cut at barlines into pieces that are big enough to read, stacked in one tall column
+   that scrolls by itself with the music (and under the finger). */
+function reelLevel(){return Math.max(0,Math.min(2,+store.get(built.reelKey||'reelP',built.reelKey==='reelL'?0:1)||0))}
+function reelStep(d,wrap){let l=reelLevel()+d;if(wrap)l=(l+3)%3;l=Math.max(0,Math.min(2,l));if(l===reelLevel()){toast(d>0?'가장 크게 보는 중이에요.':'가장 작게 보는 중이에요.',1200);return}
+  store.set(built.reelKey,l);const L=locate(Math.max(0,currentBeat()));layoutViews();toast(['한 줄씩 보기','반 줄씩 크게 보기','한두 마디씩 아주 크게 보기'][l],1400);zoomUI()}
+function layoutReel(sys,W,H,colW,colH){
+  built.reel=true;built.rolling=false;built.zoom=1;built.reelKey=W<H?'reelP':'reelL';built.colW=colW;built.colH=colH;
+  const frac=[1,0.5,0.25][reelLevel()],maxW=Math.max(...sys.map(s=>s.w)),maxH=Math.max(...sys.map(s=>s.h));
+  const list=[];
+  for(const s of sys){const ms=(S.systems[s.sys].measures||[]).slice();const n=Math.max(1,Math.min(ms.length,Math.round(s.w/maxW/frac)));
+    if(n<2){const last=S.measures[ms[ms.length-1]],xb=last?Math.min(s.x+s.w,last.x1+s.w*0.02):s.x+s.w;
+      if(frac<1&&last&&xb-s.x<s.w*0.8)list.push({sys:s.sys,x:s.x,w:xb-s.x,h:s.h,src:s,lo:ms[0],hi:ms[ms.length-1]});else list.push(s);continue}
+    // cut where a barline is nearest to an even share of the line (never inside a multi-bar rest)
+    const cuts=[];for(let i=1;i<n;i++){const goal=s.x+s.w*i/n;let best=-1,bd=1e9;for(let j=1;j<ms.length;j++){const m=S.measures[ms[j]];if(m.mr&&m.mr[0]>0)continue;if(cuts.includes(j))continue;const d=Math.abs(m.x0-goal);if(d<bd){bd=d;best=j}}if(best>0)cuts.push(best)}
+    cuts.sort((a,b)=>a-b);const mg=s.w*0.006;let from=0;
+    [...cuts,ms.length].forEach((to,ci)=>{const xa=from===0?s.x:S.measures[ms[from]].x0-mg,xb=to>=ms.length?s.x+s.w:S.measures[ms[to]].x0+mg;
+      list.push({sys:s.sys,x:xa,w:xb-xa,h:s.h,src:s,lo:ms[from],hi:ms[to-1]});from=to})}
+  const pw=Math.max(...list.map(q=>q.w));const k=Math.min(colW/pw,colH*0.9/maxH);built.k=k;
+  const gap=Math.round(maxH*k*0.05);let y=6;const items=[];built.pieces={};
+  list.forEach(q=>{const it={s:q,h:q.h*k,w:q.w*k,y,x:Math.max(0,(colW-q.w*k)/2)};items.push(it);y+=it.h+gap;
+    const v={vp:0,it};(built.pieces[q.sys]||(built.pieces[q.sys]=[])).push(v);if(!built.sysV[q.sys])built.sysV[q.sys]=v});
+  built.vpages.push({items});built.reelH=y;built.reelTo=null;
+  ['colL','colR'].forEach(id=>{const c=$(id);c.style.width=colW+'px';c.style.height=colH+'px';c.classList.remove('zoomed')});
+  zoomUI();
+}
+/* where a measure is drawn: its line, or on a phone the piece of the line that holds it */
+function vOf(mi){const m=S.measures[mi];if(!m)return null;const ps=built.pieces&&built.pieces[m.sys];
+  if(ps){for(const p of ps)if(p.it.s.lo==null||(mi>=p.it.s.lo&&mi<=p.it.s.hi))return p}return built.sysV&&built.sysV[m.sys]}
+(()=>{const el=$('colL');const u=()=>{el._userT=performance.now();built.reelTo=null};el.addEventListener('touchstart',u,{passive:true});el.addEventListener('touchmove',u,{passive:true});el.addEventListener('wheel',u,{passive:true})})();
 
 let lastSpreadKey='';
 function spreadPages(pi){
@@ -2281,13 +2316,16 @@ function spreadPages(pi){
   return [pi-1,pi];
 }
 function stripCanvas(s){
+  if(!s.spreadCanvas&&s.src){const src=s.src.el.querySelector('canvas'),r=src.width/s.src.w;const c=document.createElement('canvas');c.width=Math.max(1,Math.round(s.w*r));c.height=src.height;
+    c.getContext('2d').drawImage(src,Math.round((s.x-s.src.x)*r),0,c.width,c.height,0,0,c.width,c.height);
+    c.addEventListener('click',ev=>{const q=c.getBoundingClientRect();clickSystem(s.sys,null,s.x+(ev.clientX-q.left)/q.width*s.w)});s.spreadCanvas=c}
   if(!s.spreadCanvas){const src=s.el.querySelector('canvas');const c=document.createElement('canvas');c.width=src.width;c.height=src.height;
     c.getContext('2d').drawImage(src,0,0);c.addEventListener('click',ev=>{const r=c.getBoundingClientRect();clickSystem(s.sys,(ev.clientX-r.left)/r.width)});s.spreadCanvas=c}
   return s.spreadCanvas;
 }
 function placeSpread(L,R,cur){
   [[$('colL'),L],[$('colR'),R]].forEach(([el,vi])=>{
-    const was=el.dataset.vp;el.innerHTML='';el.dataset.vp=vi==null?'':vi;el.classList.remove('turned');if(was!==undefined&&was!==''&&String(vi)!==was){void el.offsetWidth;el.classList.add('turned')}el.hidden=el.id==='colR'&&(built.single||(vi==null&&built.vpages.length<=1));
+    const was=el.dataset.vp,keepTop=built.reel?el.scrollTop:0;el.innerHTML='';el.dataset.vp=vi==null?'':vi;el.classList.remove('turned');if(was!==undefined&&was!==''&&String(vi)!==was){void el.offsetWidth;el.classList.add('turned')}el.hidden=el.id==='colR'&&(built.single||(vi==null&&built.vpages.length<=1));
     if(vi==null)return;
     built.vpages[vi].items.forEach(it=>{const c=stripCanvas(it.s);c.style.left=it.x+'px';c.style.top=it.y+'px';c.style.width=it.w+'px';c.style.height=it.h+'px';el.appendChild(c)});
     const lb=document.createElement('div');lb.className='loopbox';Hd(lb,!!(true));el.appendChild(lb);
@@ -2295,6 +2333,7 @@ function placeSpread(L,R,cur){
     const mh=document.createElement('div');mh.className='mhl';Hd(mh,!!(true));el.appendChild(mh);
     const cu=document.createElement('div');cu.className='cur';Hd(cu,!!(true));el.appendChild(cu);
     addMarks(el);
+    if(built.reel){const sp=document.createElement('div');sp.style.cssText='position:absolute;left:0;width:1px;height:1px;top:'+Math.round(built.reelH+built.colH*0.55)+'px';el.appendChild(sp);el.scrollTop=keepTop;return}
     if(el.id==='colL'&&vi>cur&&!built.rolling){const b=document.createElement('div');b.className='badge';b.textContent='다음';el.appendChild(b)}
     const pg=document.createElement('div');pg.className='pg';pg.textContent=`${vi+1} / ${built.vpages.length}`;el.appendChild(pg);
   });
@@ -2351,7 +2390,7 @@ function render(force){
   // at the barline; the last measure of a line runs to the line's end)
   const cX=q=>q.curx!=null?q.curx:(q.cx0!=null?q.cx0:q.x0);const nx=S.measures[L.mi+1],xa=cX(m),xe=nx&&nx.sys===m.sys&&nx.x0>=m.x1-1?cX(nx):m.x1,x=xa+(xe-xa)*L.frac;
   if(P.view==='spread'){
-    const V=built.sysV[m.sys];if(!V)return;
+    const V=vOf(L.mi);if(!V)return;
     let [a,b]=spreadPages(V.vp);
     if(P.loop.on&&S.tl[P.loop.a]){const va=built.sysV[S.measures[S.tl[P.loop.a].mi].sys],vb=built.sysV[S.measures[S.tl[P.loop.b].mi].sys];
       // a loop across two neighbouring columns: keep both on screen, no page turns
@@ -2362,6 +2401,11 @@ function render(force){
     const key=a+'|'+b+'|'+built.vpages.length;
     if(key!==lastSpreadKey||force){placeSpread(a,b,V.vp);lastSpreadKey=key}
     const k=built.k;
+    if(built.reel){const el=$('colL'),it=V.it,vh=built.colH,want=Math.round(Math.max(0,Math.min(built.reelH-vh*0.5,it.y-vh*0.16)));
+      // the column follows the music one row at a time (the browser's own smooth scrolling); a finger on the score wins for a moment
+      if(transport.playing){if(performance.now()-(el._userT||0)>2500&&built.reelTo!==want){built.reelTo=want;el.scrollTo({top:want,behavior:'smooth'})}}
+      else if(force||built.seekGlide){const t=el.scrollTop;if(it.y<t-2||it.y+it.h>t+vh+2)el.scrollTo({top:want,behavior:built.seekGlide?'smooth':'auto'});built.reelTo=null}
+      built.seekGlide=false}
     [$('colL'),$('colR')].forEach(el=>{
       const hl=el.querySelector('.hl'),cu=el.querySelector('.cur'),lb=el.querySelector('.loopbox');if(!hl)return;
       const vi=el.dataset.vp===''?-1:+el.dataset.vp;
@@ -2369,17 +2413,18 @@ function render(force){
       el.querySelectorAll('.loopbox.extra').forEach(e=>e.remove());
       {const lb=el.querySelector('.loopbox:not(.extra)');if(lb){Hd(lb,!!(true));if(P.loop.on&&vi>=0){let used=false;
         const sa=S.measures[S.tl[P.loop.a].mi].sys,sb=S.measures[S.tl[P.loop.b].mi].sys;
-        for(const it of built.vpages[vi].items){const r=loopRect(it.s.sys);if(!r)continue;
+        for(const it of built.vpages[vi].items){let r=loopRect(it.s.sys);if(!r)continue;let pf=true,pl=true;
+          if(it.s.src){pf=r[0]>=it.s.x-1;pl=r[1]<=it.s.x+it.s.w+1;r=[Math.max(r[0],it.s.x),Math.min(r[1],it.s.x+it.s.w)];if(r[1]-r[0]<2)continue}
           let box=lb;if(used){box=lb.cloneNode(false);box.className='loopbox extra';el.appendChild(box)}used=true;
           Hd(box,!!(false));_sw(box,'left',(it.x+(r[0]-it.s.x)*k-2)+'px');_sw(box,'width',((r[1]-r[0])*k+4)+'px');_sw(box,'top',it.y+'px');_sw(box,'height',it.h+'px');
-          loopMarks(box,it.s.sys===sa,it.s.sys===sb)}}}}
+          loopMarks(box,pf&&it.s.sys===sa,pl&&it.s.sys===sb)}}}}
       const mh=el.querySelector('.mhl');
       if(vi!==V.vp){Hd(hl,!!(true));Hd(cu,!!(true));if(mh)Hd(mh,!!(true));placeMarks(el,false);return}
       const it=V.it;
       if(mh){Hd(mh,!!(L.before||!P.showLine));if(!mh.hidden){const sp=barSpan(L);_sw(mh,'left',(it.x+(sp.x0-it.s.x)*k-3)+'px');_sw(mh,'width',((sp.x1-sp.x0)*k+6)+'px');_sw(mh,'top',(it.y+2)+'px');_sw(mh,'height',(it.h-4)+'px');measPulse(mh,L.mi);mhProg(mh,L,sp)}}
       Hd(hl,!!(!P.showLine));_sw(hl,'top',it.y+'px');_sw(hl,'height',it.h+'px');_sw(hl,'left',it.x+'px');_sw(hl,'right','auto');_sw(hl,'width',it.w+'px');
       placeMarks(el,true,it.x,it.w,it.y,it.h,L,xx=>it.x+(xx-it.s.x)*k);
-      Hd(cu,!!(L.before||!P.showCur));_sw(cu,'transform',`translate3d(${(it.x+(x-it.s.x)*k).toFixed(1)}px,0,0)`);
+      Hd(cu,!!(L.before||!P.showCur));_sw(cu,'transform',`translate3d(${(it.x+(Math.min(x,it.s.x+it.s.w)-it.s.x)*k).toFixed(1)}px,0,0)`);
       // zoomed in: keep the cursor in view by sliding the column sideways, a page-width at a time
       if(built.zoom>1.01&&(transport.playing||force)){const cx=it.x+(x-it.s.x)*k,w=built.colW,sl=el.scrollLeft;
         if(cx<sl+w*0.06||cx>sl+w*0.82){const to=Math.max(0,cx-w*0.12);if(Math.abs(to-(el._panTo||-1))>4){el._panTo=to;el.scrollTo({left:to,behavior:force?'auto':'smooth'})}}}_sw(cu,'top',(it.y+it.h*.12)+'px');_sw(cu,'height',(it.h*.76)+'px');
@@ -2445,7 +2490,7 @@ function nextMark(L){let nb=$('nextBox');const nj=transport.playing||hasAudio()?
   if(!nj){if(nb&&!nb.hidden)nb.hidden=true;if(nextMark.k){nextMark.k=null;const f=$('jumpFlash');if(!f.classList.contains('after'))f.hidden=true}return}
   if(!nb){nb=document.createElement('div');nb.id='nextBox';nb.className='nextbox';nb.innerHTML='<span>다음</span>'}
   const m=S.measures[nj.mi];let host=null,x0,x1,y,h;
-  if(P.view==='spread'){const V=built.sysV&&built.sysV[m.sys];if(V){const el=[$('colL'),$('colR')].find(c=>c&&c.dataset.vp!==''&&+c.dataset.vp===V.vp);
+  if(P.view==='spread'){const V=vOf(nj.mi);if(V){const el=[$('colL'),$('colR')].find(c=>c&&c.dataset.vp!==''&&+c.dataset.vp===V.vp);
       if(el){const it=V.it,k=built.k;host=el;x0=it.x+(m.x0-it.s.x)*k;x1=it.x+(m.x1-it.s.x)*k;y=it.y+2;h=it.h-4}}}
   else{const st=built.stripOf&&built.stripOf[m.sys];if(st){host=st.el;x0=(m.x0-st.x)*scale.strip;x1=(m.x1-st.x)*scale.strip;y=3;h=null}}
   if(host){if(nb.parentNode!==host)host.appendChild(nb);nb.hidden=false;_sw(nb,'left',(x0-3)+'px');_sw(nb,'width',(x1-x0+6)+'px');_sw(nb,'top',y+'px');_sw(nb,'height',h==null?'calc(100% - 6px)':h+'px')}
@@ -3072,7 +3117,7 @@ function flip(dir){
   seekBeat(measureStart(S.systems[target].measures[0]));
 }
 $('navUp').onclick=()=>flip(-1);$('navDn').onclick=()=>flip(1);
-let wheelAt=0;$('stand').addEventListener('wheel',e=>{if(!$('pagesOv').hidden||!$('libOv').hidden||e.target.closest('#drawer,#libOv,#pagesOv'))return;
+let wheelAt=0;$('stand').addEventListener('wheel',e=>{if(built.reel)return;if(!$('pagesOv').hidden||!$('libOv').hidden||e.target.closest('#drawer,#libOv,#pagesOv'))return;
   e.preventDefault();const now=performance.now();if(now-wheelAt<350)return;wheelAt=now;flip(e.deltaY>0?1:-1)},{passive:false});
 
 /* ---------------- syncing music to the score ---------------- */
@@ -3516,9 +3561,10 @@ async function loadSample(){
   if(/Android/i.test(navigator.userAgent)){$('scoreFile').removeAttribute('accept');$('audioFile').setAttribute('accept','audio/*')}
 })();
 /* pinch on the score: zoom in or out (1x to 2.5x) */
-function setZoom(z,quiet){z=Math.round(Math.max(1,Math.min(2.5,z))*4)/4;if(Math.abs(z-(P.zoom||1))<0.01)return;P.zoom=z;store.set('zoom',z);
+function setZoom(z,quiet){if(built.reel){const r=z/(P.zoom||1);if(r>1.08)reelStep(1);else if(r<0.93)reelStep(-1);return}
+  z=Math.round(Math.max(1,Math.min(2.5,z))*4)/4;if(Math.abs(z-(P.zoom||1))<0.01)return;P.zoom=z;store.set('zoom',z);
   if(S.pages.length){layoutViews()}if(!quiet)toast(`악보 ${Math.round(z*100)}%`,1200);zoomUI()}
-function zoomUI(){const q=document.getElementById('qZoom');if(q){q.querySelector('b').textContent=Math.round((P.zoom||1)*100)+'%';q.classList.toggle('on',(P.zoom||1)>1.01)}}
+function zoomUI(){const q=document.getElementById('qZoom');if(q&&built.reel){q.querySelector('b').textContent=['1줄','반 줄','마디'][reelLevel()];q.classList.toggle('on',reelLevel()>0);return}if(q){q.querySelector('b').textContent=Math.round((P.zoom||1)*100)+'%';q.classList.toggle('on',(P.zoom||1)>1.01)}}
 (()=>{const st=$('stand');let d0=0,z0=1;const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
   st.addEventListener('touchstart',e=>{if(e.touches.length===2&&!e.target.closest('#drawer,#pagesOv,#libOv,#welcome')){d0=dist(e.touches);z0=P.zoom||1}},{passive:true});
   st.addEventListener('touchmove',e=>{if(d0&&e.touches.length===2){e.preventDefault();const sp=$('spread');sp.style.transformOrigin='50% 40%';sp.style.transform=`scale(${Math.max(0.6,Math.min(2.5,dist(e.touches)/d0))})`}},{passive:false});
@@ -3528,7 +3574,7 @@ function zoomUI(){const q=document.getElementById('qZoom');if(q){q.querySelector
 let swipeAt=0;(()=>{let t0=null;const st=$('stand');
   st.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('#drawer,#pagesOv,#libOv,#tapOv,#welcome,.navbtns'))return t0=null;t0={x:e.touches[0].clientX,y:e.touches[0].clientY,t:performance.now()}},{passive:true});
   st.addEventListener('touchend',e=>{if(!t0)return;const c=e.changedTouches[0],dx=c.clientX-t0.x,dy=c.clientY-t0.y;t0=null;
-    if(Math.abs(dy)>45&&Math.abs(dy)>Math.abs(dx)*1.3){swipeAt=performance.now();flip(dy<0?1:-1)}},{passive:true});
+    if(!built.reel&&Math.abs(dy)>45&&Math.abs(dy)>Math.abs(dx)*1.3){swipeAt=performance.now();flip(dy<0?1:-1)}},{passive:true});
 })();
 </script>
 
@@ -3541,14 +3587,14 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
     view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'};
   const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['fsBtn','전체 화면','fs']];
   const sh=$('moreSheet'),grid=$('msGrid');
-  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){let t=$(id);if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
+  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){let t=$(id);if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
       b.innerHTML='<svg viewBox="0 0 24 24">'+IC[ic]+'</svg><span></span>';b.lastChild.textContent=lb;b.onclick=()=>{close();setTimeout(()=>t.click(),30)};grid.appendChild(b)}sh.hidden=false}
   function close(){sh.hidden=true}
   $('moreBtn').onclick=open;$('msClose').onclick=close;sh.addEventListener('click',e=>{if(e.target===sh)close()});
   const relayout=()=>{};
   $('qTempo').onclick=()=>{document.body.classList.toggle('mixopen');$('qTempo').classList.toggle('on',document.body.classList.contains('mixopen'));relayout()};
   $('zIn').onclick=()=>setZoom((P.zoom||1)+0.25);$('zOut').onclick=()=>setZoom((P.zoom||1)-0.25);
-  $('qZoom').onclick=()=>{const z=P.zoom||1;setZoom(z<1.4?1.5:z<1.9?2:1)};zoomUI();
+  $('qZoom').onclick=()=>{if(built.reel){reelStep(1,true);return}const z=P.zoom||1;setZoom(z<1.4?1.5:z<1.9?2:1)};zoomUI();
   {const ki=$('ytKeyIn');if(ki){try{ki.value=store.get('ytKey','')}catch(e){}$('ytKeySave').onclick=()=>{store.set('ytKey',ki.value.trim());toast(ki.value.trim()?'검색 키를 저장했어요.':'검색 키를 지웠어요.')}}}
   $('qSong').onclick=()=>$('songBtn').click();$('qMetro').onclick=()=>$('metroBtn').click();$('qCi').onclick=()=>$('ciBtn').click();$('qSync').onclick=()=>$('syncChip').click();
   function sync(){const bp=$('bpmRail').value,sp=$('speedVal').textContent;if($('qBpm').textContent!==String(Math.round(+bp*10)/10))$('qBpm').textContent=Math.round(+bp*10)/10;if($('qSpd').textContent!==sp)$('qSpd').textContent=sp;
@@ -3574,7 +3620,7 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.31.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.32.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
