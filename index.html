@@ -1360,7 +1360,7 @@ body.hosted .drawer details.adv>.field,body.hosted .drawer details.adv>label.fie
         <li><i>2</i><div><b>노래를 붙여요</b><span>음원 파일이나 유튜브 링크. 템포와 첫 박을 찾아요.</span></div></li>
         <li><i>3</i><div><b>재생하고 치면 돼요</b><span>지금 치는 마디를 따라 악보가 넘어가요. 반복·예비박도 자동이에요.</span></div></li></ol></div>
       <div class="wempty"><svg viewBox="0 0 64 40" aria-hidden="true"><path d="M2 8h60M2 15h60M2 22h60M2 29h60M2 36h60" stroke="currentColor" stroke-width=".8" opacity=".35"/><ellipse cx="22" cy="25.5" rx="4.2" ry="3.2" transform="rotate(-20 22 25.5)" fill="currentColor"/><path d="M25.8 24.4V6.5" stroke="currentColor" stroke-width="1.4"/><ellipse cx="42" cy="18.5" rx="4.2" ry="3.2" transform="rotate(-20 42 18.5)" fill="currentColor"/><path d="M45.8 17.4V2.5M25.8 6.5l20-4" stroke="currentColor" stroke-width="1.4"/></svg>
-        <b>아직 연습한 곡이 없어요</b><span>악보를 열고 저장하면 여기에 모여요.</span><button class="wlink" id="wSample2">예시 악보로 둘러보기</button></div>
+        <b>아직 연습한 곡이 없어요</b><span>악보를 열고 저장하면 여기에 모여요.</span><button class="wlink" id="wSample2">예시 악보로 둘러보기</button><button class="wlink" id="wGuide" onclick="openGuide()" style="margin-left:16px">사용법 보기</button></div>
     </div>
   </section>
 
@@ -3348,7 +3348,10 @@ function restoreSync(v){P.map=v.map?{i0:v.map.i0,t:Float64Array.from(v.map.t)}:n
 function showSyncAsk(kind){if(!hasAudio()||!S.tl||!S.tl.length)return;const eb=entryBar(),no=barNo(eb.mi);saEntry=S.tl[eb.ti].start;
   $('saTitle').textContent=kind==='fixed'?`${no}마디 맞춤`:kind==='tap'?'박자 맞추기':'자동으로 맞췄어요';$('saTap').textContent=kind==='tap'?'탭 시작':'다시';$('saBeat').hidden=kind==='tap';$('saTap').dataset.k=kind;
   $('saSub').textContent=kind==='fixed'?'다르면 1마디씩 옮겨요':kind==='tap'?`${no}마디부터 박마다 ${TAP_N}번 탭`:`${no}마디가 안 맞으면 '다시'`;
-  $('saUndo').hidden=!fixSnap;$('syncAsk').hidden=false}
+  if(isPhoneUI()){if(kind==='tap'){$('saTitle').textContent='노래에 악보 맞추기';$('saSub').textContent=`드럼이 나올 때(${no}마디)부터 박자에 맞춰 8번 눌러요`;$('saTap').textContent='탭 시작'}
+    else if(kind==='fixed'){$('saTitle').textContent='맞췄어요! 지금 들으며 확인해 보세요';$('saSub').textContent="악보의 표시가 드럼 소리와 같이 가면 '맞아요'. 악보가 늦으면 ◀, 빠르면 ▶, 많이 다르면 '다시'를 눌러요."}}
+  $('saUndo').hidden=!fixSnap;$('syncAsk').hidden=false;
+  if(kind==='tap'&&isPhoneUI()&&$('tapFix').hidden)openTapCoach(no)}
 function hideSyncAsk(){$('syncAsk').hidden=true;saEntry=null}
 const TAP_N=8;
 function startBeatTap(fromStart){startFix(fromStart,true)}
@@ -3357,6 +3360,8 @@ function startFix(fromStart,beats){if(!hasAudio()){toast('먼저 음원이나 �
   $('tfMain').textContent=beats?`박마다 ${TAP_N}번 탭`:'드럼이 시작할 때 탭';$('tfDots').hidden=!beats;$('tfDots').innerHTML=beats?'<u></u>'.repeat(TAP_N):'';
   $('tfNote').textContent=beats?'쿵·쿵·쿵·쿵 박자대로':'조금 틀려도 괜찮아요';
   $('tfHit').innerHTML=beats?'탭':'지금 <small>스페이스바</small>';
+  if(isPhoneUI()){$('coach').hidden=true;if(beats){$('tfMain').textContent='드럼이 나오면 박자에 맞춰 8번 누르세요';$('tfNote').textContent='전주는 그냥 듣고 기다려요. 드럼이 이미 지나갔으면 ◀ 5초로 되감아요.';$('tfHit').textContent='여기를 탭'}
+    else{$('tfMain').textContent='드럼이 처음 나오는 순간 한 번 누르세요';$('tfNote').textContent='조금 늦거나 빨라도 괜찮아요. 가까운 박에 맞춰 드려요.';$('tfHit').textContent='지금!'}}
   pause();ensureAC();$('tfBar').textContent=barNo(eb.mi);$('tapFix').hidden=false;$('tfHit').classList.remove('hit');
   // start a little before where the drums should come in (the start of the song if that is where the trouble is)
   let t0=0;if(!fromStart&&P.synced&&!beats){const te=bToT(S.tl[eb.ti].start);t0=Math.max(0,te-9)}
@@ -3372,6 +3377,7 @@ function startFix(fromStart,beats){if(!hasAudio()){toast('먼저 음원이나 �
 function beatTap(){const f=fixMode;if(!f||!f.beats)return;const t=M.time()-0.03;f.taps.push(t);
   const d=$('tfDots').children;for(let i=0;i<d.length;i++)d[i].classList.toggle('on',i<f.taps.length);
   $('tfHit').classList.add('hit');setTimeout(()=>$('tfHit').classList.remove('hit'),90);
+  if(isPhoneUI()&&f.taps.length<TAP_N)$('tfMain').textContent=`좋아요, 계속! ${f.taps.length} / ${TAP_N}`;
   if(f.taps.length>=TAP_N)endFix(true,true)}
 function fitTaps(T){const gaps=[];for(let i=1;i<T.length;i++)gaps.push(T[i]-T[i-1]);const g=gaps.slice().sort((a,b)=>a-b)[gaps.length>>1];
   // a tap that skipped a beat is numbered by the typical gap, not by its order
@@ -3578,16 +3584,76 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 })();
 </script>
 
+<style>
+.coach{position:fixed;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.66);backdrop-filter:blur(6px)}
+.co-card{width:min(520px,100%);max-height:94vh;overflow-y:auto;background:#0d0d0e;border-top:1px solid var(--line);border-radius:22px 22px 0 0;padding:22px 20px max(18px,env(safe-area-inset-bottom,0px));box-shadow:0 -20px 60px rgba(0,0,0,.7);animation:msUp .3s cubic-bezier(.2,.8,.2,1)}
+.co-kick{margin:0 0 6px;font:600 12.5px/1 var(--f-ui);color:var(--gold,#d8b67a);letter-spacing:.02em}
+.co-card h3{margin:0 0 16px;font:700 22px/1.3 var(--f-ui);color:#fff}
+.co-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.co-steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+.co-steps li>i{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 16px/1 var(--f-ui);font-style:normal;color:#24190a;background:linear-gradient(180deg,#e7bb63,#c8932f)}
+.co-steps b{display:block;font:650 16.5px/1.35 var(--f-ui);color:#fff}
+.co-steps span{display:block;margin-top:3px;font:400 14.5px/1.5 var(--f-ui);color:#b9b3a8}
+.co-steps span em{font-style:normal;color:#e7bb63;font-weight:650}
+.co-demo{margin:14px 0 0 46px;display:flex;align-items:center;gap:7px}
+.co-demo u{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.14);animation:coBeat 4.4s infinite}
+.co-demo small{margin-left:6px;font:500 13px/1 var(--f-ui);color:#8b857b}
+@keyframes coBeat{0%,8%{background:#e7bb63;transform:scale(1.25)}14%,100%{background:rgba(255,255,255,.14);transform:none}}
+.co-note{margin:16px 0 0;padding:11px 13px;border-radius:12px;background:rgba(231,187,99,.09);font:500 14px/1.5 var(--f-ui);color:#e4d3ae}
+.co-go{margin-top:18px;width:100%;height:58px;border:0;border-radius:16px;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;font:700 18px/1 var(--f-ui);cursor:pointer}
+.co-later{margin-top:6px;width:100%;height:44px;border:0;background:none;color:#8b857b;font:500 14.5px/1 var(--f-ui);cursor:pointer}
+@media (max-width:900px),(orientation:landscape) and (max-height:500px){
+  body .tf-card{grid-template-columns:1fr;grid-template-areas:"bar" "main" "dots" "hit" "note" "row";gap:4px}
+  body .tf-bar{font-size:13px}body .tf-bar b{font-size:16px}
+  body .tf-main{font-size:16.5px;font-weight:650;line-height:1.4}
+  body .tf-dots{margin:6px 0 2px;gap:7px}body .tf-dots u{width:12px;height:12px}
+  body .tf-hit{width:100%;height:104px;font-size:24px;margin-top:6px;border-radius:16px}
+  body .tf-note{display:block;grid-area:note;margin:8px 0 0;font-size:13px;line-height:1.45;color:#b9b3a8}
+  body .syncask .sa-text b{font-size:15.5px}
+  body .syncask .sa-text span{font-size:13.5px;line-height:1.5;-webkit-line-clamp:4}
+  body .syncask .sa-btns{flex-wrap:wrap}
+  body .syncask .btn{height:40px;font-size:14px}
+  body .syncask #saBeat{display:none}body .syncask #saOk{border:1px solid #c8932f;color:#e7bb63;border-radius:999px;padding:0 18px}
+}
+@media (orientation:landscape) and (max-height:500px){body .tf-card{grid-template-columns:1fr 200px;grid-template-areas:"bar hit" "main hit" "dots hit" "note hit" "row row"}body .tf-hit{height:100%;min-height:84px;margin:0}
+  .co-card{padding-top:14px}.co-card h3{margin-bottom:10px;font-size:18px}.co-steps{gap:8px}.co-go{height:48px;margin-top:10px}}
+</style>
+<div class="coach" id="coach" hidden><div class="co-card">
+  <p class="co-kick" id="coKick"></p><h3 id="coTitle"></h3><ol class="co-steps" id="coSteps"></ol>
+  <div class="co-demo" id="coDemo" hidden></div><p class="co-note" id="coNote" hidden></p>
+  <button class="co-go" id="coGo"></button><button class="co-later" id="coLater"></button></div></div>
+<script>
+/* 2.33: plain-words guides. One sheet: how the app is used, and how to match a song by tapping (phones cannot hear a YouTube video,
+   so there the match is tapped; the sheet says exactly what to press and when). */
+function openCoach(o){const $=id=>document.getElementById(id);$('coKick').textContent=o.kick||'';$('coTitle').textContent=o.title;
+  $('coSteps').innerHTML=o.steps.map((x,i)=>'<li><i>'+(i+1)+'</i><div><b>'+x[0]+'</b>'+(x[1]?'<span>'+x[1]+'</span>':'')+'</div></li>').join('');
+  const d=$('coDemo');d.hidden=!o.demo;if(o.demo){d.innerHTML='';for(let i=0;i<8;i++){const u=document.createElement('u');u.style.animationDelay=(i*0.5)+'s';d.appendChild(u)}const sm=document.createElement('small');sm.textContent='쿵 · 쿵 · 쿵 · 쿵 …';d.appendChild(sm)}
+  $('coNote').hidden=!o.note;$('coNote').textContent=o.note||'';$('coGo').textContent=o.go||'알겠어요';$('coLater').hidden=!o.later;$('coLater').textContent=o.later||'';
+  $('coGo').onclick=()=>{$('coach').hidden=true;if(o.onGo)o.onGo()};$('coLater').onclick=()=>{$('coach').hidden=true;if(o.onLater)o.onLater()};$('coach').hidden=false}
+function openGuide(){store.set('guideSeen',1);openCoach({kick:'사용법',title:'이렇게 쓰면 돼요',go:'알겠어요',steps:[
+  ['악보를 열어요',"<em>'악보 열기'</em>를 눌러 PDF 악보를 골라요. 마디는 알아서 읽어요."],
+  ['노래를 붙여요',"<em>'유튜브'</em>에서 노래를 찾아 누르거나, 핸드폰에 있는 음원 파일을 열어요."],
+  ['박자를 한 번 맞춰요','유튜브는 드럼이 나올 때부터 박자에 맞춰 버튼을 8번 눌러 주면 돼요. 화면에서 순서대로 알려 드려요. 음원 파일은 자동으로 맞춰요.'],
+  ['▶ 를 누르고 치면 돼요','악보가 노래를 따라 내려가요. 악보의 마디를 누르면 그 자리로 가고, <em>− +</em> 로 악보 크기를 바꿔요.']]})}
+function isPhoneUI(){return matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches}
+function openTapCoach(no){openCoach({kick:'박자 맞추기 · 10초면 끝나요',title:'노래에 악보를 맞춰요',demo:true,go:'시작하기',later:'나중에 할게요',
+  steps:[["'시작하기'를 누르면 노래가 나와요",no>1?'드럼이 나오기 조금 전부터 틀어 드려요. 전주는 그냥 들으며 기다려요.':''],
+    ['드럼이 처음 나오는 순간부터<br>박자에 맞춰 금색 버튼을 8번 눌러요','발로 박자를 세듯이 <em>쿵 · 쿵 · 쿵 · 쿵</em> 일정하게요. 조금 틀려도 괜찮아요.'],
+    ['끝이에요','악보가 노래를 따라가요. 안 맞으면 다시 할 수 있어요.']],
+  note:'드럼은 악보 '+no+'마디에서 시작해요. 한 번 맞추면 이 곡은 다음에도 기억해요.',
+  onGo:()=>startBeatTap(false),onLater:()=>toast("아래 '탭 시작'을 누르면 언제든 할 수 있어요.",3200)})}
+window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElementById('licOv');if(isPhoneUI()&&!store.get('guideSeen',0)&&!S.pages.length&&(!lo||lo.hidden))openGuide()}catch(e){}},900));
+</script>
 <div class="moresheet" id="moreSheet" hidden><div class="ms-card"><div class="ms-grab"></div><p class="ms-title">메뉴</p><div class="ms-grid" id="msGrid"></div><button class="ms-close" id="msClose">닫기</button></div></div>
 <script>
 /* 2.21: phone menu sheet and the quick chips; they only press the real controls, so nothing about playback changes */
 (function(){const $=id=>document.getElementById(id);
   const IC={lib:'<path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.5l3.5 1-4 15-3.5-1z"/>',save:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',score:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
     audio:'<path d="M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2"/>',yt:'<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.5 9.5v5l4-2.5z"/>',pages:'<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/>',
-    view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'};
-  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['fsBtn','전체 화면','fs']];
+    view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17v.2"/>'};
+  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
   const sh=$('moreSheet'),grid=$('msGrid');
-  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){let t=$(id);if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
+  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
       b.innerHTML='<svg viewBox="0 0 24 24">'+IC[ic]+'</svg><span></span>';b.lastChild.textContent=lb;b.onclick=()=>{close();setTimeout(()=>t.click(),30)};grid.appendChild(b)}sh.hidden=false}
   function close(){sh.hidden=true}
   $('moreBtn').onclick=open;$('msClose').onclick=close;sh.addEventListener('click',e=>{if(e.target===sh)close()});
@@ -3620,7 +3686,7 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.32.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.33.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
