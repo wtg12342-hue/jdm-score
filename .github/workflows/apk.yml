@@ -23,11 +23,7 @@ jobs:
           npm init -y >/dev/null
           npm i @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
           npx cap add android
-          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do n=${d%%:*}; s=${d##*:}; r=android/app/src/main/res/mipmap-$n
-            convert $GITHUB_WORKSPACE/icon-512.png -resize ${s}x${s} $r/ic_launcher.png
-            convert $GITHUB_WORKSPACE/icon-512.png -resize ${s}x${s} $r/ic_launcher_round.png
-            f=$((s*108/48)); convert $GITHUB_WORKSPACE/icon-maskable.png -resize ${f}x${f} $r/ic_launcher_foreground.png
-          done
+          cp -r $GITHUB_WORKSPACE/.github/apk/res/. android/app/src/main/res/
           sed -i 's/#FFFFFF/#0B0A08/' android/app/src/main/res/values/ic_launcher_background.xml || true
           npx cap sync android
       - name: build
