@@ -2343,6 +2343,7 @@ function clickSystem(si,fx,xAbs){
   let mi=s.measures.find(i=>x>=S.measures[i].x0&&x<S.measures[i].x1);
   if(mi==null)mi=x<S.measures[s.measures[0]].x0?s.measures[0]:s.measures[s.measures.length-1];
   if(performance.now()-swipeAt<450)return;
+  if(pin){pinAt(mi);return}
   if(P.alignPick&&hasAudio()){alignBarNow(mi);setAlignPick(false);return}
   if(P.loopPick){pickLoop(mi);return}
   if(P.view==='spread'&&!built.single){const a=$('colL').dataset.vp,b=$('colR').hidden?'':$('colR').dataset.vp;built.hold={a:a===''||a==null?null:+a,b:b===''||b==null?null:+b,sys:si}}
@@ -3344,6 +3345,39 @@ function alignBarNow(mi){const t=M.time(),ti=occurrence(mi),start=S.tl[ti].start
   else if(P.synced){const k=Math.round((off-P.offset)/beat);off=P.offset+k*beat}
   setOffset(off);P.synced=true;updateChip();saveSync();spUI();follow.reset();render(true);
   toast(`${barNo(mi)}마디를 지금 위치에 맞췄어요`,1800)}
+/* ---- match by pointing (phones): the song plays, and the player presses on the score the bar that is starting right now.
+   One bar gives where the song is; a second one, further on, gives how fast it runs. Any later press corrects it again.
+   Nothing has to be counted or tapped in time, and it works for any song and any score. ---- */
+let pin=null;
+function pinStart(){if(!hasAudio()){toast('먼저 노래(유튜브나 음원)를 열어 주세요.');return}
+  $('coach').hidden=true;$('syncAsk').hidden=true;$('syncPop').hidden=true;if(fixMode)endFix(false);if(transport.playing)pause();ensureAC();
+  pin={pts:[],B:0,ok:false};M.rate(P.speed);M.play().catch(()=>toast('음원을 재생하지 못했어요.'));document.body.classList.add('pinning');pinUI()}
+function pinDone(){if(!pin)return;const ok=pin.ok||pin.pts.length>0;pin=null;document.body.classList.remove('pinning');$('pinBar').hidden=true;
+  if(ok){saveSync();toast("맞춤을 저장했어요. 어긋나면 아래 '맞추기'에서 다시 할 수 있어요.",3000)}}
+function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;let t,u;
+  if(!n){t='지금 나오는 마디를 누르세요';u='노래를 들으며 악보를 손가락으로 밀어 찾아요. 새 마디가 시작되는 순간, 악보에서 그 마디를 누르면 돼요.'}
+  else if(pin.ok){t='맞췄어요  ♩='+P.bpm;u="악보가 노래를 따라가요. 어긋나 보이면 그 마디가 시작될 때 다시 누르세요. 잘 맞으면 '완료'."}
+  else if(n===1){t='좋아요! 한 군데만 더';u=barNo(last.mi)+'마디를 맞췄어요. 조금 더 듣다가, 몇 줄 뒤의 다른 마디가 시작될 때 한 번 더 눌러 주세요. 그러면 빠르기까지 맞춰요.'}
+  else{t='조금 더 뒤에서 한 번 더';u='두 마디가 너무 가까워요. 몇 줄 뒤의 마디가 시작될 때 한 번 더 눌러 주세요.'}
+  $('pbT').textContent=t;$('pbS').textContent=u;$('pinBar').hidden=false}
+function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
+  // (a bar that is played more than once: the pass nearest to where the song is thought to be; at first, the first pass)
+  if(pin.pts.length){ti=occurrence(mi,tToB(t))}else ti=T.findIndex(e=>e.mi===mi);
+  if(ti<0)return;const b=T[ti].start;
+  // a press that disagrees with a finished match by most of a beat: the player is correcting it. Start over from this bar, keeping the tempo.
+  if(pin.ok&&Math.abs((t-bToT(b))*P.bpm/60)>0.75){pin.pts=[];pin.ok=false}
+  pin.pts=pin.pts.filter(q=>Math.abs(q.b-b)>0.5);pin.pts.push({b,t,mi});
+  const p=pin.pts,n=p.length,bs=p.map(q=>q.b),span=Math.max(...bs)-Math.min(...bs);let B=pin.B||60/(S.scoreBpm||P.bpm||100);
+  if(n>=2&&span>=8){const mb=bs.reduce((a,c)=>a+c,0)/n,mt=p.reduce((a,q)=>a+q.t,0)/n;let sxx=0,sxy=0;for(const q of p){sxx+=(q.b-mb)*(q.b-mb);sxy+=(q.b-mb)*(q.t-mt)}
+    const B2=sxy/sxx;
+    if(B2>0.18&&B2<2.2){B=B2;
+      // (the tempo printed on the score, when the presses cannot tell it apart from the measured one)
+      if(S.scoreBpm&&Math.abs(60/B/S.scoreBpm-1)<0.15/(span*B))B=60/S.scoreBpm;
+      pin.B=B;pin.ok=true}}
+  const off=p.reduce((a,q)=>a+q.t-q.b*B,0)/n,bpm=Math.round(6000/B)/100;
+  if(P.map)P.map=null;setBpm(bpm);setOffset(off);P.synced=true;updateChip();spUI();follow.reset();
+  if(!transport.playing){transport.forceCi=0;play()}render(true);
+  saveSync();toast(barNo(mi)+'마디 ✓',1200);pinUI()}
 /* ---- one tap to fix: press when the drums come in; the tap lands on the nearest beat of the song's beat grid ---- */
 let fixMode=null,fixSnap=null,fixRaf=0,saEntry=null;
 function entryBar(){const T=S.tl;if(!T||!T.length)return {ti:0,mi:0};const sm=scoreModel(),b=sm.firstAct||0,L=locate(b);if(!L||L.before)return {ti:0,mi:T[0].mi};
@@ -3367,7 +3401,7 @@ function restoreSync(v){P.map=v.map?{i0:v.map.i0,t:Float64Array.from(v.map.t)}:n
 function showSyncAsk(kind,quiet){if(!hasAudio()||!S.tl||!S.tl.length)return;const eb=entryBar(),no=barNo(eb.mi);saEntry=S.tl[eb.ti].start;
   $('saTitle').textContent=kind==='fixed'?`${no}마디 맞춤`:kind==='tap'?'박자 맞추기':'자동으로 맞췄어요';$('saTap').textContent=kind==='tap'?'탭 시작':'다시';$('saBeat').hidden=kind==='tap';$('saTap').dataset.k=kind;
   $('saSub').textContent=kind==='fixed'?'다르면 1마디씩 옮겨요':kind==='tap'?`${no}마디부터 박마다 ${TAP_N}번 탭`:`${no}마디가 안 맞으면 '다시'`;
-  if(isPhoneUI()){if(kind==='tap'){$('saTitle').textContent='노래에 악보 맞추기';$('saSub').textContent=`악보 ${no}마디가 시작될 때부터 박자에 맞춰 8번 눌러요`;$('saTap').textContent='탭 시작'}
+  if(isPhoneUI()){if(kind==='tap'){$('saTitle').textContent='노래에 악보 맞추기';$('saSub').textContent='노래를 들으며, 지금 나오는 마디를 악보에서 누르면 돼요.';$('saTap').textContent='맞추기 시작'}
     else if(kind==='fixed'){$('saTitle').textContent='맞췄어요! 지금 들으며 확인해 보세요';$('saSub').textContent="악보 표시가 드럼 소리와 같이 가면 '맞아요'. 악보가 노래보다 늦으면 ◀, 빠르면 ▶ 를 눌러 옮겨요."}}
   $('saUndo').hidden=!fixSnap;$('syncAsk').hidden=false;
   if(kind==='tap'&&isPhoneUI()&&$('tapFix').hidden&&!quiet)openTapCoach()}
@@ -3432,7 +3466,7 @@ function endFix(hit,done){if(!fixMode)return;
   P.synced=true;updateChip();saveSync();follow.reset();render(true);
   // play it back from two bars before, so the fix can be heard at once
   seekBeat(Math.max(0,start-2*firstBeats()));setTimeout(()=>{transport.noCi=true;play()},150);showSyncAsk('fixed')}
-$('saTap').onclick=()=>$('saTap').dataset.k==='tap'?startBeatTap(false):startFix(false);$('saBeat').onclick=()=>startBeatTap(false);$('spFix').onclick=()=>startFix(false);$('tfHit').addEventListener('pointerdown',e=>{e.preventDefault();endFix(true)});$('tfCancel').onclick=()=>endFix(false);
+$('saTap').onclick=()=>isPhoneUI()?pinStart():$('saTap').dataset.k==='tap'?startBeatTap(false):startFix(false);$('saBeat').onclick=()=>startBeatTap(false);$('spFix').onclick=()=>isPhoneUI()?pinStart():startFix(false);if(matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches)$('spFix').textContent='노래 들으며 악보 눌러 맞추기';$('tfHit').addEventListener('pointerdown',e=>{e.preventDefault();endFix(true)});$('tfCancel').onclick=()=>endFix(false);
 $('tfFromStart').onclick=()=>{M.seek(0)};$('tfBack').onclick=()=>{M.seek(Math.max(0,M.time()-5))};$('tfFwd').onclick=()=>{M.seek(M.time()+5)};
 $('saOk').onclick=()=>{hideSyncAsk();fixSnap=null};
 $('saUndo').onclick=()=>{if(fixSnap){restoreSync(fixSnap);fixSnap=null;$('saUndo').hidden=true;toast('맞추기 전으로 되돌렸어요',1600)}};
@@ -3624,6 +3658,11 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 .co-barb{display:flex;gap:8px;margin-top:8px}.co-barb button{flex:1;height:40px;border-radius:999px;border:1px solid var(--line);background:none;color:#e4d3ae;font:600 14px/1 var(--f-ui)}
 .co-bar small{display:block;margin-top:7px;font:400 12.5px/1.4 var(--f-ui);color:#8b857b}
 .tf-snip{display:none}.sa-bt{display:none!important}
+.pinbar{position:fixed;left:0;right:0;bottom:0;z-index:65;padding:14px 16px max(14px,env(safe-area-inset-bottom,0px));background:#12100b;border-top:1px solid #c8932f;box-shadow:0 -10px 30px rgba(0,0,0,.6);display:grid;grid-template-columns:1fr;gap:4px}
+.pinbar b{font:700 17px/1.3 var(--f-ui);color:#e7bb63}.pinbar span{font:400 13.5px/1.45 var(--f-ui);color:#d5cfc3}
+.pinbar div{display:flex;gap:8px;margin-top:6px}.pinbar button{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:#e4d3ae;font:600 13.5px/1 var(--f-ui)}
+.pinbar button.go{margin-left:auto;border:0;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a}
+@media (orientation:landscape) and (max-height:500px){.pinbar{grid-template-columns:1fr auto;align-items:center;padding-top:6px;padding-bottom:6px}.pinbar b{grid-column:1}.pinbar span{grid-column:1;font-size:12.5px}.pinbar div{grid-column:2;grid-row:1/3;margin:0}}
 .co-note{margin:16px 0 0;padding:11px 13px;border-radius:12px;background:rgba(231,187,99,.09);font:500 14px/1.5 var(--f-ui);color:#e4d3ae}
 .co-go{margin-top:18px;width:100%;height:58px;border:0;border-radius:16px;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;font:700 18px/1 var(--f-ui);cursor:pointer}
 .co-later{margin-top:6px;width:100%;height:44px;border:0;background:none;color:#8b857b;font:500 14.5px/1 var(--f-ui);cursor:pointer}
@@ -3644,6 +3683,7 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 @media (orientation:landscape) and (max-height:500px){body .tf-card{grid-template-columns:1fr 200px;grid-template-areas:"bar hit" "snip hit" "main hit" "dots hit" "note hit" "row row"}body .tf-snip{max-height:56px}body .tf-note{display:none}body .tf-hit{height:100%;min-height:84px;margin:0}
   .co-card{padding-top:14px}.co-card h3{margin-bottom:10px;font-size:18px}.co-steps{gap:8px}.co-go{height:48px;margin-top:10px}}
 </style>
+<div class="pinbar" id="pinBar" hidden><b id="pbT"></b><span id="pbS"></span><div><button id="pbBack">◀ 10초</button><button id="pbHead">처음부터</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
   <p class="co-kick" id="coKick"></p><h3 id="coTitle"></h3><ol class="co-steps" id="coSteps"></ol>
   <div class="co-bar" id="coBar" hidden><p id="coBarT"></p><canvas id="coBarC"></canvas><div class="co-barb"><button id="coPrev">◀ 앞 마디</button><button id="coNext">뒤 마디 ▶</button></div><small>이 마디가 아니면 화살표로 바꾸세요.</small></div><div class="co-demo" id="coDemo" hidden></div><p class="co-note" id="coNote" hidden></p>
@@ -3660,17 +3700,16 @@ function openCoach(o){const $=id=>document.getElementById(id);$('coKick').textCo
 function openGuide(){store.set('guideSeen',1);openCoach({kick:'사용법',title:'이렇게 쓰면 돼요',go:'알겠어요',steps:[
   ['악보를 열어요',"<em>'악보 열기'</em>를 눌러 PDF 악보를 골라요. 마디는 알아서 읽어요."],
   ['노래를 붙여요',"<em>'유튜브'</em>에서 노래를 찾아 누르거나, 핸드폰에 있는 음원 파일을 열어요."],
-  ['박자를 한 번 맞춰요','유튜브는 드럼이 나올 때부터 박자에 맞춰 버튼을 8번 눌러 주면 돼요. 화면에서 순서대로 알려 드려요. 음원 파일은 자동으로 맞춰요.'],
+  ['노래와 악보를 맞춰요','유튜브는 노래를 들으며 지금 나오는 마디를 악보에서 두 번 눌러 주면 돼요. 화면에서 순서대로 알려 드려요. 음원 파일은 자동으로 맞춰요.'],
   ['▶ 를 누르고 치면 돼요','악보가 노래를 따라 내려가요. 악보의 마디를 누르면 그 자리로 가고, <em>− +</em> 로 악보 크기를 바꿔요.']]})}
+document.getElementById('pbBack').onclick=()=>M.seek(Math.max(0,M.time()-10));document.getElementById('pbHead').onclick=()=>{if(pin){pin.pts=[];pin.ok=false;pin.B=0}if(transport.playing)pause();M.seek(0);M.play();pinUI()};document.getElementById('pbDone').onclick=()=>pinDone();
 function isPhoneUI(){return matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches}
-function openTapCoach(){const $=id=>document.getElementById(id);
-  const draw=()=>{const eb=entryBar(),no=barNo(eb.mi);$('coBarT').innerHTML='노래에서 <em>악보 '+no+'마디</em>가 시작될 때부터 눌러요';barSnip($('coBarC'),eb.mi);};
-  openCoach({kick:'박자 맞추기 · 10초면 끝나요',title:'노래에 악보를 맞춰요',demo:true,go:'시작하기',later:'나중에 할게요',bar:draw,
-  steps:[["'시작하기'를 누르면 노래가 나와요",'아래 마디가 나오기 조금 전부터 틀어 드려요.'],
-    ['아래 마디의 첫 박부터<br>박자에 맞춰 금색 버튼을 8번 눌러요','발로 박자를 세듯이 <em>쿵 · 쿵 · 쿵 · 쿵</em> 일정하게, 두 마디 동안요.'],
-    ['끝이에요','악보가 노래를 따라가요. 안 맞으면 다시 할 수 있어요.']],
-  note:'전주나 앞의 쉬는 마디는 그냥 듣고 기다려요. 한 번 맞추면 이 곡은 다음에도 기억해요.',onGo:()=>startBeatTap(false),onLater:()=>toast("아래 '탭 시작'을 누르면 언제든 할 수 있어요.",3200)});
-  $('coPrev').onclick=()=>{anchorMove(-1);draw();showSyncAsk('tap',true)};$('coNext').onclick=()=>{anchorMove(1);draw();showSyncAsk('tap',true)}}
+function openTapCoach(){openCoach({kick:'박자 맞추기',title:'노래를 들으며 악보를 눌러 맞춰요',go:'시작하기',later:'나중에 할게요',
+  steps:[["'시작하기'를 누르면 노래가 나와요",'악보는 손가락으로 위아래로 밀어서 넘길 수 있어요.'],
+    ['지금 나오는 마디를 악보에서 눌러요','새 마디가 <em>시작되는 순간</em> 그 마디를 누르면 돼요. 드럼이 들어오는 마디나 [후렴] 같은 표시가 있는 마디가 찾기 쉬워요.'],
+    ['조금 뒤, 다른 마디에서 한 번 더','두 군데를 알려 주면 빠르기까지 알아서 맞춰요. 박자를 세거나 여러 번 두드릴 필요 없어요.']],
+  note:'맞춘 뒤에도 어긋나 보이면, 그 마디가 시작될 때 다시 누르기만 하면 고쳐져요.',
+  onGo:()=>pinStart(),onLater:()=>toast("아래 '맞추기 시작'을 누르면 언제든 할 수 있어요.",3200)})}
 window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElementById('licOv');if(isPhoneUI()&&!store.get('guideSeen',0)&&!S.pages.length&&(!lo||lo.hidden))openGuide()}catch(e){}},900));
 </script>
 <div class="moresheet" id="moreSheet" hidden><div class="ms-card"><div class="ms-grab"></div><p class="ms-title">메뉴</p><div class="ms-grid" id="msGrid"></div><button class="ms-close" id="msClose">닫기</button></div></div>
@@ -3715,7 +3754,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.34.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.35.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
