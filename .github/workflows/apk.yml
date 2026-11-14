@@ -13,23 +13,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '21' }
-      - uses: actions/setup-node@v4
-        with: { node-version: '22' }
-      - name: project
-        run: |
-          mkdir -p /tmp/app/www && cd /tmp/app
-          cp $GITHUB_WORKSPACE/.github/apk/capacitor.config.json .
-          echo '<!doctype html><meta charset="utf-8"><title>JDM</title>' > www/index.html
-          npm init -y >/dev/null
-          npm i @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
-          npx cap add android
-          cp -r $GITHUB_WORKSPACE/.github/apk/res/. android/app/src/main/res/
-          sed -i 's/#FFFFFF/#0B0A08/' android/app/src/main/res/values/ic_launcher_background.xml || true
-          npx cap sync android
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.11.1' }
       - name: build
         run: |
           mkdir -p ~/.android && cp .github/apk/test.keystore ~/.android/debug.keystore
-          cd /tmp/app/android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon -q
+          cd .github/apk/twa && gradle assembleDebug --no-daemon -q
           cp app/build/outputs/apk/debug/app-debug.apk /tmp/JDM-Score.apk && ls -la /tmp/JDM-Score.apk
       - name: publish to apk branch
         run: |

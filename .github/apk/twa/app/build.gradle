@@ -1,0 +1,14 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'kr.jdmdrum.score'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'kr.jdmdrum.score'
+        minSdk 23
+        targetSdk 35
+        versionCode 3
+        versionName '2.32.0'
+    }
+    lint { abortOnError false; checkReleaseBuilds false }
+}
+dependencies { implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.6.2' }
