@@ -1,0 +1,43 @@
+name: apk
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/apk.yml', '.github/apk/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: project
+        run: |
+          mkdir -p /tmp/app/www && cd /tmp/app
+          cp $GITHUB_WORKSPACE/.github/apk/capacitor.config.json .
+          echo '<!doctype html><meta charset="utf-8"><title>JDM</title>' > www/index.html
+          npm init -y >/dev/null
+          npm i @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+          npx cap add android
+          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do n=${d%%:*}; s=${d##*:}; r=android/app/src/main/res/mipmap-$n
+            convert $GITHUB_WORKSPACE/icon-512.png -resize ${s}x${s} $r/ic_launcher.png
+            convert $GITHUB_WORKSPACE/icon-512.png -resize ${s}x${s} $r/ic_launcher_round.png
+            f=$((s*108/48)); convert $GITHUB_WORKSPACE/icon-maskable.png -resize ${f}x${f} $r/ic_launcher_foreground.png
+          done
+          sed -i 's/#FFFFFF/#0B0A08/' android/app/src/main/res/values/ic_launcher_background.xml || true
+          npx cap sync android
+      - name: build
+        run: |
+          mkdir -p ~/.android && cp .github/apk/test.keystore ~/.android/debug.keystore
+          cd /tmp/app/android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon -q
+          cp app/build/outputs/apk/debug/app-debug.apk /tmp/JDM-Score.apk && ls -la /tmp/JDM-Score.apk
+      - name: publish to apk branch
+        run: |
+          mkdir /tmp/out && cd /tmp/out && cp /tmp/JDM-Score.apk . && git init -q -b apk
+          git config user.name "github-actions" && git config user.email "actions@users.noreply.github.com"
+          git add . && git commit -qm "apk ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" apk
