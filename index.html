@@ -2159,6 +2159,7 @@ function updateTitles(){
 }
 function paintRange(el){const mn=+el.min||0,mx=+el.max||100;el.style.setProperty('--p',((+el.value-mn)/(mx-mn)*100)+'%')}
 function afterLoad(){
+  if(typeof sharePend!=='undefined'&&sharePend&&!hasAudio())setTimeout(()=>shareGo(),300);
   $('welcome').hidden=true;
   $('songName').textContent=S.name;
   $('layout').disabled=S.kind==='xml';
@@ -3351,12 +3352,12 @@ function pinStart(){if(!hasAudio()){toast('먼저 노래(유튜브나 음원)를
   $('coach').hidden=true;$('syncAsk').hidden=true;$('syncPop').hidden=true;if(fixMode)endFix(false);if(transport.playing)pause();ensureAC();
   pin={pts:[],B:0,ok:false};M.rate(P.speed);M.play().catch(()=>toast('음원을 재생하지 못했어요.'));document.body.classList.add('pinning');pinUI()}
 function pinDone(){if(!pin)return;const ok=pin.ok||pin.pts.length>0;pin=null;document.body.classList.remove('pinning');$('pinBar').hidden=true;
-  if(ok){saveSync();toast("맞춤을 저장했어요. 어긋나면 아래 '맞추기'에서 다시 할 수 있어요.",3000)}}
+  if(ok){saveSync();toast('저장했어요',1600)}}
 function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;let t,u;
-  if(!n){t='지금 나오는 마디를 누르세요';u='노래를 들으며 악보를 손가락으로 밀어 찾아요. 새 마디가 시작되는 순간, 악보에서 그 마디를 누르면 돼요.'}
-  else if(pin.ok){t='맞췄어요  ♩='+P.bpm;u="악보가 노래를 따라가요. 어긋나 보이면 그 마디가 시작될 때 다시 누르세요. 잘 맞으면 '완료'."}
-  else if(n===1){t='좋아요! 한 군데만 더';u=barNo(last.mi)+'마디를 맞췄어요. 조금 더 듣다가, 몇 줄 뒤의 다른 마디가 시작될 때 한 번 더 눌러 주세요. 그러면 빠르기까지 맞춰요.'}
-  else{t='조금 더 뒤에서 한 번 더';u='두 마디가 너무 가까워요. 몇 줄 뒤의 마디가 시작될 때 한 번 더 눌러 주세요.'}
+  if(!n){t='지금 나오는 마디를 누르세요';u=''}
+  else if(pin.ok){t='맞췄어요  ♩='+P.bpm;u='어긋나면 그 마디를 다시 누르세요'}
+  else if(n===1){t='한 번 더!';u='몇 줄 뒤의 마디를 누르세요'}
+  else{t='더 뒤쪽 마디를 누르세요';u=''}
   $('pbT').textContent=t;$('pbS').textContent=u;$('pinBar').hidden=false}
 function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
   // (a bar that is played more than once: the pass nearest to where the song is thought to be; at first, the first pass)
@@ -3401,7 +3402,7 @@ function restoreSync(v){P.map=v.map?{i0:v.map.i0,t:Float64Array.from(v.map.t)}:n
 function showSyncAsk(kind,quiet){if(!hasAudio()||!S.tl||!S.tl.length)return;const eb=entryBar(),no=barNo(eb.mi);saEntry=S.tl[eb.ti].start;
   $('saTitle').textContent=kind==='fixed'?`${no}마디 맞춤`:kind==='tap'?'박자 맞추기':'자동으로 맞췄어요';$('saTap').textContent=kind==='tap'?'탭 시작':'다시';$('saBeat').hidden=kind==='tap';$('saTap').dataset.k=kind;
   $('saSub').textContent=kind==='fixed'?'다르면 1마디씩 옮겨요':kind==='tap'?`${no}마디부터 박마다 ${TAP_N}번 탭`:`${no}마디가 안 맞으면 '다시'`;
-  if(isPhoneUI()){if(kind==='tap'){$('saTitle').textContent='노래에 악보 맞추기';$('saSub').textContent='노래를 들으며, 지금 나오는 마디를 악보에서 누르면 돼요.';$('saTap').textContent='맞추기 시작'}
+  if(isPhoneUI()){if(kind==='tap'){$('saTitle').textContent='노래에 악보 맞추기';$('saSub').textContent='지금 나오는 마디를 누르면 돼요';$('saTap').textContent='맞추기 시작'}
     else if(kind==='fixed'){$('saTitle').textContent='맞췄어요! 지금 들으며 확인해 보세요';$('saSub').textContent="악보 표시가 드럼 소리와 같이 가면 '맞아요'. 악보가 노래보다 늦으면 ◀, 빠르면 ▶ 를 눌러 옮겨요."}}
   $('saUndo').hidden=!fixSnap;$('syncAsk').hidden=false;
   if(kind==='tap'&&isPhoneUI()&&$('tapFix').hidden&&!quiet)openTapCoach()}
@@ -3697,20 +3698,43 @@ function openCoach(o){const $=id=>document.getElementById(id);$('coKick').textCo
   const d=$('coDemo');d.hidden=!o.demo;if(o.demo){d.innerHTML='';for(let i=0;i<8;i++){const u=document.createElement('u');u.style.animationDelay=(i*0.5)+'s';d.appendChild(u)}const sm=document.createElement('small');sm.textContent='쿵 · 쿵 · 쿵 · 쿵 …';d.appendChild(sm)}
   $('coNote').hidden=!o.note;$('coNote').textContent=o.note||'';$('coGo').textContent=o.go||'알겠어요';$('coLater').hidden=!o.later;$('coLater').textContent=o.later||'';
   $('coGo').onclick=()=>{$('coach').hidden=true;if(o.onGo)o.onGo()};$('coLater').onclick=()=>{$('coach').hidden=true;if(o.onLater)o.onLater()};$('coach').hidden=false}
-function openGuide(){store.set('guideSeen',1);openCoach({kick:'사용법',title:'이렇게 쓰면 돼요',go:'알겠어요',steps:[
-  ['악보를 열어요',"<em>'악보 열기'</em>를 눌러 PDF 악보를 골라요. 마디는 알아서 읽어요."],
-  ['노래를 붙여요',"<em>'유튜브'</em>에서 노래를 찾아 누르거나, 핸드폰에 있는 음원 파일을 열어요."],
-  ['노래와 악보를 맞춰요','유튜브는 노래를 들으며 지금 나오는 마디를 악보에서 두 번 눌러 주면 돼요. 화면에서 순서대로 알려 드려요. 음원 파일은 자동으로 맞춰요.'],
-  ['▶ 를 누르고 치면 돼요','악보가 노래를 따라 내려가요. 악보의 마디를 누르면 그 자리로 가고, <em>− +</em> 로 악보 크기를 바꿔요.']]})}
-document.getElementById('pbBack').onclick=()=>M.seek(Math.max(0,M.time()-10));document.getElementById('pbHead').onclick=()=>{if(pin){pin.pts=[];pin.ok=false;pin.B=0}if(transport.playing)pause();M.seek(0);M.play();pinUI()};document.getElementById('pbDone').onclick=()=>pinDone();
+function openGuide(){store.set('guideSeen',1);openCoach({kick:'사용법',title:'이렇게 써요',go:'알겠어요',steps:[
+  ['악보를 열어요',''],['노래를 붙여요 (유튜브·음원)',''],['박자를 맞춰요',''],['▶ 누르고 연주해요','']]})}
+/* 2.37: a matched song as a link. The teacher matches a video once and sends the link; whoever opens it only opens the same score,
+   and the video and the timing come with it. The link holds the video id, the tempo and where bar 1 is: nothing else. */
+const SHARE_BASE='https://wtg12342-hue.github.io/jdm-score/';
+function shareCode(){const o={v:1,y:yt.id,b:P.bpm,o:Math.round(bToT(0)*1000)/1000,n:S.measures.length,t:(S.name||'').slice(0,60)};
+  return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function shareRead(c){try{c=c.replace(/-/g,'+').replace(/_/g,'/');while(c.length%4)c+='=';const o=JSON.parse(decodeURIComponent(escape(atob(c))));
+  if(!o||!/^[\w-]{11}$/.test(o.y||'')||!(o.b>=20&&o.b<=320)||typeof o.o!=='number'||Math.abs(o.o)>3600)return null;return {y:o.y,b:+o.b,o:+o.o,n:+o.n||0,t:String(o.t||'').slice(0,60)}}catch(e){return null}}
+async function shareSync(){if(M.type!=='yt'||!yt.id){toast('유튜브 노래를 붙이고 박자를 맞춘 뒤에 보낼 수 있어요.',3200);return}
+  if(!P.synced){toast('먼저 노래와 악보를 맞춰 주세요.',2800);return}
+  const url=SHARE_BASE+'#s='+shareCode(),text='[JDM 악보] '+(S.name||'')+' — 링크를 열고 같은 악보 파일을 열면 노래와 박자가 맞춰져 있어요.';
+  try{if(navigator.share){await navigator.share({title:'JDM 악보',text,url});return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(text+'\n'+url);toast('링크를 복사했어요. 카톡이나 문자에 붙여 넣어 보내세요.',3600)}
+  catch(e){openCoach({kick:'학생에게 보내기',title:'이 주소를 복사해서 보내세요',steps:[['받은 사람은 링크를 열고 같은 악보 파일을 열면 돼요','']],note:url,go:'닫기'})}}
+let sharePend=null;
+function shareTake(){const m=/[#&]s=([\w-]+)/.exec(location.hash||'');if(m){const o=shareRead(m[1]);try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+    if(o){store.set('sharePend',o)}else toast('링크가 잘못됐어요. 보낸 사람에게 다시 받아 주세요.',4000)}
+  sharePend=store.get('sharePend',null);return sharePend}
+async function shareGo(){const o=sharePend;if(!o||!S.measures.length)return;sharePend=null;store.set('sharePend',null);
+  libPend={key:'y:'+o.y,v:{bpm:o.b,offset:o.o,map:null,order:null}};
+  try{await loadYouTube(o.y)}catch(e){}
+  for(let i=0;i<40&&!(yt.ready&&songKey==='y:'+o.y);i++)await new Promise(r=>setTimeout(r,250));
+  if(P.synced&&M.type==='yt'){saveSync();$('coach').hidden=true;$('syncAsk').hidden=true;
+    if(o.n&&o.n!==S.measures.length)toast(`악보의 마디 수가 달라요 (보낸 악보 ${o.n}마디, 이 악보 ${S.measures.length}마디). 박자가 안 맞을 수 있어요.`,6000);
+    else toast(`노래와 박자를 맞춰 놨어요 (♩=${P.bpm}). ▶ 를 누르면 돼요.`,4200)}}
+function shareAsk(){const o=sharePend;if(!o)return;
+  if(S.measures.length){shareGo();return}
+  openCoach({kick:'받은 곡',title:'박자가 맞춰진 곡이에요',go:'악보 열기',later:'나중에',
+    steps:[['악보 파일을 열어요',''],['▶ 만 누르면 돼요','']],
+    onGo:()=>document.getElementById('scoreFile').click()})}
 function isPhoneUI(){return matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches}
-function openTapCoach(){openCoach({kick:'박자 맞추기',title:'노래를 들으며 악보를 눌러 맞춰요',go:'시작하기',later:'나중에 할게요',
-  steps:[["'시작하기'를 누르면 노래가 나와요",'악보는 손가락으로 위아래로 밀어서 넘길 수 있어요.'],
-    ['지금 나오는 마디를 악보에서 눌러요','새 마디가 <em>시작되는 순간</em> 그 마디를 누르면 돼요. 드럼이 들어오는 마디나 [후렴] 같은 표시가 있는 마디가 찾기 쉬워요.'],
-    ['조금 뒤, 다른 마디에서 한 번 더','두 군데를 알려 주면 빠르기까지 알아서 맞춰요. 박자를 세거나 여러 번 두드릴 필요 없어요.']],
-  note:'맞춘 뒤에도 어긋나 보이면, 그 마디가 시작될 때 다시 누르기만 하면 고쳐져요.',
-  onGo:()=>pinStart(),onLater:()=>toast("아래 '맞추기 시작'을 누르면 언제든 할 수 있어요.",3200)})}
-window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElementById('licOv');if(isPhoneUI()&&!store.get('guideSeen',0)&&!S.pages.length&&(!lo||lo.hidden))openGuide()}catch(e){}},900));
+function openTapCoach(){openCoach({kick:'박자 맞추기',title:'노래에 악보 맞추기',go:'시작하기',later:'나중에',
+  steps:[['노래를 들어요',''],['지금 나오는 마디를 눌러요',''],['조금 뒤 한 번 더 눌러요','']],
+  onGo:()=>pinStart(),onLater:()=>{}})}
+window.addEventListener('hashchange',()=>{if(shareTake())shareAsk()});
+window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElementById('licOv');if(shareTake()&&(!lo||lo.hidden)){shareAsk();return}if(isPhoneUI()&&!store.get('guideSeen',0)&&!S.pages.length&&(!lo||lo.hidden))openGuide()}catch(e){}},900));
 </script>
 <div class="moresheet" id="moreSheet" hidden><div class="ms-card"><div class="ms-grab"></div><p class="ms-title">메뉴</p><div class="ms-grid" id="msGrid"></div><button class="ms-close" id="msClose">닫기</button></div></div>
 <script>
@@ -3718,10 +3742,10 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 (function(){const $=id=>document.getElementById(id);
   const IC={lib:'<path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.5l3.5 1-4 15-3.5-1z"/>',save:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',score:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
     audio:'<path d="M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2"/>',yt:'<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.5 9.5v5l4-2.5z"/>',pages:'<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/>',
-    view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17v.2"/>'};
-  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
+    view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',share:'<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.8l6.9-4M8.3 13.2l6.9 4"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17v.2"/>'};
+  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__share','학생에게 보내기','share'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
   const sh=$('moreSheet'),grid=$('msGrid');
-  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
+  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__share')t={click:()=>shareSync()};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
       b.innerHTML='<svg viewBox="0 0 24 24">'+IC[ic]+'</svg><span></span>';b.lastChild.textContent=lb;b.onclick=()=>{close();setTimeout(()=>t.click(),30)};grid.appendChild(b)}sh.hidden=false}
   function close(){sh.hidden=true}
   $('moreBtn').onclick=open;$('msClose').onclick=close;sh.addEventListener('click',e=>{if(e.target===sh)close()});
@@ -3754,7 +3778,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.36.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.37.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
