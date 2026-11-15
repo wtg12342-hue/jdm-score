@@ -2635,7 +2635,11 @@ function play(){
   ensureAC();if(ac&&ac.state!=='running'){ac.resume().then(()=>{if(!transport.playing)play()}).catch(()=>{});return}clearTimeout(transport.waitT);transport.wait=0;transport.expStart=null;
   let b=currentBeat();const b1=b;const atEnd=b>=S.totalBeats-1e-3;if(atEnd||(b<0&&!hasAudio()))b=0;
   const lr=loopRange();if(lr&&(b<lr[0]-1e-6||b>=lr[1]-1e-3))b=lr[0];
-  const ci=countInBeats(b);transport.ci=ci>0?[b-ci,b]:null;transport.noCi=false;
+  const ci=countInBeats(b);
+  // with a count-in, playing starts at the beginning of the bar the cursor is in: the count is then a whole bar, 1 on 1
+  // (from the middle of a bar the clicks fell across the barline and were felt as 2-3-4-1)
+  if(ci>0&&b>0&&S.tl&&S.tl.length){const L=locate(b),e=L&&S.tl[L.ti];if(e&&b-e.start>0.02&&b<e.start+e.beats)b=e.start}
+  transport.ci=ci>0?[b-ci,b]:null;transport.noCi=false;
   if(hasAudio()&&b<0&&ci>0){ // in the song's intro: the count-in is the bar right before bar 1, heard over the intro
     if(b>-ci+1e-3)b=0;transport.ci=[-ci,0];
     if(b<0){M.rate(P.speed);M.play().catch(()=>toast('음원을 재생하지 못했어요.'));
@@ -3325,12 +3329,6 @@ const fmtT3=t=>{t=Math.max(0,t);const m=Math.floor(t/60),s=t-m*60;return m+':'+(
 function shiftScore(kind){if(!hasAudio()){toast('먼저 음원이나 유튜브를 열어 주세요.');return}
   if(!$('syncAsk').hidden){if(!fixSnap)fixSnap=snapSync();$('saUndo').hidden=false}
   const beat=60/P.bpm,bar=firstBeats()*beat;const d=kind==='bar'?bar:kind==='-bar'?-bar:kind==='beat'?beat:kind==='-beat'?-beat:+kind;
-  // far into the song a one-beat slip is the tempo being a hair off, not the start: keep the bar that was matched where it is
-  // and stretch the tempo so that this place lands a beat over (a tapped tempo is only good to about 1%)
-  if((kind==='beat'||kind==='-beat')&&!P.map&&P.synced&&M.type==='yt'&&S.tl&&S.tl.length){const eb=entryBar(),ba=S.tl[eb.ti].start,ta=bToT(ba),tn=M.time(),bn=tToB(tn);
-    if(bn-ba>32){const nb=bn+(kind==='beat'?-1:1),B2=(tn-ta)/(nb-ba),bpm2=Math.round(6000/B2)/100;
-      if(bpm2>20&&bpm2<320&&Math.abs(bpm2/P.bpm-1)<0.06){setBpm(bpm2);setOffset(ta-ba*60/bpm2);P.synced=true;updateChip();saveSync();spUI();follow.reset();render(true);
-        toast(`템포를 ♩=${bpm2}로 조금 고쳐서 여기까지 맞췄어요`,2600);return}}}
   if(P.map&&kind!=='ms'&&Math.abs(Math.abs(d)/beat-Math.round(Math.abs(d)/beat))<1e-6){P.map.i0+=Math.round(d/beat);P.offset=bToT(0);$('offsetView').textContent=fmtT(P.offset);render()}
   else setOffset(P.offset+d);P.synced=true;updateChip();saveSync();spUI();follow.reset();
   toast((d>0?'악보를 뒤로 ':'악보를 앞으로 ')+(Math.abs(d)>=beat*0.99?(Math.abs(d)>=bar*0.99?'1마디':'1박'):Math.round(Math.abs(d)*1000)+'ms')+' 옮겼어요',1200)}
@@ -3373,6 +3371,8 @@ function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
     if(B2>0.18&&B2<2.2){B=B2;
       // (the tempo printed on the score, when the presses cannot tell it apart from the measured one)
       if(S.scoreBpm&&Math.abs(60/B/S.scoreBpm-1)<0.15/(span*B))B=60/S.scoreBpm;
+      // a hand cannot point finer than a whole number, and songs are almost always recorded at one: 115.4 is 115
+      else B=60/Math.max(20,Math.round(60/B));
       pin.B=B;pin.ok=true}}
   const off=p.reduce((a,q)=>a+q.t-q.b*B,0)/n,bpm=Math.round(6000/B)/100;
   if(P.map)P.map=null;setBpm(bpm);setOffset(off);P.synced=true;updateChip();spUI();follow.reset();
@@ -3754,7 +3754,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.35.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.36.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
