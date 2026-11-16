@@ -1535,7 +1535,7 @@ function toast(msg,ms=2600){const t=$('toast');t.textContent=msg;t.hidden=false;
 const S={kind:null,name:'',pages:[],systems:[],measures:[],totalBeats:0,header:null,detected:null,bpm:100};
 const P={zoom:+store.get('zoom',1)||1,bpm:100,bpb:4,offset:0,speed:1,view:store.get('view','spread'),turn:store.get('turn','half'),
   metro:true,vol:store.get('vol',70)/100,countIn:store.get('countIn',1),loopCi:store.get('loopCi',true),songOn:true,songVol:store.get('songVol',100)/100,
-  showLine:store.get('showLine',true),showCur:store.get('showCur',true),loop:{on:false,a:0,b:0},loopPick:0,sub:store.get('sub',1),latency:0};
+  showLine:store.get('showLine',true),showCur:store.get('showCur',true),curStyle:store.get('curStyle','bar'),loop:{on:false,a:0,b:0},loopPick:0,sub:store.get('sub',1),latency:0};
 
 /* ---------------- sample score (MusicXML, generated) ---------------- */
 function sampleXML(){
@@ -2432,7 +2432,9 @@ function render(force){
       if(mh){Hd(mh,!!(L.before||!P.showLine));if(!mh.hidden){const sp=barSpan(L);_sw(mh,'left',(it.x+(sp.x0-it.s.x)*k-3)+'px');_sw(mh,'width',((sp.x1-sp.x0)*k+6)+'px');_sw(mh,'top',(it.y+2)+'px');_sw(mh,'height',(it.h-4)+'px');measPulse(mh,L.mi);mhProg(mh,L,sp)}}
       Hd(hl,!!(!P.showLine));_sw(hl,'top',it.y+'px');_sw(hl,'height',it.h+'px');_sw(hl,'left',it.x+'px');_sw(hl,'right','auto');_sw(hl,'width',it.w+'px');
       placeMarks(el,true,it.x,it.w,it.y,it.h,L,xx=>it.x+(xx-it.s.x)*k);
-      Hd(cu,!!(L.before||!P.showCur));_sw(cu,'transform',`translate3d(${(it.x+(Math.min(x,it.s.x+it.s.w)-it.s.x)*k).toFixed(1)}px,0,0)`);
+      {let cxx=Math.min(x,it.s.x+it.s.w),cw='';if(P.curStyle==='note'&&P.showCur&&!L.before){const q=noteSnap(L.mi,x);if(q){cxx=q.x;cw=(q.w*k).toFixed(1)+'px'}else cw=Math.max(14,((S.systems[m.sys].bot-S.systems[m.sys].top)/4*2.3*k)).toFixed(1)+'px'}
+        if(cu._cwid!==cw){cu._cwid=cw;cu.style.width=cw;cu.style.marginLeft=cw?(-parseFloat(cw)/2)+'px':''}
+        Hd(cu,!!(L.before||!P.showCur));_sw(cu,'transform',`translate3d(${(it.x+(cxx-it.s.x)*k).toFixed(1)}px,0,0)`)}
       // zoomed in: keep the cursor in view by sliding the column sideways, a page-width at a time
       if(built.zoom>1.01&&(transport.playing||force)){const cx=it.x+(x-it.s.x)*k,w=built.colW,sl=el.scrollLeft;
         if(cx<sl+w*0.06||cx>sl+w*0.82){const to=Math.max(0,cx-w*0.12);if(Math.abs(to-(el._panTo||-1))>4){el._panTo=to;el.scrollTo({left:to,behavior:force?'auto':'smooth'})}}}_sw(cu,'top',(it.y+it.h*.12)+'px');_sw(cu,'height',(it.h*.76)+'px');
@@ -3057,7 +3059,23 @@ function setSub(v){P.sub=v;store.set('sub',v);$('subIco').innerHTML=SUB_ICO[v];$
 $('subBtn').onclick=()=>{setSub(SUBS[(SUBS.indexOf(P.sub)+1)%SUBS.length]);toast('메트로놈: '+SUB_LBL[P.sub]+(P.sub===1?'음표':P.sub===3?' (8분 셋잇단)':'음표'),1400)};
 document.querySelectorAll('#subSeg button').forEach(b=>b.onclick=()=>setSub(+b.dataset.sub));
 $('lineBtn').onclick=()=>{P.showLine=!P.showLine;store.set('showLine',P.showLine);$('lineBtn').classList.toggle('on',P.showLine);render(true)};
-$('curBtn').onclick=()=>{P.showCur=!P.showCur;store.set('showCur',P.showCur);$('curBtn').classList.toggle('on',P.showCur);render(true)};
+/* the cursor: a thin bar that sweeps, or (experimental) a gold block that steps from note to note, or none */
+function curApply(){document.body.classList.toggle('curnote',P.curStyle==='note');$('curBtn').classList.toggle('on',P.showCur)}
+function curCycle(){if(!P.showCur){P.showCur=true;P.curStyle='bar'}else if(P.curStyle==='bar')P.curStyle='note';else{P.showCur=false;P.curStyle='bar'}
+  store.set('showCur',P.showCur);store.set('curStyle',P.curStyle);curApply();render(true);toast(!P.showCur?'커서 끔':P.curStyle==='note'?'커서: 음표 따라가기 (실험)':'커서: 막대',1600)}
+$('curBtn').onclick=curCycle;setTimeout(curApply,0);
+/* where the notes of a bar stand: the stems, read from the picture of the line (a stem is the one tall thin stroke a note has) */
+function noteXs(mi){const m=S.measures[mi];if(!m)return [];if(m.nxs)return m.nxs;m.nxs=[];const s=S.systems[m.sys],st=built.strips&&built.strips.find(q=>q.sys===m.sys);
+  if(!st||!s||m.rest||m.mr||!(s.bot>s.top))return m.nxs;const cv=st.el.querySelector('canvas');if(!cv)return m.nxs;
+  const r=cv.width/st.w,sp=(s.bot-s.top)/4,xa=Math.max(m.x0+sp*0.5,(m.curx!=null?m.curx:m.x0)-sp*1.2),xb=m.x1-sp*0.45;
+  const X0=Math.max(0,Math.round((xa-st.x)*r)),X1=Math.min(cv.width,Math.round((xb-st.x)*r)),Y0=Math.max(0,Math.round((s.top-sp*3.5-st.y)*r)),Y1=Math.min(cv.height,Math.round((s.bot+sp*2-st.y)*r));
+  const w=X1-X0,h=Y1-Y0;if(w<4||h<4)return m.nxs;let d;try{d=cv.getContext('2d').getImageData(X0,Y0,w,h).data}catch(e){return m.nxs}
+  const need=sp*2.4*r,hit=new Uint8Array(w);
+  for(let x=0;x<w;x++){let run=0,best=0;for(let y=0;y<h;y++){const i=(y*w+x)*4;if(d[i+3]>128&&d[i]+d[i+1]+d[i+2]<380){if(++run>best)best=run}else run=0}hit[x]=best>=need?1:0}
+  const xs=[];for(let x=0;x<w;x++)if(hit[x]){let e=x;while(e+1<w&&hit[e+1])e++;if(e-x+1<=sp*0.5*r)xs.push(st.x+(X0+(x+e)/2)/r);x=e}
+  for(const v of xs)if(!m.nxs.length||v-m.nxs[m.nxs.length-1]>sp*1.1)m.nxs.push(v);
+  m.nsp=sp;return m.nxs}
+function noteSnap(mi,x){const xs=noteXs(mi),m=S.measures[mi];if(!xs.length)return null;const sp=m.nsp;let pick=null;for(const v of xs)if(v-sp*1.3<=x)pick=v;return pick==null?null:{x:pick-sp*0.45,w:sp*2.3}}
 $('loopCiBtn').onclick=()=>{P.loopCi=!P.loopCi;store.set('loopCi',P.loopCi);loopUI();
   toast(P.loopCi?'반복할 때마다 한 마디 예비박을 세어 줘요.':'반복할 때 예비박 없이 바로 이어져요.',2200)};
 $('loopBtn').onclick=()=>{if(!S.measures.length)return;if(P.loop.on||P.loopPick){clearLoop();return}
@@ -3673,6 +3691,7 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 .co-barb{display:flex;gap:8px;margin-top:8px}.co-barb button{flex:1;height:40px;border-radius:999px;border:1px solid var(--line);background:none;color:#e4d3ae;font:600 14px/1 var(--f-ui)}
 .co-bar small{display:block;margin-top:7px;font:400 12.5px/1.4 var(--f-ui);color:#8b857b}
 .tf-snip{display:none}.sa-bt{display:none!important}
+body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9px;box-shadow:inset 0 -4px 0 #be9b5c!important;transition:transform .06s linear}
 .pinbar{position:fixed;left:0;right:0;bottom:0;z-index:65;padding:14px 16px max(14px,env(safe-area-inset-bottom,0px));background:#12100b;border-top:1px solid #c8932f;box-shadow:0 -10px 30px rgba(0,0,0,.6);display:grid;grid-template-columns:1fr;gap:4px}
 .pinbar b{font:700 17px/1.3 var(--f-ui);color:#e7bb63}.pinbar span{font:400 13.5px/1.45 var(--f-ui);color:#d5cfc3}
 .pinbar div{display:flex;gap:8px;margin-top:6px}.pinbar button{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:#e4d3ae;font:600 13.5px/1 var(--f-ui)}
@@ -3759,10 +3778,10 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 (function(){const $=id=>document.getElementById(id);
   const IC={lib:'<path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.5l3.5 1-4 15-3.5-1z"/>',save:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',score:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
     audio:'<path d="M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2"/>',yt:'<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.5 9.5v5l4-2.5z"/>',pages:'<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/>',
-    view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',lesson:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l5-2.8z"/>',studio:'<path d="M4 11l8-6 8 6v8H4z"/><path d="M10 19v-5h4v5"/>',share:'<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.8l6.9-4M8.3 13.2l6.9 4"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17v.2"/>'};
-  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__share','학생에게 보내기','share'],['__lesson','드럼 강의 보기','lesson'],['__studio','JDM 드럼 스튜디오 상담','studio'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
+    view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',curs:'<rect x="8.5" y="4" width="7" height="16" rx="3"/><path d="M3 9h3M3 15h3M18 9h3M18 15h3"/>',lesson:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l5-2.8z"/>',studio:'<path d="M4 11l8-6 8 6v8H4z"/><path d="M10 19v-5h4v5"/>',share:'<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.8l6.9-4M8.3 13.2l6.9 4"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17v.2"/>'};
+  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__cur','커서 모양 바꾸기','curs'],['__share','학생에게 보내기','share'],['__lesson','드럼 강의 보기','lesson'],['__studio','JDM 드럼 스튜디오 상담','studio'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
   const sh=$('moreSheet'),grid=$('msGrid');
-  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__share')t={click:()=>shareSync()};if(id==='__lesson')t={click:()=>openOut(LINK_LESSON)};if(id==='__studio')t={click:()=>openOut(LINK_STUDIO)};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
+  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__share')t={click:()=>shareSync()};if(id==='__cur')t={click:()=>curCycle()};if(id==='__lesson')t={click:()=>openOut(LINK_LESSON)};if(id==='__studio')t={click:()=>openOut(LINK_STUDIO)};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
       b.innerHTML='<svg viewBox="0 0 24 24">'+IC[ic]+'</svg><span></span>';b.lastChild.textContent=lb;b.onclick=()=>{close();setTimeout(()=>t.click(),30)};grid.appendChild(b)}sh.hidden=false}
   function close(){sh.hidden=true}
   $('moreBtn').onclick=open;$('msClose').onclick=close;sh.addEventListener('click',e=>{if(e.target===sh)close()});
@@ -3795,7 +3814,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.41.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.42.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
