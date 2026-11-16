@@ -2160,6 +2160,11 @@ function updateTitles(){
 }
 function paintRange(el){const mn=+el.min||0,mx=+el.max||100;el.style.setProperty('--p',((+el.value-mn)/(mx-mn)*100)+'%')}
 function afterLoad(){
+  // the cursor enters a line at its first note, not at the clef and time signature in front of it
+  if(S.kind!=='xml'&&S.systems&&S.systems.length){const firsts=S.systems.map(q=>S.measures[(q.measures||[])[0]]).filter(Boolean);
+    // (the clef takes the same room on every line: where a line's first mark was read further in than that, it was not the first note)
+    const offs=firsts.filter(m=>m.cx0!=null&&m.cx0>m.x0).map(m=>m.cx0-m.x0).sort((a,b)=>a-b),lead=offs.length?offs[Math.floor((offs.length-1)*0.25)]:0;
+    if(lead>0)for(const m of firsts){const w=m.x1-m.x0,own=m.cx0!=null&&m.cx0>m.x0?m.cx0-m.x0:Infinity;m.curx=m.x0+Math.min(own,lead*1.08,w*0.4)*0.92}}
   if(typeof sharePend!=='undefined'&&sharePend&&!hasAudio())setTimeout(()=>shareGo(),300);
   $('welcome').hidden=true;
   $('songName').textContent=S.name;
@@ -3790,7 +3795,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.40.2';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.41.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
