@@ -3363,18 +3363,26 @@ function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
   // (a bar that is played more than once: the pass nearest to where the song is thought to be; at first, the first pass)
   if(pin.pts.length){ti=occurrence(mi,tToB(t))}else ti=T.findIndex(e=>e.mi===mi);
   if(ti<0)return;const b=T[ti].start;
-  // a press that disagrees with a finished match by most of a beat: the player is correcting it. Start over from this bar, keeping the tempo.
-  if(pin.ok&&Math.abs((t-bToT(b))*P.bpm/60)>0.75){pin.pts=[];pin.ok=false}
+  const sb=S.scoreBpm||0,B0=pin.B||60/(sb||(P.bpm>=50&&P.bpm<=220?P.bpm:100));
+  // a second press right after the last one replaces it (a slip of the finger)
+  if(pin.pts.length&&Math.abs(t-pin.pts[pin.pts.length-1].t)<1.5)pin.pts.pop();
   pin.pts=pin.pts.filter(q=>Math.abs(q.b-b)>0.5);pin.pts.push({b,t,mi});
-  const p=pin.pts,n=p.length,bs=p.map(q=>q.b),span=Math.max(...bs)-Math.min(...bs);let B=pin.B||60/(S.scoreBpm||P.bpm||100);
-  if(n>=2&&span>=8){const mb=bs.reduce((a,c)=>a+c,0)/n,mt=p.reduce((a,q)=>a+q.t,0)/n;let sxx=0,sxy=0;for(const q of p){sxx+=(q.b-mb)*(q.b-mb);sxy+=(q.b-mb)*(q.t-mt)}
-    const B2=sxy/sxx;
-    if(B2>0.18&&B2<2.2){B=B2;
-      // (the tempo printed on the score, when the presses cannot tell it apart from the measured one)
-      if(S.scoreBpm&&Math.abs(60/B/S.scoreBpm-1)<0.15/(span*B))B=60/S.scoreBpm;
-      // a hand cannot point finer than a whole number, and songs are almost always recorded at one: 115.4 is 115
-      else B=60/Math.max(20,Math.round(60/B));
-      pin.B=B;pin.ok=true}}
+  // the tempo a set of presses gives, or 0 when they do not agree with each other
+  const tempoOf=P_=>{const bs=P_.map(q=>q.b),span=Math.max(...bs)-Math.min(...bs);if(P_.length<2||span<8)return 0;
+    const k=P_.length,mb=bs.reduce((a,c)=>a+c,0)/k,mt=P_.reduce((a,q)=>a+q.t,0)/k;let sxx=0,sxy=0;for(const q of P_){sxx+=(q.b-mb)*(q.b-mb);sxy+=(q.b-mb)*(q.t-mt)}
+    if(!(sxy>0))return 0;const m=60*sxx/sxy;
+    // what a tempo can be: near the one printed on the score when there is one, else anything a song is played at
+    if(sb?Math.abs(m/sb-1)>=0.12:(m<50||m>220))return 0;
+    // the printed tempo stands unless the presses, taken far enough apart, plainly say another one; and a whole number always
+    const Bc=60/((sb&&(span<32||Math.abs(m/sb-1)<0.02))?sb:Math.max(20,Math.round(m)));
+    const Bm=60/m;for(const q of P_)if(Math.abs((q.t-mt-(q.b-mb)*Bm)/Bm)>0.4)return 0;return Bc}; // (do the presses lie on one line?)
+  let p=pin.pts,B=B0,got=tempoOf(p);pin.ok=false;
+  // presses that do not agree (a bar pressed to look around, the wrong pass of a repeat, a slip): leave out the one older press that spoils it,
+  // or else start over from this bar. The tempo never comes from presses that disagree.
+  if(!got&&p.length>=3){for(let i=p.length-2;i>=0&&!got;i--){const q=p.filter((_,j)=>j!==i);got=tempoOf(q);if(got)pin.pts=p=q}}
+  if(!got&&p.length>=2){const last=p[p.length-1],span=Math.max(...p.map(q=>q.b))-Math.min(...p.map(q=>q.b));if(span>=8)pin.pts=p=[last]}
+  if(got){B=got;pin.B=B;pin.ok=true}
+  const n=p.length;
   const off=p.reduce((a,q)=>a+q.t-q.b*B,0)/n,bpm=Math.round(6000/B)/100;
   if(P.map)P.map=null;setBpm(bpm);setOffset(off);P.synced=true;updateChip();spUI();follow.reset();
   if(!transport.playing){transport.forceCi=0;play()}render(true);
@@ -3778,7 +3786,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.37.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.38.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
