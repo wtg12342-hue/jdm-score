@@ -3790,7 +3790,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.40.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.40.2';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -3808,7 +3808,8 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   const hosted=/^https?:$/.test(location.protocol)&&!window.jdm&&!/claude|anthropic|usercontent/.test(location.hostname);
   if(hosted&&'serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').then(reg=>{
-      const ask=w=>{const t=$('updBar');if(!t)return;t.hidden=false;$('updGo').onclick=()=>{w.postMessage('skip')}};
+      const ask=w=>{if(!S.pages.length&&!transport.playing){w.postMessage('skip');return} // nothing open: take the new version at once
+        const t=$('updBar');if(!t)return;t.hidden=false;$('updGo').onclick=()=>{w.postMessage('skip')}};
       if(reg.waiting&&navigator.serviceWorker.controller)ask(reg.waiting);
       reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)ask(w)})});
       setInterval(()=>reg.update().catch(()=>{}),30*60*1000)}).catch(()=>{});
