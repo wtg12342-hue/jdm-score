@@ -2396,7 +2396,9 @@ function render(force){
   // (the cursor sweeps from the measure's first note to its closing barline)
   // (the cursor sweeps from the measure's first note to the next measure's first note, so it glides on without a hop
   // at the barline; the last measure of a line runs to the line's end)
-  const cX=q=>q.curx!=null?q.curx:(q.cx0!=null?q.cx0:q.x0);const nx=S.measures[L.mi+1],xa=cX(m),xe=nx&&nx.sys===m.sys&&nx.x0>=m.x1-1?cX(nx):m.x1,x=xa+(xe-xa)*L.frac;
+  const cX=q=>q.curx!=null?q.curx:(q.cx0!=null?q.cx0:q.x0);const nx=S.measures[L.mi+1],xa=cX(m),xe=nx&&nx.sys===m.sys&&nx.x0>=m.x1-1?cX(nx):m.x1;let x=xa+(xe-xa)*L.frac;
+  // (through each note at the moment it is played, when the bar's notes could be read)
+  if(!L.before&&!window.__linCur){const xs2=noteSweep(L.mi,L.frac,xa,nx&&nx.sys===m.sys&&nx.x0>=m.x1-1&&noteBeats(L.mi+1)&&noteBeats(L.mi+1).on[0]===0?noteBeats(L.mi+1).hx[0]:xe);if(xs2!=null)x=xs2}
   if(P.view==='spread'){
     const V=vOf(L.mi);if(!V)return;
     let [a,b]=spreadPages(V.vp);
@@ -2432,7 +2434,7 @@ function render(force){
       if(mh){Hd(mh,!!(L.before||!P.showLine));if(!mh.hidden){const sp=barSpan(L);_sw(mh,'left',(it.x+(sp.x0-it.s.x)*k-3)+'px');_sw(mh,'width',((sp.x1-sp.x0)*k+6)+'px');_sw(mh,'top',(it.y+2)+'px');_sw(mh,'height',(it.h-4)+'px');measPulse(mh,L.mi);mhProg(mh,L,sp)}}
       Hd(hl,!!(!P.showLine));_sw(hl,'top',it.y+'px');_sw(hl,'height',it.h+'px');_sw(hl,'left',it.x+'px');_sw(hl,'right','auto');_sw(hl,'width',it.w+'px');
       placeMarks(el,true,it.x,it.w,it.y,it.h,L,xx=>it.x+(xx-it.s.x)*k);
-      {let cxx=Math.min(x,it.s.x+it.s.w),cw='';if(P.curStyle==='note'&&P.showCur&&!L.before){const q=noteSnap(L.mi,x);if(q){cxx=q.x;cw=(q.w*k).toFixed(1)+'px'}else cw=Math.max(14,((S.systems[m.sys].bot-S.systems[m.sys].top)/4*2.3*k)).toFixed(1)+'px'}
+      {let cxx=Math.min(x,it.s.x+it.s.w),cw='';if(P.curStyle==='note'&&P.showCur&&!L.before){const q=noteSnap(L.mi,L.frac);if(q){cxx=q.x;cw=(q.w*k).toFixed(1)+'px'}else cw=Math.max(14,((S.systems[m.sys].bot-S.systems[m.sys].top)/4*2.3*k)).toFixed(1)+'px'}
         if(cu._cwid!==cw){cu._cwid=cw;cu.style.width=cw;cu.style.marginLeft=cw?(-parseFloat(cw)/2)+'px':''}
         Hd(cu,!!(L.before||!P.showCur));_sw(cu,'transform',`translate3d(${(it.x+(cxx-it.s.x)*k).toFixed(1)}px,0,0)`)}
       // zoomed in: keep the cursor in view by sliding the column sideways, a page-width at a time
@@ -3067,15 +3069,84 @@ $('curBtn').onclick=curCycle;setTimeout(curApply,0);
 /* where the notes of a bar stand: the stems, read from the picture of the line (a stem is the one tall thin stroke a note has) */
 function noteXs(mi){const m=S.measures[mi];if(!m)return [];if(m.nxs)return m.nxs;m.nxs=[];const s=S.systems[m.sys],st=built.strips&&built.strips.find(q=>q.sys===m.sys);
   if(!st||!s||m.rest||m.mr||!(s.bot>s.top))return m.nxs;const cv=st.el.querySelector('canvas');if(!cv)return m.nxs;
-  const r=cv.width/st.w,sp=(s.bot-s.top)/4,xa=Math.max(m.x0+sp*0.5,(m.curx!=null?m.curx:m.x0)-sp*1.2),xb=m.x1-sp*0.45;
-  const X0=Math.max(0,Math.round((xa-st.x)*r)),X1=Math.min(cv.width,Math.round((xb-st.x)*r)),Y0=Math.max(0,Math.round((s.top-sp*3.5-st.y)*r)),Y1=Math.min(cv.height,Math.round((s.bot+sp*2-st.y)*r));
+  const r=cv.width/st.w,sp=(s.bot-s.top)/4,lineFirst=s.measures&&s.measures[0]===mi,hasSig=lineFirst&&(s.tsig||[]).some(q=>q[0]===0);
+  // (a line's first bar: past the clef, whose two bars are as tall as stems, and past a time signature)
+  const xa=lineFirst?m.x0+sp*(hasSig?5.6:3.8):m.x0+sp*0.5,xb=m.x1-sp*0.45;
+  const X0=Math.max(0,Math.round((xa-st.x)*r)),X1=Math.min(cv.width,Math.round((xb-st.x)*r)),Y0=Math.max(0,Math.round((s.top-sp*6.5-st.y)*r)),Y1=Math.min(cv.height,Math.round((s.bot+sp*3-st.y)*r));
   const w=X1-X0,h=Y1-Y0;if(w<4||h<4)return m.nxs;let d;try{d=cv.getContext('2d').getImageData(X0,Y0,w,h).data}catch(e){return m.nxs}
-  const need=sp*2.4*r,hit=new Uint8Array(w);
-  for(let x=0;x<w;x++){let run=0,best=0;for(let y=0;y<h;y++){const i=(y*w+x)*4;if(d[i+3]>128&&d[i]+d[i+1]+d[i+2]<380){if(++run>best)best=run}else run=0}hit[x]=best>=need?1:0}
-  const xs=[];for(let x=0;x<w;x++)if(hit[x]){let e=x;while(e+1<w&&hit[e+1])e++;if(e-x+1<=sp*0.5*r)xs.push(st.x+(X0+(x+e)/2)/r);x=e}
-  for(const v of xs)if(!m.nxs.length||v-m.nxs[m.nxs.length-1]>sp*1.1)m.nxs.push(v);
+  const need=sp*1.9*r,hit=new Uint8Array(w);
+  const dk=(x,y)=>{if(x<0||y<0||x>=w||y>=h)return false;const i=(y*w+x)*4;return d[i+3]>128&&d[i]+d[i+1]+d[i+2]<380};
+  const ya=new Int32Array(w),yb=new Int32Array(w);
+  const brk=Math.max(1,Math.round(sp*0.2*r)); // (a stem may be broken for a pixel or two where a scan is faint or a notehead crosses it)
+  for(let x=0;x<w;x++){let run=0,gap=0,best=0,be=0;for(let y=0;y<h;y++){if(dk(x,y)){run+=gap+1;gap=0;if(run>best){best=run;be=y}}else if(run>0&&++gap>brk){run=0;gap=0}}hit[x]=best>=need?1:0;yb[x]=be;ya[x]=be-best+1}
+  // how many beams (or flags) a stem carries: the short thick strokes that leave it sideways at one of its ends.
+  // none: a quarter or longer; one: an eighth; two: a sixteenth
+  const off=Math.max(2,Math.round(sp*0.4*r)),off2=Math.round(sp*1.15*r),tmin=sp*0.22*r,tmax=sp*0.95*r,span=Math.round(sp*1.9*r);
+  // (a beam runs on sideways well past a notehead's width; a flag does not, but it is always to the right of the stem's upper end)
+  const strokes=(x,y0,y1,far)=>{let c=0,run=0;for(let y=y0;y<=y1+1;y++){if(y<=y1&&dk(x,y))run++;else{if(run>0&&window.__bmdbg)window.__bmdbg.push([mi,x,y-run-y0,run,far,far?+dk(x+far,y-1-(run>>1)):-1]);if(run>=tmin&&run<=tmax&&(!far||dk(x+far,y-1-(run>>1))))c++;run=0}}return c};
+  const reach=Math.round(sp*0.35*r);
+  // (the two ends of the stem: followed along the stroke itself, which may lean by a pixel and be faint for a few, since the beams are at the very tip)
+  const tip=(x,y,dir)=>{for(;;){const ny=y+dir;if(ny<0||ny>=h)return [x,y];if(dk(x,ny)){y=ny;continue}if(dk(x+1,ny)){x++;y=ny;continue}if(dk(x-1,ny)){x--;y=ny;continue}
+      let f=0;for(let g=2;g<=reach&&!f;g++){const yy=y+dir*g;if(yy<0||yy>=h)break;for(const dx of [0,1,-1])if(dk(x+dx,yy)&&dk(x+dx,yy+dir)){x+=dx;y=yy;f=1;break}}if(!f)return [x,y]}};
+  // a stem's note: how many beams it carries, which way the stem goes (the beams are at its tip, the notehead at its foot), and where the notehead is.
+  // A tall stroke with no notehead at either end is a rest.
+  const mass=(xa2,xb2,ya2,yb2)=>{let c=0,t=0;for(let y=ya2;y<=yb2;y++)for(let x=xa2;x<=xb2;x++){t++;if(dk(x,y))c++}return t?c/t:0};
+  const hw=Math.round(sp*1.2*r),hh=Math.round(sp*0.5*r),hd=sp*0.55*r;
+  const sT=(s.top-st.y)*r-Y0,sB=(s.bot-st.y)*r-Y0;
+  const note=x0=>{const [xt,a]=tip(x0,ya[x0],-1),[xb,b]=tip(x0,yb[x0],1),e=Math.round(sp*0.3*r);
+    if(Math.abs(a-sT)<sp*0.3*r&&Math.abs(b-sB)<sp*0.3*r)return null; // from the top line to the bottom line exactly: a barline
+    const top=Math.max(strokes(xt+off,a-e,a+span,off2-off),strokes(xt-off,a-e,a+span,off-off2)),bot=Math.max(strokes(xb+off,b-span,b+e,off2-off),strokes(xb-off,b-span,b+e,off-off2));
+    const mUp=mass(xb-hw,xb-2,b-hh-hh,b+hh),mDn=mass(xt+2,xt+hw,a-hh,a+hh+hh);
+    if(top>0||bot>0){const up=top>=bot;return {bm:Math.max(top,bot),x:up?xb-hd:xt+hd,rest:false}}
+    const fl=Math.min(2,strokes(xt+off,a-e,a+span,0));
+    if(Math.max(mUp,mDn)<0.17)return {bm:0,x:(xt+xb)/2,rest:true};
+    const up=mUp>=mDn;return {bm:up?fl:0,x:up?xb-hd:xt+hd,rest:false}};
+  const ev=[];for(let x=0;x<w;x++)if(hit[x]){let e=x;while(e+1<w&&hit[e+1])e++;if(e-x+1<=sp*0.5*r){const q=note((x+e)>>1);if(q){if(e-x+1>sp*0.3*r&&!q.rest&&q.bm<2){q.rest=true;q.bm=0;q.x=(x+e)/2} /* a thick stroke is a rest's, not a stem */
+      ev.push({x:st.x+(X0+q.x)/r,bm:q.bm,rest:q.rest})}}x=e}
+  // the notes of two voices that sound together stand above each other: one moment
+  ev.sort((p,q)=>p.x-q.x);m.nbm=[];m.nrs=[];
+  for(const q of ev){const k=m.nxs.length-1;if(q.rest&&q.x>m.x1-sp*1.4)continue; /* (the thin line of a double barline) */
+    if(k>=0&&q.x-m.nxs[k]<sp*((q.rest||m.nrs[k])?1.3:0.75)){if(!q.rest){if(m.nrs[k]){m.nxs[k]=q.x;m.nbm[k]=q.bm;m.nrs[k]=false}else m.nbm[k]=Math.max(m.nbm[k],q.bm)}}else{m.nxs.push(q.x);m.nbm.push(q.bm);m.nrs.push(q.rest)}}
   m.nsp=sp;return m.nxs}
-function noteSnap(mi,x){const xs=noteXs(mi),m=S.measures[mi];if(!xs.length)return null;const sp=m.nsp;let pick=null;for(const v of xs)if(v-sp*1.3<=x)pick=v;return pick==null?null:{x:pick-sp*0.45,w:sp*2.3}}
+/* when each note of a bar is played. A printed score gives a longer note more room, by a steady rule (room = C x length^a); and the
+   lengths of a bar add up to the bar. So: give every gap between two stems one of the lengths music has (a sixteenth, an eighth, a dotted
+   eighth, a triplet eighth...), so that they add up to the bar and the rooms they would take are closest to the gaps as printed.
+   C and a are whatever fits this bar best. The result: for every stem, its beat in the bar. */
+function noteBeats(mi){const m=S.measures[mi];if(!m)return null;if(m.nbt!==undefined)return m.nbt;m.nbt=null;const xs=noteXs(mi);if(!xs.length)return null;
+  const sp=m.nsp,B=m.beats||4,hx=xs.slice(),xa=m.curx!=null?m.curx:(m.cx0!=null?m.cx0:m.x0+sp),n=xs.length,U=12,TOT=Math.round(B*U);
+  if(TOT<=0||TOT>96||n>40)return null;
+  // room before the first note beyond what a first note always has after the barline (or the clef): rests at the start of the bar
+  const first=!!(S.systems[m.sys]&&S.systems[m.sys].measures[0]===mi),sig0=first&&(S.systems[m.sys].tsig||[]).some(q=>q[0]===0),room=first?hx[0]-m.x0-sp*(sig0?9.5:7.5):hx[0]-m.x0-sp*4.5,lead=room>0?room+sp*1.2:0;
+  // the gaps, in order: (the rest at the start,) note to note, and the last note to the barline (less sure: it ends in padding)
+  const g=[],wt=[];if(lead>0){g.push(lead);wt.push(0.5)}for(let i=0;i<n-1;i++){g.push(Math.max(sp*0.2,xs[i+1]-xs[i]));wt.push(1)}g.push(Math.max(sp*0.5,m.x1-xs[n-1]-sp*1.5));wt.push(0.05);
+  const bm=[];if(lead>0)bm.push(-1);for(let i=0;i<n;i++)bm.push(m.nbm?m.nbm[i]:-1);
+  // what a note's beams say about the time until the next one: its own length; longer when a rest or a dot follows; hardly ever shorter
+  const bcost=(b,dd)=>{if(b<0)return 0;const v=b>=3?1.5:b===2?3:b===1?6:12;if(b===0)return dd>=12?0:dd===8?0.03:0.5;if(dd===v)return 0;if(b===1&&dd===4)return 0.03;return dd>v?0.12:0.5};
+  const lg=g.map(Math.log),N=g.length,D=[3,6,9,12,18,24,36,48,4,8],PEN=[0,0,0,0,0,0,0,0,0.12,0.12]; // lengths in twelfths of a beat; triplets cost a little
+  const gmin=Math.min(...g.slice(0,N-1).concat(N>1?[]:[g[0]]));
+  const solve=(a,lc)=>{ // best lengths for this rule, by steps: cost[i][sum]
+    const INF=1e9;let cur=new Float64Array(TOT+1).fill(INF);cur[0]=0;const back=[];
+    for(let i=0;i<N;i++){const nxt=new Float64Array(TOT+1).fill(INF),bk=new Int8Array(TOT+1).fill(-1);
+      for(let sm=0;sm<=TOT;sm++){const c0=cur[sm];if(c0>=INF)continue;for(let k=0;k<D.length;k++){const t=sm+D[k];if(t>TOT||(t%3&&t%4)||(i===0&&lead>0&&(D[k]%3||D[k]<6)))continue; /* every note on the sixteenth grid or the triplet grid */const e=lg[i]-(lc+a*Math.log(D[k]/U));const c=c0+wt[i]*e*e+PEN[k]+bcost(bm[i],D[k]);if(c<nxt[t]){nxt[t]=c;bk[t]=k}}}
+      back.push(bk);cur=nxt}
+    if(cur[TOT]>=INF)return null;const d=new Array(N);let sm=TOT;for(let i=N-1;i>=0;i--){const k=back[i][sm];d[i]=D[k];sm-=D[k]}return {cost:cur[TOT],d}};
+  let best=null;
+  for(let a=0.3;a<=1.001;a+=0.1)for(const d0 of [3,4,6,12]){let lc=Math.log(gmin)-a*Math.log(d0/U);
+    for(let it=0;it<2;it++){const r=solve(a,lc);if(!r)break;
+      const c=r.cost+Math.abs(a-0.6)*0.02;if(!best||c<best.c)best={c,d:r.d,a,cost:r.cost};
+      // (C again from the lengths just found, then once more)
+      let sw=0,se=0;for(let i=0;i<N;i++){sw+=wt[i];se+=wt[i]*(lg[i]-a*Math.log(r.d[i]/U))}lc=se/sw}}
+  if(!best)return null;const rms=Math.sqrt(best.cost/wt.reduce((x,y)=>x+y,0));if(rms>0.45)return null;
+  const on=[];let t=0,i0=0;if(lead>0){t=best.d[0];i0=1}for(let i=0;i<n;i++){on.push(t/U);t+=best.d[i0+i]}
+  // (a reading that puts a note a whole beat from where its place in the bar says: not trusted, the bar is swept evenly instead)
+  {const xe2=m.x1-sp*1.2,x00=lead>0?hx[0]-lead:hx[0];if(xe2>x00)for(let i=0;i<n;i++){const lin=(hx[i]-x00)/(xe2-x00)*B;if(Math.abs(on[i]-lin)>1.0)return null}}
+  m.nbt={on,hx,w:sp*2.3,B,p:best.a,gr:on.some(o=>Math.abs(o*4-Math.round(o*4))>1e-6)?3:4,cost:rms};return m.nbt}
+/* the note being played, and where a sweeping bar is, from those beats */
+function noteSnap(mi,frac){const nb=noteBeats(mi);if(!nb)return null;const b=frac*nb.B+0.02;let i=-1;for(let j=0;j<nb.on.length;j++)if(nb.on[j]<=b)i=j;return i<0?null:{x:nb.hx[i],w:nb.w}}
+function noteSweep(mi,frac,xa,xe){const nb=noteBeats(mi);if(!nb)return null;const b=frac*nb.B,on=nb.on,hx=nb.hx,n=on.length;
+  if(b<=on[0])return on[0]>0?xa+(hx[0]-xa)*(b/on[0]):hx[0];
+  for(let j=n-1;j>=0;j--)if(on[j]<=b){const b1=j+1<n?on[j+1]:nb.B,x1=j+1<n?hx[j+1]:Math.max(xe,hx[j]);return hx[j]+(x1-hx[j])*((b-on[j])/Math.max(1e-6,b1-on[j]))}
+  return hx[0]}
 $('loopCiBtn').onclick=()=>{P.loopCi=!P.loopCi;store.set('loopCi',P.loopCi);loopUI();
   toast(P.loopCi?'반복할 때마다 한 마디 예비박을 세어 줘요.':'반복할 때 예비박 없이 바로 이어져요.',2200)};
 $('loopBtn').onclick=()=>{if(!S.measures.length)return;if(P.loop.on||P.loopPick){clearLoop();return}
@@ -3814,7 +3885,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.42.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.43.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
