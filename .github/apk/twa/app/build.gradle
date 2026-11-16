@@ -5,9 +5,9 @@ android {
     defaultConfig {
         applicationId 'kr.jdmdrum.score'
         minSdk 23
-        targetSdk 35
-        versionCode 3
-        versionName '2.32.0'
+        targetSdk 36
+        versionCode 10
+        versionName '1.0.0'
     }
     lint { abortOnError false; checkReleaseBuilds false }
 }
