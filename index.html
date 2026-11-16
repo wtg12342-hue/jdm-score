@@ -2894,7 +2894,7 @@ $('openScore').onclick=()=>$('scoreFile').click();
 $('openAudio').onclick=()=>$('audioFile').click();
 /* ---- YouTube search (desktop program) ---- */
 /* web: YouTube's own search API (YouTube Data API v3). The key is the shop's, limited to this site's address */
-const YT_KEY_BUILTIN='';
+const YT_KEY_BUILTIN='AIzaSyBh5rEqZD5XLfF-5DrvUHw9iQ-WJeFOjM8';
 function ytKey(){return (store.get('ytKey','')||YT_KEY_BUILTIN||'').trim()}
 async function apiSearch(q){const key=ytKey();if(!key)return {error:'검색 키가 아직 없어요. 설정 → 고급 설정에서 유튜브 검색 키를 넣어 주세요.'};
   try{const u='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&regionCode=KR&relevanceLanguage=ko&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(key);
@@ -3786,7 +3786,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.38.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.39.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
