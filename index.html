@@ -3968,7 +3968,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.49.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.49.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4004,11 +4004,13 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   const box=$('ytBox'),slot=$('ytSlot');let last='';
   function place(){const on=!box.hidden&&!box.classList.contains('mini')&&innerWidth<=900;const land=on&&innerWidth>innerHeight;
     const cls=on?(land?'ytside':'ytdock'):'';if(cls!==last){document.body.classList.remove('ytdock','ytside');if(cls)document.body.classList.add(cls);last=cls;setTimeout(()=>{window.dispatchEvent(new Event('resize'));place2()},60)}place2()}
-  function place2(){if(last==='ytdock'){const r=slot.getBoundingClientRect();Object.assign(box.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',right:'auto',bottom:'auto'})}
+  function place2(){if(last==='ytdock'){const r=slot.getBoundingClientRect();if(r.width<120){Object.assign(box.style,{position:'fixed',left:'10px',right:'auto',top:'auto',bottom:'84px',width:'208px'});return}Object.assign(box.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',right:'auto',bottom:'auto'})}
     else if(last==='ytside'){const tb=document.querySelector('.topbar').getBoundingClientRect();Object.assign(box.style,{position:'fixed',left:'auto',right:'6px',top:(tb.bottom+6)+'px',width:'208px',bottom:'auto'})}
     else if(hosted){const sr=$('stand').getBoundingClientRect();Object.assign(box.style,{position:'fixed',left:'14px',top:'auto',right:'auto',width:'',bottom:(innerHeight-sr.bottom+14)+'px'})}
     else{['position','left','top','width','right','bottom'].forEach(k=>box.style[k]='')}}
   if(hosted)document.body.appendChild(box); // out of the score area, so it can sit in the player
+  // the slot moves when a score is opened later, the drawer opens, the screen changes: follow it (a slot not laid out yet must not fix the video at no width)
+  {let sig='';setInterval(()=>{if(box.hidden)return;place();if(!last)return;const r=slot.getBoundingClientRect(),g=[r.left,r.top,r.width].map(Math.round).join();if(g!==sig){sig=g;place2()}},350)}
   new MutationObserver(place).observe(box,{attributes:true,attributeFilter:['hidden','class']});addEventListener('resize',()=>setTimeout(place,80));addEventListener('orientationchange',()=>setTimeout(place,250));
   if(hosted){const h=$('ytHide');if(h)h.hidden=true;try{store.set('ytMini',false)}catch(e){}box.classList.remove('mini')}
   // settings, in the order people need them (web/phone build)
