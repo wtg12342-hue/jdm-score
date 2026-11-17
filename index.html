@@ -3445,21 +3445,47 @@ function alignBarNow(mi){const t=M.time(),ti=occurrence(mi),start=S.tl[ti].start
 let pin=null;
 function pinStart(){if(!hasAudio()){toast('먼저 노래(유튜브나 음원)를 열어 주세요.');return}
   $('coach').hidden=true;$('syncAsk').hidden=true;$('syncPop').hidden=true;if(fixMode)endFix(false);if(transport.playing)pause();ensureAC();
-  pin={pts:[],B:0,ok:false,taps:[],tapBpm:0,tapping:!(S.scoreBpm>0)};M.rate(P.speed);M.play().catch(()=>toast('음원을 재생하지 못했어요.'));document.body.classList.add('pinning');pinUI()}
+  pin={pts:[],B:0,ok:false,taps:[],tapBpm:0,tapping:!(S.scoreBpm>0)};
+  if(pin.tapping){const A=autoTempo();if(A&&A.state==='ok'){pin.tapBpm=A.bpm;pin.auto=true;pin.B=60/A.bpm;pin.tapping=false;setBpm(A.bpm)}}M.rate(P.speed);M.play().catch(()=>toast('음원을 재생하지 못했어요.'));document.body.classList.add('pinning');pinUI()}
 /* the tempo, when the score does not print it: tapped along with the song (eight taps; the middle of the gaps between them, as a whole number).
    The bars pressed afterwards say where the song is; they change the tempo only within a little of the tapped one. */
 const PIN_TAPS=8;
+/* the tempo found by itself (web, YouTube): the song is looked up by the video's title in a public music catalogue (Deezer), and the
+   30-second preview of the recording that the catalogue gives is analysed here, like an opened audio file. Checked two ways before it
+   is believed: the track is as long as the video, or the tempo fits the score (its beats against the video's length). */
+let autoT=null;
+function jsonpGet(u,ms){return new Promise((res,rej)=>{const cb='__jp'+Math.random().toString(36).slice(2),sc=document.createElement('script');let done=false;
+  const end=(f,v)=>{if(done)return;done=true;try{delete window[cb]}catch(e){}sc.remove();f(v)};window[cb]=d=>end(res,d);sc.onerror=()=>end(rej,'net');
+  sc.src=u+(u.includes('?')?'&':'?')+'output=jsonp&callback='+cb;document.head.appendChild(sc);setTimeout(()=>end(rej,'timeout'),ms||7000)})}
+function songQueries(t){t=String(t||'').replace(/[\[\(【「『〈《][^\]\)】」』〉》]*[\]\)】」』〉》]/g,' ');
+  t=t.replace(/official|music\s*video|\bm\/?v\b|lyrics?|audio|video|가사|듣기|뮤직비디오|공식|드럼|drum|cover|커버|악보|live|라이브|4k|hd|full/gi,' ').replace(/[|｜:：·•]/g,' - ').replace(/\s+/g,' ').trim();
+  const parts=t.split(/\s+-\s+/).map(x=>x.trim()).filter(Boolean),out=[t.replace(/\s+-\s+/g,' ')];if(parts.length>=2)out.push(parts[0]+' '+parts[1]);return [...new Set(out)].filter(x=>x.length>=2)}
+function autoTempo(){if(typeof desktop!=='undefined'&&desktop)return null;if(M.type!=='yt'||!yt.id||!S.measures.length)return null;const key=songKey+'|'+S.measures.length;
+  if(autoT&&autoT.key===key)return autoT;const A=autoT={key,state:'run',bpm:0,title:''};
+  A.p=(async()=>{try{let title='';try{title=yt.player.getVideoData().title}catch(e){}if(!title)title=$('ytTitle').textContent||'';const dur=mediaDur()||0;
+      let best=null;for(const q of songQueries(title)){const d=await jsonpGet('https://api.deezer.com/search?q='+encodeURIComponent(q)+'&limit=6',7000).catch(()=>null);
+        for(const t of (d&&d.data)||[]){if(!t.preview)continue;const dd=dur?Math.abs((t.duration||0)-dur):60;if(!best||dd<best.dd)best={dd,t}}if(best&&best.dd<=25)break}
+      if(!best){A.state='no';return A}
+      const ab=await (await fetch(best.t.preview)).arrayBuffer(),AC=window.AudioContext||window.webkitAudioContext,a2=new AC(),buf=await a2.decodeAudioData(ab);try{a2.close()}catch(e){}
+      const r=Tempo.fromBuffer(buf,40);if(!r||!(r.bpm>0)){A.state='no';return A}
+      let bpm=r.bpm,fits=false;const T=S.tl,tot=T&&T.length?T[T.length-1].start+T[T.length-1].beats:0,est=tot&&dur?tot*60/dur:0;
+      if(est){for(const k of [1,2,0.5]){const v=bpm*k;if(v>=est*0.88&&v<=est*1.3){bpm=v;fits=true;break}}}
+      if(!fits&&!(best.dd<=8&&r.conf>=0.6)){A.state='no';return A}
+      A.bpm=Math.round(bpm);A.title=best.t.title+(best.t.artist?' · '+best.t.artist.name:'');A.state='ok';
+      // (the one matching is under way: take it over, unless the player has already tapped a tempo)
+      if(pin&&pin.tapping&&autoT===A){pin.tapBpm=A.bpm;pin.auto=true;pin.B=60/A.bpm;pin.tapping=false;setBpm(A.bpm);pinUI()}
+    }catch(e){A.state='no'}return A})();return A}
 function pinTap(){if(!pin||!pin.tapping)return;const now=performance.now()/1000,tp=pin.taps;if(tp.length&&now-tp[tp.length-1]>2.5)tp.length=0;tp.push(now);
   if(tp.length>=PIN_TAPS){const d=[];for(let i=1;i<tp.length;i++)d.push(tp[i]-tp[i-1]);d.sort((a,b)=>a-b);const med=(d[(d.length-1)>>1]+d[d.length>>1])/2,bpm=Math.round(60/med*(P.speed||1));
-    if(bpm>=40&&bpm<=240){pin.tapBpm=bpm;pin.B=60/bpm;pin.tapping=false;setBpm(bpm);const q=pin.pts[0];if(q){setOffset(q.t-q.b*pin.B);P.synced=true;follow.reset();saveSync();render(true)}}else{tp.length=0;toast('다시 두드려 주세요',1500)}}
+    if(bpm>=40&&bpm<=240){pin.auto=false;pin.tapBpm=bpm;pin.B=60/bpm;pin.tapping=false;setBpm(bpm);const q=pin.pts[0];if(q){setOffset(q.t-q.b*pin.B);P.synced=true;follow.reset();saveSync();render(true)}}else{tp.length=0;toast('다시 두드려 주세요',1500)}}
   pinUI()}
 function pinDone(){if(!pin)return;const ok=pin.ok||pin.pts.length>0;pin=null;document.body.classList.remove('pinning');$('pinBar').hidden=true;
   if(ok){saveSync();toast('저장했어요',1600)}}
 function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;let t,u;
   $('pbTap').hidden=!pin.tapping;$('pbSkip').hidden=!pin.tapping;$('pbBack').hidden=$('pbHead').hidden=$('pbRetap').hidden=pin.tapping;
-  if(pin.tapping){$('pbTap').textContent=pin.taps.length?('두드리기  '+pin.taps.length+' / '+PIN_TAPS):'여기를 두드리기';$('pbT').textContent='노래 박자에 맞춰 8번 두드리세요';$('pbS').textContent='';$('pinBar').hidden=false;return}
-  const pre=pin.tapBpm?'♩='+pin.tapBpm+' · ':'';
-  if(!n){t=pre+'지금 나오는 마디를 누르세요';u=''}
+  if(pin.tapping){$('pbTap').textContent=pin.taps.length?('두드리기  '+pin.taps.length+' / '+PIN_TAPS):'여기를 두드리기';$('pbT').textContent=autoT&&autoT.state==='run'?'템포를 찾는 중이에요…':'노래 박자에 맞춰 8번 두드리세요';$('pbS').textContent=autoT&&autoT.state==='run'?'기다리기 싫으면 박자에 맞춰 8번 두드려도 돼요':'';$('pinBar').hidden=false;return}
+  const pre=pin.tapBpm?'♩='+pin.tapBpm+(pin.auto?' 자동':'')+' · ':'';
+  if(!n){t=pre+'지금 나오는 마디를 누르세요';u=pin.auto&&autoT&&autoT.title?('찾은 곡: '+autoT.title+" · 다른 곡이면 '템포 다시'"):''}
   else{t='맞췄어요  ♩='+P.bpm;u='위치가 어긋나면 그 마디를 다시 누르고, 점점 밀리면 템포를 다시 두드리세요'}
   $('pbT').textContent=t;$('pbS').textContent=u;$('pinBar').hidden=false}
 function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
@@ -3835,8 +3861,9 @@ document.getElementById('pbTap').addEventListener('pointerdown',e=>{e.preventDef
 document.getElementById('pbSkip').onclick=()=>{if(pin){pin.tapping=false;pinUI()}};
 document.getElementById('pbRetap').onclick=()=>{if(pin){pin.tapping=true;pin.taps=[];pinUI()}};
 function isPhoneUI(){return matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches}
-function openTapCoach(){openCoach({kick:'박자 맞추기',title:'노래에 악보 맞추기',go:'시작하기',later:'나중에',
-  steps:S.scoreBpm>0?[['노래를 들어요',''],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']]:[['노래 박자에 맞춰 8번 두드려요',''],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']],
+function openTapCoach(){if(!(S.scoreBpm>0))try{const A=autoTempo();if(A&&A.p)A.p.then(()=>{if(autoT===A&&pin)pinUI()})}catch(e){}
+  openCoach({kick:'박자 맞추기',title:'노래에 악보 맞추기',go:'시작하기',later:'나중에',
+  steps:S.scoreBpm>0?[['노래를 들어요',''],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']]:[['템포는 자동으로 찾아요','못 찾으면 박자에 맞춰 8번 두드려요'],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']],
   onGo:()=>pinStart(),onLater:()=>{}})}
 window.addEventListener('hashchange',()=>{if(shareTake())shareAsk()});
 window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElementById('licOv');if(shareTake()&&(!lo||lo.hidden)){shareAsk();return}if(isPhoneUI()&&!store.get('guideSeen',0)&&!S.pages.length&&(!lo||lo.hidden))openGuide()}catch(e){}},900));
@@ -3883,7 +3910,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.45.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.46.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
