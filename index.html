@@ -1,10 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>:root{color-scheme:dark}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}/* back to the first screen */
-.backb{flex:none;display:grid;place-items:center;width:40px;height:40px;margin:0 2px 0 -6px;border:0;border-radius:12px;background:transparent;color:var(--ink,#eee);cursor:pointer}
-.backb:hover{background:rgba(255,255,255,.07)}.backb[hidden]{display:none!important}
-@media (max-width:900px){body .backb{width:36px;height:36px;margin:0 -4px 0 -8px}body:has(#backBtn:not([hidden])) .brand::before{display:none}}
-</style>
+<style>:root{color-scheme:dark}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>JDM 악보 플레이어</title>
 <meta name="description" content="드럼 악보를 노래에 맞춰 넘겨 주는 연습 앱">
 <meta name="theme-color" content="#050505">
@@ -698,6 +694,10 @@ button{touch-action:manipulation}
 .tf-hit{background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}.tf-hit:active,.tf-hit.hit{filter:brightness(.92)}
 .pgpanel{border-radius:12px}.libitem{border-radius:10px}.libitem:hover{border-color:rgba(217,166,72,.6)}
 .libfolders .fchip.on{color:var(--brass);border-color:rgba(217,166,72,.6);background:var(--brass-soft)}
+/* back to the first screen */
+.backb{flex:none;display:grid;place-items:center;width:40px;height:40px;margin:0 2px 0 -6px;border:0;border-radius:12px;background:transparent;color:var(--ink,#eee);cursor:pointer}
+.backb:hover{background:rgba(255,255,255,.07)}.backb[hidden]{display:none!important}
+@media (max-width:900px){body .backb{width:36px;height:36px;margin:0 -4px 0 -8px}body:has(#backBtn:not([hidden])) .brand::before{display:none}}
 </style>
 <style id="skin">
 /* ===== 2.22 skin "Noir & Champagne": true black, ivory paper, champagne gold used sparingly, hairline rules,
