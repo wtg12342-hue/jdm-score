@@ -2890,7 +2890,9 @@ async function loadYouTube(url){
     $('ytTitle').textContent=title||'유튜브';render();
     P.synced=false;updateChip();
     songKey='y:'+(yt.id||'');applySong();
-    if(loadSync()){follow.start()}
+    yt.justAt=performance.now();
+    if(loadSync()){follow.start();if(!desktop)toast('영상을 열었어요 ✓  저장해 둔 맞춤도 불러왔어요',3200)}
+    else if(!desktop&&!(S.tl&&S.tl.length))toast('영상을 열었어요 ✓  이제 악보를 열어 주세요',4000)
     else if(window.jdm&&window.jdm.ytRecStart){toast('유튜브를 불러왔어요. 템포와 첫 박을 자동으로 찾을게요.',3000);setTimeout(autoSync,300)}
     else if(!desktop){$('drawer').hidden=true;document.body.classList.remove('mixopen');showSyncAsk('tap')}
     else{openSync();toast('유튜브를 불러왔어요. 첫 박을 탭으로 맞춰 주세요.',3800)}};
@@ -2912,7 +2914,7 @@ async function loadYouTube(url){
       onPlaybackRateChange:e=>{const ct=M.time();yt.rate=e.data;yt.last=ct;yt.stamp=performance.now();
         if(Math.abs(e.data-P.speed)>0.001)toast(`유튜브는 ${Math.round(e.data*100)}% 속도로 재생돼요.`,2600)},
       onError:e=>{const c=e.data;let msg;
-        if(c===101||c===150)msg='이 영상은 유튜브 밖에서 재생할 수 없게 막혀 있어요. 다른 영상을 써 주세요.';
+        if(c===101||c===150){msg='이 영상은 앱에서 틀 수 없게 막혀 있어요. 다른 영상을 골라 주세요.';if(!desktop){try{if(pin)pinDone();$('coach').hidden=true;hideSyncAsk();dropYouTube();openSearch()}catch(_){}}}
         else if(c===153||c===152)msg='유튜브가 재생을 거부했어요 (오류 '+c+').';
         else if(c==='load')msg='유튜브 페이지를 열지 못했어요. 인터넷 연결을 확인해 주세요.'+(e.detail?' ('+e.detail+')':'');
         else if(c==='yt')msg='유튜브: '+e.detail;
@@ -2943,7 +2945,7 @@ $('openAudio').onclick=()=>$('audioFile').click();
 const YT_KEY_BUILTIN='AIzaSyBh5rEqZD5XLfF-5DrvUHw9iQ-WJeFOjM8';
 function ytKey(){return (store.get('ytKey','')||YT_KEY_BUILTIN||'').trim()}
 async function apiSearch(q){const key=ytKey();if(!key)return {error:'검색 키가 아직 없어요. 설정 → 고급 설정에서 유튜브 검색 키를 넣어 주세요.'};
-  try{const u='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&regionCode=KR&relevanceLanguage=ko&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(key);
+  try{const u='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&videoSyndicated=true&maxResults=12&regionCode=KR&relevanceLanguage=ko&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(key);
     const r=await fetch(u);const j=await r.json();if(j.error)return {error:(j.error.errors&&j.error.errors[0]&&j.error.errors[0].reason)||j.error.message||'error'};
     const dec=t=>{const e=document.createElement('textarea');e.innerHTML=t||'';return e.value};
     const items=(j.items||[]).filter(x=>x.id&&x.id.videoId).map(x=>({id:x.id.videoId,title:dec(x.snippet.title),ch:dec(x.snippet.channelTitle),ago:(x.snippet.publishedAt||'').slice(0,4)}));
@@ -3520,12 +3522,12 @@ function pinTap(){if(!pin||!pin.tapping)return;const now=performance.now()/1000,
 function pinDone(){if(!pin)return;const ok=pin.ok||pin.pts.length>0;pin=null;document.body.classList.remove('pinning');$('pinBar').hidden=true;
   if(ok){saveSync();toast('저장했어요',1600)}}
 function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;let t,u;
-  $('pbTap').hidden=!pin.tapping;$('pbSkip').hidden=!pin.tapping;$('pbBack').hidden=$('pbHead').hidden=$('pbRetap').hidden=$('pbDn').hidden=$('pbUp').hidden=pin.tapping;
+  $('pbTap').hidden=!pin.tapping;$('pbSkip').hidden=!pin.tapping;$('pbRetap').hidden=$('pbDn').hidden=$('pbUp').hidden=pin.tapping;
   const bpmNow=pin.tapBpm||S.scoreBpm||0;
   // two separate jobs, named apart: 1 the song's tempo (how fast), 2 the place in the score (where)
   if(pin.tapping){$('pbTap').textContent=pin.taps.length?('두드리기  '+pin.taps.length+' / '+PIN_TAPS):'여기를 두드리기';
-    $('pbK').textContent='1단계 · 곡의 템포 맞추기';$('pbT').textContent='노래 박자에 맞춰 버튼을 8번 두드리세요';$('pbS').textContent='노래가 얼마나 빠른지 알려 주는 거예요. 발로 박자 세듯이 일정하게 두드려요.';$('pinBar').hidden=false;return}
-  if(!n){$('pbK').textContent='2단계 · 악보 위치 맞추기'+(bpmNow?'   (템포 ♩='+bpmNow+')':'');t='지금 노래에 나오는 마디를 악보에서 누르세요';u='노래가 악보의 어디쯤인지 알려 주는 거예요. 악보를 손가락으로 밀어 찾고, 그 마디가 시작될 때 눌러요.'}
+    $('pbK').textContent='1단계 · 곡의 템포 맞추기';$('pbT').textContent='노래 박자에 맞춰 버튼을 8번 두드리세요';$('pbS').textContent='발로 박자 세듯이 일정하게 두드려요. 드럼이 늦게 나오면 아래 줄을 밀어 건너뛰세요.';$('pinBar').hidden=false;return}
+  if(!n){$('pbK').textContent='2단계 · 악보 위치 맞추기'+(bpmNow?'   (템포 ♩='+bpmNow+')':'');t='지금 노래에 나오는 마디를 악보에서 누르세요';u='그 마디가 시작될 때 눌러요. 드럼이 나올 때까지 기다리지 말고 아래 줄을 밀어 건너뛰세요.'}
   else{$('pbK').textContent='맞춤 완료 · 템포 ♩='+P.bpm;t='악보가 노래를 따라가요';u='노래 뒤쪽에서 지금 나오는 마디를 한 번 더 누르세요. 템포까지 알아서 맞춰져요.'}
   $('pbT').textContent=t;$('pbS').textContent=u;$('pinBar').hidden=false}
 function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
@@ -3831,7 +3833,7 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
 .pinbar{position:fixed;left:0;right:0;bottom:0;z-index:65;padding:14px 16px max(14px,env(safe-area-inset-bottom,0px));background:#12100b;border-top:1px solid #c8932f;box-shadow:0 -10px 30px rgba(0,0,0,.6);display:grid;grid-template-columns:1fr;gap:4px}
 .pinbar i{font:700 12.5px/1.2 var(--f-ui);font-style:normal;letter-spacing:.02em;color:#24190a;background:linear-gradient(180deg,#e7bb63,#c8932f);border-radius:999px;padding:5px 11px;justify-self:start;margin-bottom:4px}
 .pinbar b{font:700 17px/1.3 var(--f-ui);color:#e7bb63}.pinbar span{font:400 13.5px/1.45 var(--f-ui);color:#d5cfc3}
-.pinbar div{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}.pinbar button{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:#e4d3ae;font:600 13.5px/1 var(--f-ui)}
+.pinbar div{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}.pinbar .pbseek{display:flex;align-items:center;gap:10px;margin-top:8px}.pinbar .pbseek input{flex:1;min-width:0;height:28px;accent-color:#c8932f}.pinbar .pbseek em{font:600 12.5px/1 var(--f-ui);font-style:normal;color:#b9b2a4;white-space:nowrap}.pinbar button{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:#e4d3ae;font:600 13.5px/1 var(--f-ui)}
 .pinbar button.tapbig{height:84px;margin-top:8px;border:0;border-radius:16px;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;font:700 20px/1 var(--f-ui);touch-action:manipulation}
 .pinbar button.go{margin-left:auto;border:0;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a}
 @media (orientation:landscape) and (max-height:500px){.pinbar{grid-template-columns:1fr auto;align-items:center;padding-top:6px;padding-bottom:6px}.pinbar b{grid-column:1}.pinbar span{grid-column:1;font-size:12.5px}.pinbar div{grid-column:2;grid-row:1/3;margin:0}}
@@ -3855,7 +3857,7 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
 @media (orientation:landscape) and (max-height:500px){body .tf-card{grid-template-columns:1fr 200px;grid-template-areas:"bar hit" "snip hit" "main hit" "dots hit" "note hit" "row row"}body .tf-snip{max-height:56px}body .tf-note{display:none}body .tf-hit{height:100%;min-height:84px;margin:0}
   .co-card{padding-top:14px}.co-card h3{margin-bottom:10px;font-size:18px}.co-steps{gap:8px}.co-go{height:48px;margin-top:10px}}
 </style>
-<div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">처음부터</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">템포 다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
+<div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><label class="pbseek"><input type="range" id="pbSeek" min="0" max="1000" value="0" aria-label="노래 위치"><em id="pbTime">0:00</em></label><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">10초 ▶</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">템포 다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
   <p class="co-kick" id="coKick"></p><h3 id="coTitle"></h3><ol class="co-steps" id="coSteps"></ol>
   <div class="co-bar" id="coBar" hidden><p id="coBarT"></p><canvas id="coBarC"></canvas><div class="co-barb"><button id="coPrev">◀ 앞 마디</button><button id="coNext">뒤 마디 ▶</button></div><small>이 마디가 아니면 화살표로 바꾸세요.</small></div><div class="co-demo" id="coDemo" hidden></div><p class="co-note" id="coNote" hidden></p>
@@ -3904,7 +3906,11 @@ function shareAsk(){const o=sharePend;if(!o)return;
 const LINK_LESSON='https://www.youtube.com/playlist?list=PLsWp55nNlTckhDzDepeX-HrM9lMY6DVyt',LINK_STUDIO='https://naver.me/GzEzH9NR';
 function openOut(u){try{if(typeof pause==='function'&&transport.playing)pause()}catch(e){}window.open(u,'_blank','noopener')}
 document.getElementById('pbBack').onclick=()=>M.seek(Math.max(0,M.time()-10));
-document.getElementById('pbHead').onclick=()=>{if(pin){pin.pts=[];pin.ok=false;if(!pin.tapBpm)pin.B=0}if(transport.playing)pause();M.seek(0);M.play();pinUI()};
+document.getElementById('pbHead').onclick=()=>{const d=mediaDur()||0;M.seek(d?Math.min(d-1,M.time()+10):M.time()+10)};
+{const sk=document.getElementById('pbSeek'),tm=document.getElementById('pbTime'),f=t=>{t=Math.max(0,Math.round(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};let drag=false;
+  sk.addEventListener('input',()=>{drag=true;const d=mediaDur()||0;tm.textContent=f(d*sk.value/1000)+' / '+f(d)});
+  sk.addEventListener('change',()=>{const d=mediaDur()||0;if(d)M.seek(d*sk.value/1000);setTimeout(()=>drag=false,400)});
+  setInterval(()=>{if(!pin||drag)return;const d=mediaDur()||0,t=M.time();if(d)sk.value=Math.round(1000*t/d);tm.textContent=f(t)+(d?' / '+f(d):'')},400)}
 document.getElementById('pbDone').onclick=()=>pinDone();
 document.getElementById('pbTap').addEventListener('pointerdown',e=>{e.preventDefault();pinTap()});
 document.getElementById('pbSkip').onclick=()=>{if(pin){pin.tapping=false;pinUI()}};
@@ -3912,7 +3918,7 @@ document.getElementById('pbDn').onclick=()=>pinNudge(-1);document.getElementById
 document.getElementById('pbRetap').onclick=()=>{if(pin){pin.tapping=true;pin.taps=[];pinUI()}};
 function isPhoneUI(){return matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches}
 function openTapCoach(){if(!(S.scoreBpm>0))try{const A=autoTempo();if(A&&A.p)A.p.then(()=>{if(autoT===A&&pin)pinUI()})}catch(e){}
-  openCoach({kick:'노래와 악보 맞추기',title:'세 가지만 하면 돼요',go:'시작하기',later:'나중에',
+  openCoach({kick:(yt.justAt&&performance.now()-yt.justAt<2500)?'영상을 열었어요 ✓  이제 악보와 맞춰요':'노래와 악보 맞추기',title:'세 가지만 하면 돼요',go:'시작하기',later:'나중에',
   steps:[['곡의 템포 맞추기',S.scoreBpm>0?'악보에 적힌 템포 <em>♩='+S.scoreBpm+'</em> 을 써요. 따로 할 건 없어요.':'노래가 얼마나 빠른지 알려 줘요.<br>노래 박자에 맞춰 버튼을 <em>8번 두드려요</em>.'],
     ['악보 위치 맞추기','노래가 악보의 어디쯤인지 알려 줘요.<br>지금 노래에 나오는 마디를 <em>악보에서 눌러요</em>.'],
     ['뒤쪽에서 한 번 더','1분쯤 뒤에 지금 나오는 마디를 <em>한 번 더 눌러요</em>.<br>템포가 틀렸으면 알아서 고쳐져요.']],
@@ -3962,7 +3968,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.48.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.49.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
