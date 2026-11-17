@@ -3460,7 +3460,8 @@ function jsonpGet(u,ms){return new Promise((res,rej)=>{const cb='__jp'+Math.rand
 function songQueries(t){t=String(t||'').replace(/[\[\(【「『〈《][^\]\)】」』〉》]*[\]\)】」』〉》]/g,' ');
   t=t.replace(/official|music\s*video|\bm\/?v\b|lyrics?|audio|video|가사|듣기|뮤직비디오|공식|드럼|drum|cover|커버|악보|live|라이브|4k|hd|full/gi,' ').replace(/[|｜:：·•]/g,' - ').replace(/\s+/g,' ').trim();
   const parts=t.split(/\s+-\s+/).map(x=>x.trim()).filter(Boolean),out=[t.replace(/\s+-\s+/g,' ')];if(parts.length>=2)out.push(parts[0]+' '+parts[1]);return [...new Set(out)].filter(x=>x.length>=2)}
-function autoTempo(){if(typeof desktop!=='undefined'&&desktop)return null;if(M.type!=='yt'||!yt.id||!S.measures.length)return null;const key=songKey+'|'+S.measures.length;
+const AUTO_TEMPO_ON=false; // off: the catalogue's terms allow non-commercial use only (checked 2026-11-17); kept for a source whose terms fit
+function autoTempo(){if(!AUTO_TEMPO_ON)return null;if(typeof desktop!=='undefined'&&desktop)return null;if(M.type!=='yt'||!yt.id||!S.measures.length)return null;const key=songKey+'|'+S.measures.length;
   if(autoT&&autoT.key===key)return autoT;const A=autoT={key,state:'run',bpm:0,title:''};
   A.p=(async()=>{try{let title='';try{title=yt.player.getVideoData().title}catch(e){}if(!title)title=$('ytTitle').textContent||'';const dur=mediaDur()||0;
       let best=null;for(const q of songQueries(title)){const d=await jsonpGet('https://api.deezer.com/search?q='+encodeURIComponent(q)+'&limit=6',7000).catch(()=>null);
@@ -3863,7 +3864,7 @@ document.getElementById('pbRetap').onclick=()=>{if(pin){pin.tapping=true;pin.tap
 function isPhoneUI(){return matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches}
 function openTapCoach(){if(!(S.scoreBpm>0))try{const A=autoTempo();if(A&&A.p)A.p.then(()=>{if(autoT===A&&pin)pinUI()})}catch(e){}
   openCoach({kick:'박자 맞추기',title:'노래에 악보 맞추기',go:'시작하기',later:'나중에',
-  steps:S.scoreBpm>0?[['노래를 들어요',''],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']]:[['템포는 자동으로 찾아요','못 찾으면 박자에 맞춰 8번 두드려요'],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']],
+  steps:S.scoreBpm>0?[['노래를 들어요',''],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']]:[['노래 박자에 맞춰 8번 두드려요',''],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']],
   onGo:()=>pinStart(),onLater:()=>{}})}
 window.addEventListener('hashchange',()=>{if(shareTake())shareAsk()});
 window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElementById('licOv');if(shareTake()&&(!lo||lo.hidden)){shareAsk();return}if(isPhoneUI()&&!store.get('guideSeen',0)&&!S.pages.length&&(!lo||lo.hidden))openGuide()}catch(e){}},900));
@@ -3910,7 +3911,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.46.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.46.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
