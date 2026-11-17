@@ -2848,10 +2848,13 @@ class DesktopYT{
     const prev=this.s,now=performance.now();if(st.title)this.title=st.title;
     if(!st.ad)this.raw={t:st.t,st:st.st,at:now,rate:st.rate||1};
     // follow the player's clock smoothly: readings arrive every 100 ms with a few ms of jitter
-    if(prev.st===YTS.PLAYING&&st.st===YTS.PLAYING&&Math.abs((prev.rate||1)-(st.rate||1))<1e-3){const pred=this.getCurrentTime(),err=st.t-pred;
-      // no jumps: the clock keeps its place and runs a little faster or slower until it has caught up (about 0.5 s)
-      if(Math.abs(err)<0.25){this.s={...st,t:pred};this.rx=now;this.k=Math.max(0.92,Math.min(1.08,1+err/0.5))}else{this.s=st;this.rx=now;this.k=1}}
-    else{this.s=st;this.rx=now;this.k=1}
+    if(prev.st===YTS.PLAYING&&st.st===YTS.PLAYING&&Math.abs((prev.rate||1)-(st.rate||1))<1e-3&&now>=(this.seekAt||0)){const rate=st.rate||1,W=this.w||(this.w=[]);
+      // every reading arrives a little late, by a different amount each time: the least delayed of the last few seconds is the true clock.
+      // The clock then runs at one even speed and is only eased (at most 1.5 %) toward it: the cursor never speeds up and slows down
+      W.push([now,st.t-now/1000*rate]);while(W.length>1&&now-W[0][0]>4000)W.shift();let mx=-1e9;for(const q of W)if(q[1]>mx)mx=q[1];
+      const pred=this.getCurrentTime(),err=mx+now/1000*rate-pred;
+      if(Math.abs(err)<0.25){this.s={...st,t:pred};this.rx=now;this.k=Math.max(0.985,Math.min(1.015,1+err/2))}else{this.s=st;this.rx=now;this.k=1;this.w=[]}}
+    else{this.s=st;this.rx=now;this.k=1;this.w=[]}
     if(!this.readyFired){this.readyFired=true;this.ev.onReady();return}
     if(prev.st!==st.st)this.ev.onStateChange({data:st.st});
     if(Math.abs((prev.rate||1)-(st.rate||1))>0.001)this.ev.onPlaybackRateChange({data:st.rate});
@@ -2860,7 +2863,7 @@ class DesktopYT{
   getCurrentTime(){const s=this.s;return s.st===YTS.PLAYING?s.t+(performance.now()-this.rx)/1000*(s.rate||1)*(this.k||1):s.t}
   playVideo(){window.jdm.ytCmd('play')}
   pauseVideo(){window.jdm.ytCmd('pause')}
-  seekTo(t){this.s={...this.s,t};this.rx=performance.now();this.seekAt=performance.now()+30;window.jdm.ytCmd('seek',t)}
+  seekTo(t){this.w=[];this.s={...this.s,t};this.rx=performance.now();this.seekAt=performance.now()+30;window.jdm.ytCmd('seek',t)}
   setPlaybackRate(r){window.jdm.ytCmd('rate',r)}
   getAvailablePlaybackRates(){const a=[];for(let r=0.25;r<=2.0001;r+=0.05)a.push(Math.round(r*100)/100);return a}
   getVideoData(){return {title:this.title||''}}
@@ -2934,7 +2937,7 @@ async function loadYouTube(url){
     // a big gap (buffering, a jump): go there at once; a small drift is caught up gently, without a hop of the cursor
     if(!(window.jdm&&window.jdm.desktop)){ // web: never bend the tempo; jump only when really off (twice in a row)
       if(Math.abs(err)>0.09){yt.off=(yt.off||0)+1;if(yt.off>=2||Math.abs(err)>0.4){yt.last=t;yt.stamp=performance.now();yt.k=1;yt.off=0}}else{yt.off=0;yt.last=pred+err*0.1;yt.stamp=performance.now();yt.k=1}return}
-    if(Math.abs(err)>0.4){yt.last=t;yt.stamp=performance.now();yt.k=1}else{yt.last=pred;yt.stamp=performance.now();yt.k=Math.max(0.95,Math.min(1.05,1+err/1.0))}},250);
+    if(Math.abs(err)>0.2){yt.last=t;yt.stamp=performance.now();yt.k=1}else{yt.last=pred;yt.stamp=performance.now();yt.k=Math.max(0.985,Math.min(1.015,1+err/2))}},250);
 }
 function dropYouTube(){follow.stop();if(M.type==='yt'&&yt.ready){try{yt.player.stopVideo()}catch(e){}}
   if(yt.player instanceof DesktopYT){yt.player.destroy();yt.player=null;yt.ready=false}
@@ -3001,7 +3004,7 @@ const follow={on:false,parts:[],clock:[],sr:0,timer:null,hist:[],last:0,busy:fal
       const r=Tempo.phaseError(buf,beats);if(!r||r.sal<0.35||r.strength<0.12)return;
       this.hist.push(r.lag);if(this.hist.length>3)this.hist.shift();
       if(this.hist.length>=2){const h=[...this.hist].sort((a,b)=>a-b),med=h[h.length>>1],same=this.hist.every(x=>Math.sign(x)===Math.sign(med)&&Math.abs(x)>0.006);
-        if(same&&Math.abs(med)>=0.012&&(Math.abs(med)>=0.025||this.hist.length>=3)){const c=Math.max(-0.08,Math.min(0.08,med*0.9));if(P.map)shiftMapFrom(Math.floor(tToB(now))-6,c);else setOffset(P.offset+c);saveSync();this.hist=[];
+        if(same&&Math.abs(med)>=0.012&&(Math.abs(med)>=0.025||this.hist.length>=3)){const c=Math.max(-0.08,Math.min(0.08,med*0.9));{const from=Math.floor(tToB(now))-6,n=Math.max(1,Math.min(16,Math.round(Math.abs(c)/0.004)));let i=0;const id=setInterval(()=>{if(P.map)shiftMapFrom(from,c/n);else setOffset(P.offset+c/n);if(++i>=n){clearInterval(id);saveSync()}},130)}this.hist=[];
           followBadge(`노래에 맞춰 악보를 ${c>0?'뒤로':'앞으로'} ${Math.round(Math.abs(c)*1000)}ms 옮겼어요`)}}
     }catch(e){console.error(e)}finally{this.busy=false}}};
 let followActCache=null;function followAct(){if(!followActCache||followActCache.n!==S.totalBeats){followActCache={n:S.totalBeats,a:scoreModel().act}}return followActCache.a}
@@ -3189,10 +3192,20 @@ function noteBeats(mi){const m=S.measures[mi];if(!m)return null;if(m.nbt!==undef
   m.nbt={on,hx,w:sp*2.3,B,p:best.a,gr:on.some(o=>Math.abs(o*4-Math.round(o*4))>1e-6)?3:4,cost:rms};return m.nbt}
 /* the note being played, and where a sweeping bar is, from those beats */
 function noteSnap(mi,frac){const nb=noteBeats(mi);if(!nb)return null;const b=frac*nb.B+0.02;let i=-1;for(let j=0;j<nb.on.length;j++)if(nb.on[j]<=b)i=j;return i<0?null:{x:nb.hx[i],w:nb.w}}
-function noteSweep(mi,frac,xa,xe){const nb=noteBeats(mi);if(!nb)return null;const b=frac*nb.B,on=nb.on,hx=nb.hx,n=on.length;
-  if(b<=on[0])return on[0]>0?xa+(hx[0]-xa)*(b/on[0]):hx[0];
-  for(let j=n-1;j>=0;j--)if(on[j]<=b){const b1=j+1<n?on[j+1]:nb.B,x1=j+1<n?hx[j+1]:Math.max(xe,hx[j]);return hx[j]+(x1-hx[j])*((b-on[j])/Math.max(1e-6,b1-on[j]))}
-  return hx[0]}
+function noteSweep(mi,frac,xa,xe){const nb=noteBeats(mi);if(!nb)return null;const key=xa+'|'+xe;let c=nb._sw;if(!c||c.key!==key)c=nb._sw=sweepCurve(nb,xa,xe,key);
+  if(!c.ok)return null;const b=Math.max(0,Math.min(nb.B,frac*nb.B)),bs=c.bs,xs=c.xs,ms=c.ms;let k=bs.length-2;while(k>0&&bs[k]>b)k--;
+  const h=bs[k+1]-bs[k],t=(b-bs[k])/h,t2=t*t,t3=t2*t;return (2*t3-3*t2+1)*xs[k]+(t3-2*t2+t)*h*ms[k]+(-2*t3+3*t2)*xs[k+1]+(t3-t2)*h*ms[k+1]}
+/* where the bar is at each beat comes from the notes read in the measure (the note on the beat, or between its neighbours);
+   between the beats it glides on a smooth curve, so the speed never changes abruptly. A measure whose reading would make
+   the bar race or crawl (a misread) falls back to the plain even sweep. */
+function sweepCurve(nb,xa,xe,key){const on=nb.on,hx=nb.hx,n=on.length,B=nb.B,out={key,ok:false};
+  const raw=b=>{if(b<=on[0])return on[0]>0?xa+(hx[0]-xa)*(b/on[0]):hx[0];
+    for(let j=n-1;j>=0;j--)if(on[j]<=b){const b1=j+1<n?on[j+1]:B,x1=j+1<n?hx[j+1]:Math.max(xe,hx[j]);return hx[j]+(x1-hx[j])*((b-on[j])/Math.max(1e-6,b1-on[j]))}return hx[0]};
+  const bs=[],xs=[];for(let k=0;k<B-1e-6;k++){bs.push(k);xs.push(raw(k))}bs.push(B);xs.push(raw(B));const N=bs.length;if(N<2)return out;
+  const lin=(xs[N-1]-xs[0])/B;if(!(lin>0))return out;const d=[];
+  for(let k=0;k+1<N;k++){const v=(xs[k+1]-xs[k])/(bs[k+1]-bs[k]);if(!(v>lin*0.5&&v<lin*2))return out;d.push(v)}
+  const ms=new Array(N);ms[0]=d[0];ms[N-1]=d[N-2];for(let k=1;k<N-1;k++)ms[k]=d[k-1]*d[k]<=0?0:2*d[k-1]*d[k]/(d[k-1]+d[k]);
+  out.ok=true;out.bs=bs;out.xs=xs;out.ms=ms;return out}
 $('loopCiBtn').onclick=()=>{P.loopCi=!P.loopCi;store.set('loopCi',P.loopCi);loopUI();
   toast(P.loopCi?'반복할 때마다 한 마디 예비박을 세어 줘요.':'반복할 때 예비박 없이 바로 이어져요.',2200)};
 $('loopBtn').onclick=()=>{if(!S.measures.length)return;if(P.loop.on||P.loopPick){clearLoop();return}
@@ -3976,7 +3989,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.50.2';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.51.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
