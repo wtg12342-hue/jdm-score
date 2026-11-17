@@ -1667,8 +1667,14 @@ function pageLayout(c){
   const rc=new Int16Array(H).fill(-1),blankMax=Math.max(1,(XB-XA)/2*0.002);
   const dark=y=>{if(y<0||y>=H)return 0;if(rc[y]>=0)return rc[y];let k=0;for(let x=XA;x<XB;x+=2)if(img[(y*W+x)*4]<140)k++;return rc[y]=Math.min(k,32000)};
   const cutBetween=(a,b)=>{const mid=(a+b)/2;if(!img)return mid;const ya=Math.round(a+sp*0.5),yb=Math.round(b-sp*0.5);let best=null,run=-1;
+    const gaps=[];
     for(let y=ya;y<=yb+1;y++){const bl=y<=yb&&dark(y)<=blankMax;if(bl&&run<0)run=y;
-      if(!bl&&run>=0){const h=y-run,cy=(run+y-1)/2,sc=h-Math.abs(cy-mid)*0.25;if(h>=2&&(!best||sc>best.sc))best={sc,cy};run=-1}}
+      if(!bl&&run>=0){const h=y-run,cy=(run+y-1)/2,sc=h-Math.abs(cy-mid)*0.25;if(h>=2){gaps.push([run,y-1]);if(!best||sc>best.sc)best={sc,cy}}run=-1}}
+    // words sung to the upper line (lyrics) stand under it, often nearer to the next line than to their own: a band of ink with an empty
+    // row above and below it that runs along much of the line's width is such a row of words, and the cut goes below the lowest one
+    if(!window.__noLyrCut)for(let i=gaps.length-2;i>=0;i--){const y0=gaps[i][1]+1,y1=gaps[i+1][0]-1,h=y1-y0+1;if(h<sp*0.5||h>sp*4)continue;
+      const cols=Math.ceil((XB-XA)/4);let c2=0;for(let x=XA;x<XB;x+=4){for(let y=y0;y<=y1;y+=2)if(img[(y*W+x)*4]<140){c2++;break}}
+      if(c2/cols>=0.3)return (gaps[i+1][0]+gaps[i+1][1])/2}
     return best?best.cy:mid};
   // the first and last line of a page: out to the first empty band (a tempo mark or label above, lyrics below)
   const edge=(from,dir,lim)=>{if(!img)return from;let run=0;for(let y=Math.round(from);dir<0?y>lim:y<lim;y+=dir){if(dark(y)<=blankMax){run++;if(run>=sp*0.6)return y-dir*run/2}else run=0}return from};
@@ -2286,6 +2292,19 @@ window.addEventListener('resize',()=>{if(S.pages.length)layoutViews()});
 function reelLevel(){return Math.max(0,Math.min(2,+store.get(built.reelKey||'reelP',built.reelKey==='reelL'?0:1)||0))}
 function reelStep(d,wrap){let l=reelLevel()+d;if(wrap)l=(l+3)%3;l=Math.max(0,Math.min(2,l));if(l===reelLevel()){toast(d>0?'가장 크게 보는 중이에요.':'가장 작게 보는 중이에요.',1200);return}
   store.set(built.reelKey,l);const L=locate(Math.max(0,currentBeat()));layoutViews();toast(['한 줄씩 보기','반 줄씩 크게 보기','한두 마디씩 아주 크게 보기'][l],1400);zoomUI()}
+/* the band of words under a line (lyrics): from the first row with ink below a clear gap under the staff. And in that band, the gap between two
+   words nearest to a place. Both read from the picture of the line. */
+function lyricBand(st){if(st._lyr!==undefined)return st._lyr;st._lyr=null;const sy=S.systems[st.sys],cv=st.el.querySelector('canvas');if(!sy||!cv||!(sy.bot>sy.top))return null;
+  const r=cv.width/st.w,sp=(sy.bot-sy.top)/4,y0=Math.round((sy.bot+sp*1.2-st.y)*r),h=cv.height-y0;if(h<sp*r)return null;let d;try{d=cv.getContext('2d').getImageData(0,y0,cv.width,h).data}catch(e){return null}
+  const w=cv.width,dk=(x,y)=>{const i=(y*w+x)*4;return d[i+3]>128&&d[i]+d[i+1]+d[i+2]<380},rowInk=new Uint8Array(h);
+  for(let y=0;y<h;y++){let c=0;for(let x=0;x<w;x+=2)if(dk(x,y)&&++c>2)break;rowInk[y]=c>2?1:0}
+  // (below the stems and rests that hang under the staff: a clear band, then ink again)
+  let gap=0,top=-1;const need=Math.max(2,Math.round(sp*0.3*r));for(let y=0;y<h;y++){if(!rowInk[y])gap++;else{if(gap>=need&&y>0){top=y;break}gap=0}}
+  if(top<0)return null;const col=new Uint8Array(w);for(let x=0;x<w;x++){for(let y=top;y<h;y++)if(dk(x,y)){col[x]=1;break}}
+  st._lyr={y:(y0+top)/r-sp*0.15,col,r,sp};return st._lyr}
+function lyricGap(st,ly,bx){const r=ly.r,c=Math.round((bx-st.x)*r),lim=Math.round(ly.sp*5*r),need=Math.max(2,Math.round(ly.sp*0.3*r)),w=ly.col.length;
+  for(let dd=0;dd<=lim;dd++)for(const sg of [1,-1]){const x=c+sg*dd;if(x<0||x>=w||ly.col[x])continue;let a=x,b=x;while(a>0&&!ly.col[a-1])a--;while(b<w-1&&!ly.col[b+1])b++;if(b-a+1>=need)return st.x+((a+b)/2)/r}
+  return bx}
 function layoutReel(sys,W,H,colW,colH){
   built.reel=true;built.rolling=false;built.zoom=1;built.reelKey=W<H?'reelP':'reelL';built.colW=colW;built.colH=colH;
   const frac=[1,0.5,0.25][reelLevel()],maxW=Math.max(...sys.map(s=>s.w)),maxH=Math.max(...sys.map(s=>s.h));
@@ -2296,8 +2315,11 @@ function layoutReel(sys,W,H,colW,colH){
     // cut where a barline is nearest to an even share of the line (never inside a multi-bar rest)
     const cuts=[];for(let i=1;i<n;i++){const goal=s.x+s.w*i/n;let best=-1,bd=1e9;for(let j=1;j<ms.length;j++){const m=S.measures[ms[j]];if(m.mr&&m.mr[0]>0)continue;if(cuts.includes(j))continue;const d=Math.abs(m.x0-goal);if(d<bd){bd=d;best=j}}if(best>0)cuts.push(best)}
     cuts.sort((a,b)=>a-b);const mg=s.w*0.006;let from=0;
+    // the words under the notes do not stop at barlines: they are cut at the nearest gap between two words instead, so no word is sliced in two
+    const ly=lyricBand(s),lx=j=>{const bx=S.measures[ms[j]].x0;return ly?lyricGap(s,ly,bx):bx};
     [...cuts,ms.length].forEach((to,ci)=>{const xa=from===0?s.x:S.measures[ms[from]].x0-mg,xb=to>=ms.length?s.x+s.w:S.measures[ms[to]].x0+mg;
-      list.push({sys:s.sys,x:xa,w:xb-xa,h:s.h,src:s,lo:ms[from],hi:ms[to-1]});from=to})}
+      const la=from===0?s.x:lx(from),lb=to>=ms.length?s.x+s.w:lx(to),X0=Math.min(xa,la),X1=Math.max(xb,lb);
+      list.push({sys:s.sys,x:X0,w:X1-X0,h:s.h,src:s,lo:ms[from],hi:ms[to-1],cut:ly?{xa,xb,la,lb,y:ly.y}:null});from=to})}
   const pw=Math.max(...list.map(q=>q.w));const k=Math.min(colW/pw,colH*0.9/maxH);built.k=k;
   const gap=Math.round(maxH*k*0.05);let y=6;const items=[];built.pieces={};
   list.forEach(q=>{const it={s:q,h:q.h*k,w:q.w*k,y,x:Math.max(0,(colW-q.w*k)/2)};items.push(it);y+=it.h+gap;
@@ -2324,7 +2346,10 @@ function spreadPages(pi){
 }
 function stripCanvas(s){
   if(!s.spreadCanvas&&s.src){const src=s.src.el.querySelector('canvas'),r=src.width/s.src.w;const c=document.createElement('canvas');c.width=Math.max(1,Math.round(s.w*r));c.height=src.height;
-    c.getContext('2d').drawImage(src,Math.round((s.x-s.src.x)*r),0,c.width,c.height,0,0,c.width,c.height);
+    const g=c.getContext('2d');
+    if(s.cut){const q=s.cut,yy=Math.max(0,Math.min(c.height,Math.round(q.y*r))),dr=(a,b,y0,y1)=>{const sx=Math.round((a-s.src.x)*r),sw=Math.round((b-a)*r);if(sw>0&&y1>y0)g.drawImage(src,sx,y0,sw,y1-y0,Math.round((a-s.x)*r),y0,sw,y1-y0)};
+      dr(q.xa,q.xb,0,yy);dr(q.la,q.lb,yy,c.height)} // the notes between their barlines; the words between their gaps
+    else g.drawImage(src,Math.round((s.x-s.src.x)*r),0,c.width,c.height,0,0,c.width,c.height);
     c.addEventListener('click',ev=>{const q=c.getBoundingClientRect();clickSystem(s.sys,null,s.x+(ev.clientX-q.left)/q.width*s.w)});s.spreadCanvas=c}
   if(!s.spreadCanvas){const src=s.el.querySelector('canvas');const c=document.createElement('canvas');c.width=src.width;c.height=src.height;
     c.getContext('2d').drawImage(src,0,0);c.addEventListener('click',ev=>{const r=c.getBoundingClientRect();clickSystem(s.sys,(ev.clientX-r.left)/r.width)});s.spreadCanvas=c}
@@ -3484,10 +3509,12 @@ function pinDone(){if(!pin)return;const ok=pin.ok||pin.pts.length>0;pin=null;doc
   if(ok){saveSync();toast('저장했어요',1600)}}
 function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;let t,u;
   $('pbTap').hidden=!pin.tapping;$('pbSkip').hidden=!pin.tapping;$('pbBack').hidden=$('pbHead').hidden=$('pbRetap').hidden=pin.tapping;
-  if(pin.tapping){$('pbTap').textContent=pin.taps.length?('두드리기  '+pin.taps.length+' / '+PIN_TAPS):'여기를 두드리기';$('pbT').textContent=autoT&&autoT.state==='run'?'템포를 찾는 중이에요…':'노래 박자에 맞춰 8번 두드리세요';$('pbS').textContent=autoT&&autoT.state==='run'?'기다리기 싫으면 박자에 맞춰 8번 두드려도 돼요':'';$('pinBar').hidden=false;return}
-  const pre=pin.tapBpm?'♩='+pin.tapBpm+(pin.auto?' 자동':'')+' · ':'';
-  if(!n){t=pre+'지금 나오는 마디를 누르세요';u=pin.auto&&autoT&&autoT.title?('찾은 곡: '+autoT.title+" · 다른 곡이면 '템포 다시'"):''}
-  else{t='맞췄어요  ♩='+P.bpm;u='위치가 어긋나면 그 마디를 다시 누르고, 점점 밀리면 템포를 다시 두드리세요'}
+  const bpmNow=pin.tapBpm||S.scoreBpm||0;
+  // two separate jobs, named apart: 1 the song's tempo (how fast), 2 the place in the score (where)
+  if(pin.tapping){$('pbTap').textContent=pin.taps.length?('두드리기  '+pin.taps.length+' / '+PIN_TAPS):'여기를 두드리기';
+    $('pbK').textContent='1단계 · 곡의 템포 맞추기';$('pbT').textContent='노래 박자에 맞춰 버튼을 8번 두드리세요';$('pbS').textContent='노래가 얼마나 빠른지 알려 주는 거예요. 발로 박자 세듯이 일정하게 두드려요.';$('pinBar').hidden=false;return}
+  if(!n){$('pbK').textContent='2단계 · 악보 위치 맞추기'+(bpmNow?'   (템포 ♩='+bpmNow+')':'');t='지금 노래에 나오는 마디를 악보에서 누르세요';u='노래가 악보의 어디쯤인지 알려 주는 거예요. 악보를 손가락으로 밀어 찾고, 그 마디가 시작될 때 눌러요.'}
+  else{$('pbK').textContent='맞춤 완료 · 템포 ♩='+P.bpm;t='악보가 노래를 따라가요';u="위치가 어긋나면: 그 마디를 다시 누르세요.  점점 밀리거나 앞서가면: '템포 다시 맞추기'."}
   $('pbT').textContent=t;$('pbS').textContent=u;$('pinBar').hidden=false}
 function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
   // (a bar that is played more than once: the pass nearest to where the song is thought to be; at first, the first pass)
@@ -3782,6 +3809,7 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 .tf-snip{display:none}.sa-bt{display:none!important}
 body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9px;box-shadow:inset 0 -4px 0 #be9b5c!important;transition:transform .06s linear}
 .pinbar{position:fixed;left:0;right:0;bottom:0;z-index:65;padding:14px 16px max(14px,env(safe-area-inset-bottom,0px));background:#12100b;border-top:1px solid #c8932f;box-shadow:0 -10px 30px rgba(0,0,0,.6);display:grid;grid-template-columns:1fr;gap:4px}
+.pinbar i{font:700 12.5px/1.2 var(--f-ui);font-style:normal;letter-spacing:.02em;color:#24190a;background:linear-gradient(180deg,#e7bb63,#c8932f);border-radius:999px;padding:5px 11px;justify-self:start;margin-bottom:4px}
 .pinbar b{font:700 17px/1.3 var(--f-ui);color:#e7bb63}.pinbar span{font:400 13.5px/1.45 var(--f-ui);color:#d5cfc3}
 .pinbar div{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}.pinbar button{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:#e4d3ae;font:600 13.5px/1 var(--f-ui)}
 .pinbar button.tapbig{height:84px;margin-top:8px;border:0;border-radius:16px;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;font:700 20px/1 var(--f-ui);touch-action:manipulation}
@@ -3807,7 +3835,7 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
 @media (orientation:landscape) and (max-height:500px){body .tf-card{grid-template-columns:1fr 200px;grid-template-areas:"bar hit" "snip hit" "main hit" "dots hit" "note hit" "row row"}body .tf-snip{max-height:56px}body .tf-note{display:none}body .tf-hit{height:100%;min-height:84px;margin:0}
   .co-card{padding-top:14px}.co-card h3{margin-bottom:10px;font-size:18px}.co-steps{gap:8px}.co-go{height:48px;margin-top:10px}}
 </style>
-<div class="pinbar" id="pinBar" hidden><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">처음부터</button><button id="pbRetap">템포 다시</button><button id="pbDone" class="go">완료</button></div></div>
+<div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">처음부터</button><button id="pbRetap">템포 다시 맞추기</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
   <p class="co-kick" id="coKick"></p><h3 id="coTitle"></h3><ol class="co-steps" id="coSteps"></ol>
   <div class="co-bar" id="coBar" hidden><p id="coBarT"></p><canvas id="coBarC"></canvas><div class="co-barb"><button id="coPrev">◀ 앞 마디</button><button id="coNext">뒤 마디 ▶</button></div><small>이 마디가 아니면 화살표로 바꾸세요.</small></div><div class="co-demo" id="coDemo" hidden></div><p class="co-note" id="coNote" hidden></p>
@@ -3863,8 +3891,9 @@ document.getElementById('pbSkip').onclick=()=>{if(pin){pin.tapping=false;pinUI()
 document.getElementById('pbRetap').onclick=()=>{if(pin){pin.tapping=true;pin.taps=[];pinUI()}};
 function isPhoneUI(){return matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches}
 function openTapCoach(){if(!(S.scoreBpm>0))try{const A=autoTempo();if(A&&A.p)A.p.then(()=>{if(autoT===A&&pin)pinUI()})}catch(e){}
-  openCoach({kick:'박자 맞추기',title:'노래에 악보 맞추기',go:'시작하기',later:'나중에',
-  steps:S.scoreBpm>0?[['노래를 들어요',''],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']]:[['노래 박자에 맞춰 8번 두드려요',''],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']],
+  openCoach({kick:'노래와 악보 맞추기',title:'두 가지만 하면 돼요',go:'시작하기',later:'나중에',
+  steps:[['곡의 템포 맞추기',S.scoreBpm>0?'악보에 적힌 템포 <em>♩='+S.scoreBpm+'</em> 을 써요. 따로 할 건 없어요.':'노래가 얼마나 빠른지 알려 줘요.<br>노래 박자에 맞춰 버튼을 <em>8번 두드려요</em>.'],
+    ['악보 위치 맞추기','노래가 악보의 어디쯤인지 알려 줘요.<br>지금 노래에 나오는 마디를 <em>악보에서 눌러요</em>.']],
   onGo:()=>pinStart(),onLater:()=>{}})}
 window.addEventListener('hashchange',()=>{if(shareTake())shareAsk()});
 window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElementById('licOv');if(shareTake()&&(!lo||lo.hidden)){shareAsk();return}if(isPhoneUI()&&!store.get('guideSeen',0)&&!S.pages.length&&(!lo||lo.hidden))openGuide()}catch(e){}},900));
@@ -3911,7 +3940,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.46.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.47.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
