@@ -3451,45 +3451,25 @@ function pinStart(){if(!hasAudio()){toast('먼저 노래(유튜브나 음원)를
 const PIN_TAPS=8;
 function pinTap(){if(!pin||!pin.tapping)return;const now=performance.now()/1000,tp=pin.taps;if(tp.length&&now-tp[tp.length-1]>2.5)tp.length=0;tp.push(now);
   if(tp.length>=PIN_TAPS){const d=[];for(let i=1;i<tp.length;i++)d.push(tp[i]-tp[i-1]);d.sort((a,b)=>a-b);const med=(d[(d.length-1)>>1]+d[d.length>>1])/2,bpm=Math.round(60/med*(P.speed||1));
-    if(bpm>=40&&bpm<=240){pin.tapBpm=bpm;pin.B=60/bpm;pin.tapping=false;setBpm(bpm)}else{tp.length=0;toast('다시 두드려 주세요',1500)}}
+    if(bpm>=40&&bpm<=240){pin.tapBpm=bpm;pin.B=60/bpm;pin.tapping=false;setBpm(bpm);const q=pin.pts[0];if(q){setOffset(q.t-q.b*pin.B);P.synced=true;follow.reset();saveSync();render(true)}}else{tp.length=0;toast('다시 두드려 주세요',1500)}}
   pinUI()}
 function pinDone(){if(!pin)return;const ok=pin.ok||pin.pts.length>0;pin=null;document.body.classList.remove('pinning');$('pinBar').hidden=true;
   if(ok){saveSync();toast('저장했어요',1600)}}
 function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;let t,u;
-  $('pbTap').hidden=!pin.tapping;$('pbSkip').hidden=!pin.tapping;$('pbBack').hidden=$('pbHead').hidden=pin.tapping;
+  $('pbTap').hidden=!pin.tapping;$('pbSkip').hidden=!pin.tapping;$('pbBack').hidden=$('pbHead').hidden=$('pbRetap').hidden=pin.tapping;
   if(pin.tapping){$('pbTap').textContent=pin.taps.length?('두드리기  '+pin.taps.length+' / '+PIN_TAPS):'여기를 두드리기';$('pbT').textContent='노래 박자에 맞춰 8번 두드리세요';$('pbS').textContent='';$('pinBar').hidden=false;return}
   const pre=pin.tapBpm?'♩='+pin.tapBpm+' · ':'';
   if(!n){t=pre+'지금 나오는 마디를 누르세요';u=''}
-  else if(pin.ok){t='맞췄어요  ♩='+P.bpm;u='어긋나면 그 마디를 다시 누르세요'}
-  else if(n===1){t='한 번 더!';u='몇 줄 뒤의 마디를 누르세요'}
-  else{t='더 뒤쪽 마디를 누르세요';u=''}
+  else{t='맞췄어요  ♩='+P.bpm;u='위치가 어긋나면 그 마디를 다시 누르고, 점점 밀리면 템포를 다시 두드리세요'}
   $('pbT').textContent=t;$('pbS').textContent=u;$('pinBar').hidden=false}
 function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
   // (a bar that is played more than once: the pass nearest to where the song is thought to be; at first, the first pass)
   if(pin.pts.length){ti=occurrence(mi,tToB(t))}else ti=T.findIndex(e=>e.mi===mi);
   if(ti<0)return;const b=T[ti].start;
   if(pin.tapping)return;
-  const sb=S.scoreBpm||pin.tapBpm||0,band=S.scoreBpm?0.12:0.07,B0=pin.B||60/(sb||(P.bpm>=50&&P.bpm<=220?P.bpm:100));
-  // a second press right after the last one replaces it (a slip of the finger)
-  if(pin.pts.length&&Math.abs(t-pin.pts[pin.pts.length-1].t)<1.5)pin.pts.pop();
-  pin.pts=pin.pts.filter(q=>Math.abs(q.b-b)>0.5);pin.pts.push({b,t,mi});
-  // the tempo a set of presses gives, or 0 when they do not agree with each other
-  const tempoOf=P_=>{const bs=P_.map(q=>q.b),span=Math.max(...bs)-Math.min(...bs);if(P_.length<2||span<8)return 0;
-    const k=P_.length,mb=bs.reduce((a,c)=>a+c,0)/k,mt=P_.reduce((a,q)=>a+q.t,0)/k;let sxx=0,sxy=0;for(const q of P_){sxx+=(q.b-mb)*(q.b-mb);sxy+=(q.b-mb)*(q.t-mt)}
-    if(!(sxy>0))return 0;const m=60*sxx/sxy;
-    // what a tempo can be: near the one printed on the score when there is one, else anything a song is played at
-    if(sb?Math.abs(m/sb-1)>=band:(m<50||m>220))return 0;
-    // the printed tempo stands unless the presses, taken far enough apart, plainly say another one; and a whole number always
-    const Bc=60/((sb&&(span<32||Math.abs(m/sb-1)<0.02))?sb:Math.max(20,Math.round(m)));
-    const Bm=60/m;for(const q of P_)if(Math.abs((q.t-mt-(q.b-mb)*Bm)/Bm)>0.4)return 0;return Bc}; // (do the presses lie on one line?)
-  let p=pin.pts,B=B0,got=tempoOf(p);pin.ok=false;
-  // presses that do not agree (a bar pressed to look around, the wrong pass of a repeat, a slip): leave out the one older press that spoils it,
-  // or else start over from this bar. The tempo never comes from presses that disagree.
-  if(!got&&p.length>=3){for(let i=p.length-2;i>=0&&!got;i--){const q=p.filter((_,j)=>j!==i);got=tempoOf(q);if(got)pin.pts=p=q}}
-  if(!got&&p.length>=2){const last=p[p.length-1],span=Math.max(...p.map(q=>q.b))-Math.min(...p.map(q=>q.b));if(span>=8)pin.pts=p=[last]}
-  if(got){B=got;pin.B=B;pin.ok=true}else if(sb){B=60/sb;pin.ok=true} // (the tempo is known: one bar places the song)
-  const n=p.length;
-  const off=p.reduce((a,q)=>a+q.t-q.b*B,0)/n,bpm=Math.round(6000/B)/100;
+  // a pressed bar says where the song is, nothing more: the tempo is the one tapped (or printed on the score). The last press counts.
+  const B=pin.B||60/(S.scoreBpm||(P.bpm>=40&&P.bpm<=240?P.bpm:100));pin.B=B;pin.pts=[{b,t,mi}];pin.ok=true;
+  const off=t-b*B,bpm=Math.round(6000/B)/100;
   if(P.map)P.map=null;setBpm(bpm);setOffset(off);P.synced=true;updateChip();spUI();follow.reset();
   if(!transport.playing){transport.forceCi=0;play()}render(true);
   saveSync();toast(barNo(mi)+'마디 ✓',1200);pinUI()}
@@ -3776,7 +3756,7 @@ let swipeAt=0;(()=>{let t0=null;const st=$('stand');
 body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9px;box-shadow:inset 0 -4px 0 #be9b5c!important;transition:transform .06s linear}
 .pinbar{position:fixed;left:0;right:0;bottom:0;z-index:65;padding:14px 16px max(14px,env(safe-area-inset-bottom,0px));background:#12100b;border-top:1px solid #c8932f;box-shadow:0 -10px 30px rgba(0,0,0,.6);display:grid;grid-template-columns:1fr;gap:4px}
 .pinbar b{font:700 17px/1.3 var(--f-ui);color:#e7bb63}.pinbar span{font:400 13.5px/1.45 var(--f-ui);color:#d5cfc3}
-.pinbar div{display:flex;gap:8px;margin-top:6px}.pinbar button{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:#e4d3ae;font:600 13.5px/1 var(--f-ui)}
+.pinbar div{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}.pinbar button{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:#e4d3ae;font:600 13.5px/1 var(--f-ui)}
 .pinbar button.tapbig{height:84px;margin-top:8px;border:0;border-radius:16px;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;font:700 20px/1 var(--f-ui);touch-action:manipulation}
 .pinbar button.go{margin-left:auto;border:0;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a}
 @media (orientation:landscape) and (max-height:500px){.pinbar{grid-template-columns:1fr auto;align-items:center;padding-top:6px;padding-bottom:6px}.pinbar b{grid-column:1}.pinbar span{grid-column:1;font-size:12.5px}.pinbar div{grid-column:2;grid-row:1/3;margin:0}}
@@ -3800,7 +3780,7 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
 @media (orientation:landscape) and (max-height:500px){body .tf-card{grid-template-columns:1fr 200px;grid-template-areas:"bar hit" "snip hit" "main hit" "dots hit" "note hit" "row row"}body .tf-snip{max-height:56px}body .tf-note{display:none}body .tf-hit{height:100%;min-height:84px;margin:0}
   .co-card{padding-top:14px}.co-card h3{margin-bottom:10px;font-size:18px}.co-steps{gap:8px}.co-go{height:48px;margin-top:10px}}
 </style>
-<div class="pinbar" id="pinBar" hidden><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">처음부터</button><button id="pbDone" class="go">완료</button></div></div>
+<div class="pinbar" id="pinBar" hidden><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">처음부터</button><button id="pbRetap">템포 다시</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
   <p class="co-kick" id="coKick"></p><h3 id="coTitle"></h3><ol class="co-steps" id="coSteps"></ol>
   <div class="co-bar" id="coBar" hidden><p id="coBarT"></p><canvas id="coBarC"></canvas><div class="co-barb"><button id="coPrev">◀ 앞 마디</button><button id="coNext">뒤 마디 ▶</button></div><small>이 마디가 아니면 화살표로 바꾸세요.</small></div><div class="co-demo" id="coDemo" hidden></div><p class="co-note" id="coNote" hidden></p>
@@ -3853,6 +3833,7 @@ document.getElementById('pbHead').onclick=()=>{if(pin){pin.pts=[];pin.ok=false;i
 document.getElementById('pbDone').onclick=()=>pinDone();
 document.getElementById('pbTap').addEventListener('pointerdown',e=>{e.preventDefault();pinTap()});
 document.getElementById('pbSkip').onclick=()=>{if(pin){pin.tapping=false;pinUI()}};
+document.getElementById('pbRetap').onclick=()=>{if(pin){pin.tapping=true;pin.taps=[];pinUI()}};
 function isPhoneUI(){return matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches}
 function openTapCoach(){openCoach({kick:'박자 맞추기',title:'노래에 악보 맞추기',go:'시작하기',later:'나중에',
   steps:S.scoreBpm>0?[['노래를 들어요',''],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']]:[['노래 박자에 맞춰 8번 두드려요',''],['지금 나오는 마디를 눌러요',''],['어긋나면 그 마디를 다시 눌러요','']],
@@ -3902,7 +3883,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.44.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.45.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
