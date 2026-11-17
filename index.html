@@ -3485,7 +3485,8 @@ function pinStart(){if(!hasAudio()){toast('먼저 노래(유튜브나 음원)를
   if(pin.tapping){const A=autoTempo();if(A&&A.state==='ok'){pin.tapBpm=A.bpm;pin.auto=true;pin.B=60/A.bpm;pin.tapping=false;setBpm(A.bpm)}}M.rate(P.speed);M.play().catch(()=>toast('음원을 재생하지 못했어요.'));document.body.classList.add('pinning');pinUI()}
 /* the tempo, when the score does not print it: tapped along with the song (eight taps; the middle of the gaps between them, as a whole number).
    The bars pressed afterwards say where the song is; they change the tempo only within a little of the tapped one. */
-const PIN_TAPS=8;
+const PIN_TAPS=8,PIN_SPAN=60;let pinA=null;
+function pinNudge(d){if(!pin||pin.tapping)return;const v=Math.round(P.bpm)+d;if(v<40||v>240)return;pin.B=60/v;pin.tapBpm=v;pin.ok=true;setBpm(v);follow.reset();saveSync();render(true);pinUI()}
 /* the tempo found by itself (web, YouTube): the song is looked up by the video's title in a public music catalogue (Deezer), and the
    30-second preview of the recording that the catalogue gives is analysed here, like an opened audio file. Checked two ways before it
    is believed: the track is as long as the video, or the tempo fits the score (its beats against the video's length). */
@@ -3519,13 +3520,13 @@ function pinTap(){if(!pin||!pin.tapping)return;const now=performance.now()/1000,
 function pinDone(){if(!pin)return;const ok=pin.ok||pin.pts.length>0;pin=null;document.body.classList.remove('pinning');$('pinBar').hidden=true;
   if(ok){saveSync();toast('저장했어요',1600)}}
 function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;let t,u;
-  $('pbTap').hidden=!pin.tapping;$('pbSkip').hidden=!pin.tapping;$('pbBack').hidden=$('pbHead').hidden=$('pbRetap').hidden=pin.tapping;
+  $('pbTap').hidden=!pin.tapping;$('pbSkip').hidden=!pin.tapping;$('pbBack').hidden=$('pbHead').hidden=$('pbRetap').hidden=$('pbDn').hidden=$('pbUp').hidden=pin.tapping;
   const bpmNow=pin.tapBpm||S.scoreBpm||0;
   // two separate jobs, named apart: 1 the song's tempo (how fast), 2 the place in the score (where)
   if(pin.tapping){$('pbTap').textContent=pin.taps.length?('두드리기  '+pin.taps.length+' / '+PIN_TAPS):'여기를 두드리기';
     $('pbK').textContent='1단계 · 곡의 템포 맞추기';$('pbT').textContent='노래 박자에 맞춰 버튼을 8번 두드리세요';$('pbS').textContent='노래가 얼마나 빠른지 알려 주는 거예요. 발로 박자 세듯이 일정하게 두드려요.';$('pinBar').hidden=false;return}
   if(!n){$('pbK').textContent='2단계 · 악보 위치 맞추기'+(bpmNow?'   (템포 ♩='+bpmNow+')':'');t='지금 노래에 나오는 마디를 악보에서 누르세요';u='노래가 악보의 어디쯤인지 알려 주는 거예요. 악보를 손가락으로 밀어 찾고, 그 마디가 시작될 때 눌러요.'}
-  else{$('pbK').textContent='맞춤 완료 · 템포 ♩='+P.bpm;t='악보가 노래를 따라가요';u="위치가 어긋나면: 그 마디를 다시 누르세요.  점점 밀리거나 앞서가면: '템포 다시 맞추기'."}
+  else{$('pbK').textContent='맞춤 완료 · 템포 ♩='+P.bpm;t='악보가 노래를 따라가요';u='노래 뒤쪽에서 지금 나오는 마디를 한 번 더 누르세요. 템포까지 알아서 맞춰져요.'}
   $('pbT').textContent=t;$('pbS').textContent=u;$('pinBar').hidden=false}
 function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
   // (a bar that is played more than once: the pass nearest to where the song is thought to be; at first, the first pass)
@@ -3533,11 +3534,19 @@ function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
   if(ti<0)return;const b=T[ti].start;
   if(pin.tapping)return;
   // a pressed bar says where the song is, nothing more: the tempo is the one tapped (or printed on the score). The last press counts.
-  const B=pin.B||60/(S.scoreBpm||(P.bpm>=40&&P.bpm<=240?P.bpm:100));pin.B=B;pin.pts=[{b,t,mi}];pin.ok=true;
+  let B=pin.B||60/(S.scoreBpm||(P.bpm>=40&&P.bpm<=240?P.bpm:100)),was=0;
+  // two presses a minute or more apart also say how fast the song runs: the tempo is corrected to the whole number they give
+  // (only near the present tempo, so one wrongly pressed bar cannot throw it; a press that disagrees makes the older ones forgotten)
+  {if(!pinA||pinA.key!==songKey)pinA={key:songKey,pts:[]};const cur=60/B,tol=Math.max(3,cur*0.045);let best=null;const keep=[];
+    for(const q of pinA.pts){const dt=t-q.t,db=b-q.b;if(Math.abs(dt)<8)continue;if(Math.abs(dt)<PIN_SPAN){keep.push(q);continue}
+      const est=dt*db>0?60*db/dt:0;if(!est||Math.abs(est-cur)>tol)continue;keep.push(q);if(!best||Math.abs(dt)>best.dt)best={dt:Math.abs(dt),est}}
+    keep.push({b,t});pinA.pts=keep.slice(-6);
+    if(best&&Math.abs(best.est-cur)>0.6){const nb=Math.round(best.est);if(nb!==Math.round(cur)&&nb>=40&&nb<=240){was=Math.round(cur);B=60/nb;pin.tapBpm=nb}}}
+  pin.B=B;pin.pts=[{b,t,mi}];pin.ok=true;
   const off=t-b*B,bpm=Math.round(6000/B)/100;
   if(P.map)P.map=null;setBpm(bpm);setOffset(off);P.synced=true;updateChip();spUI();follow.reset();
   if(!transport.playing){transport.forceCi=0;play()}render(true);
-  saveSync();toast(barNo(mi)+'마디 ✓',1200);pinUI()}
+  saveSync();toast(was?('템포를 '+was+' → '+bpm+' 로 고쳤어요'):(barNo(mi)+'마디 ✓'),was?2600:1200);pinUI()}
 /* ---- one tap to fix: press when the drums come in; the tap lands on the nearest beat of the song's beat grid ---- */
 let fixMode=null,fixSnap=null,fixRaf=0,saEntry=null;
 function entryBar(){const T=S.tl;if(!T||!T.length)return {ti:0,mi:0};const sm=scoreModel(),b=sm.firstAct||0,L=locate(b);if(!L||L.before)return {ti:0,mi:T[0].mi};
@@ -3846,7 +3855,7 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
 @media (orientation:landscape) and (max-height:500px){body .tf-card{grid-template-columns:1fr 200px;grid-template-areas:"bar hit" "snip hit" "main hit" "dots hit" "note hit" "row row"}body .tf-snip{max-height:56px}body .tf-note{display:none}body .tf-hit{height:100%;min-height:84px;margin:0}
   .co-card{padding-top:14px}.co-card h3{margin-bottom:10px;font-size:18px}.co-steps{gap:8px}.co-go{height:48px;margin-top:10px}}
 </style>
-<div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">처음부터</button><button id="pbRetap">템포 다시 맞추기</button><button id="pbDone" class="go">완료</button></div></div>
+<div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">처음부터</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">템포 다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
   <p class="co-kick" id="coKick"></p><h3 id="coTitle"></h3><ol class="co-steps" id="coSteps"></ol>
   <div class="co-bar" id="coBar" hidden><p id="coBarT"></p><canvas id="coBarC"></canvas><div class="co-barb"><button id="coPrev">◀ 앞 마디</button><button id="coNext">뒤 마디 ▶</button></div><small>이 마디가 아니면 화살표로 바꾸세요.</small></div><div class="co-demo" id="coDemo" hidden></div><p class="co-note" id="coNote" hidden></p>
@@ -3899,12 +3908,14 @@ document.getElementById('pbHead').onclick=()=>{if(pin){pin.pts=[];pin.ok=false;i
 document.getElementById('pbDone').onclick=()=>pinDone();
 document.getElementById('pbTap').addEventListener('pointerdown',e=>{e.preventDefault();pinTap()});
 document.getElementById('pbSkip').onclick=()=>{if(pin){pin.tapping=false;pinUI()}};
+document.getElementById('pbDn').onclick=()=>pinNudge(-1);document.getElementById('pbUp').onclick=()=>pinNudge(1);
 document.getElementById('pbRetap').onclick=()=>{if(pin){pin.tapping=true;pin.taps=[];pinUI()}};
 function isPhoneUI(){return matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches}
 function openTapCoach(){if(!(S.scoreBpm>0))try{const A=autoTempo();if(A&&A.p)A.p.then(()=>{if(autoT===A&&pin)pinUI()})}catch(e){}
-  openCoach({kick:'노래와 악보 맞추기',title:'두 가지만 하면 돼요',go:'시작하기',later:'나중에',
+  openCoach({kick:'노래와 악보 맞추기',title:'세 가지만 하면 돼요',go:'시작하기',later:'나중에',
   steps:[['곡의 템포 맞추기',S.scoreBpm>0?'악보에 적힌 템포 <em>♩='+S.scoreBpm+'</em> 을 써요. 따로 할 건 없어요.':'노래가 얼마나 빠른지 알려 줘요.<br>노래 박자에 맞춰 버튼을 <em>8번 두드려요</em>.'],
-    ['악보 위치 맞추기','노래가 악보의 어디쯤인지 알려 줘요.<br>지금 노래에 나오는 마디를 <em>악보에서 눌러요</em>.']],
+    ['악보 위치 맞추기','노래가 악보의 어디쯤인지 알려 줘요.<br>지금 노래에 나오는 마디를 <em>악보에서 눌러요</em>.'],
+    ['뒤쪽에서 한 번 더','1분쯤 뒤에 지금 나오는 마디를 <em>한 번 더 눌러요</em>.<br>템포가 틀렸으면 알아서 고쳐져요.']],
   onGo:()=>pinStart(),onLater:()=>{}})}
 window.addEventListener('hashchange',()=>{if(shareTake())shareAsk()});
 window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElementById('licOv');if(shareTake()&&(!lo||lo.hidden)){shareAsk();return}if(isPhoneUI()&&!store.get('guideSeen',0)&&!S.pages.length&&(!lo||lo.hidden))openGuide()}catch(e){}},900));
@@ -3951,7 +3962,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.47.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.48.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
