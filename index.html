@@ -1666,7 +1666,18 @@ function pageLayout(c){
   const XA=Math.max(0,Math.round(Math.min(...st.map(s=>s.x0))-sp)),XB=Math.min(W,Math.round(Math.max(...st.map(s=>s.x1))+sp));
   const rc=new Int16Array(H).fill(-1),blankMax=Math.max(1,(XB-XA)/2*0.002);
   const dark=y=>{if(y<0||y>=H)return 0;if(rc[y]>=0)return rc[y];let k=0;for(let x=XA;x<XB;x+=2)if(img[(y*W+x)*4]<140)k++;return rc[y]=Math.min(k,32000)};
-  const cutBetween=(a,b)=>{const mid=(a+b)/2;if(!img)return mid;const ya=Math.round(a+sp*0.5),yb=Math.round(b-sp*0.5);let best=null,run=-1;
+  // where the words under a line stand (lyrics), learned from the last line of the page, under which nothing else is printed:
+  // how far below the staff they begin, and how tall they are. Every line of a score has its words at the same distance.
+  const cover=(y0,y1)=>{const cols=Math.ceil((XB-XA)/4);let c2=0;for(let x=XA;x<XB;x+=4){for(let y=y0;y<=y1;y+=2)if(img[(y*W+x)*4]<140){c2++;break}}return c2/cols};
+  let lyr=null;if(img&&!window.__noLyrCut){const L=st.reduce((p,q)=>q.bot>p.bot?q:p,st[0]),yS=Math.round(L.bot+sp*0.5),yE=Math.min(H-1,Math.round(L.bot+sp*11));let run=-1;const bands=[];
+    for(let y=yS;y<=yE+1;y++){const ink=y<=yE&&dark(y)>blankMax;if(ink&&run<0)run=y;if(!ink&&run>=0){bands.push([run,y-1]);run=-1}}
+    for(const [y0,y1] of bands){const h=y1-y0+1;if(y0<=yS+1||h<sp*0.6||h>sp*3.5)continue;if(cover(y0,y1)>=0.08){lyr={d:y0-L.bot,h};break}}
+    if(lyr)pageLayout.lyr={d:lyr.d/sp,h:lyr.h/sp};else if(pageLayout.lyr)lyr={d:pageLayout.lyr.d*sp,h:pageLayout.lyr.h*sp}}
+  const cutBetween=(a,b)=>{const mid=(a+b)/2;if(!img)return mid;
+    // (this line's words, where the page's last line has its own: the cut goes under them, on the emptiest row before the next line's notes)
+    if(lyr){const y0=Math.round(a+lyr.d),y1=Math.round(a+lyr.d+lyr.h);if(y1<b-sp*0.3&&cover(y0,y1)>=0.06){let by=-1,bv=1e9;const e=Math.min(Math.round(b-sp*0.3),Math.round(y1+sp*2.2));
+        for(let y=Math.round(y1-sp*0.15);y<=e;y++){const v=dark(y);if(v<bv){bv=v;by=y}if(v<=blankMax){let k=y;while(k+1<=e&&dark(k+1)<=blankMax)k++;by=(y+k)/2;break}}
+        if(by>=0)return by}}const ya=Math.round(a+sp*0.5),yb=Math.round(b-sp*0.5);let best=null,run=-1;
     const gaps=[];
     for(let y=ya;y<=yb+1;y++){const bl=y<=yb&&dark(y)<=blankMax;if(bl&&run<0)run=y;
       if(!bl&&run>=0){const h=y-run,cy=(run+y-1)/2,sc=h-Math.abs(cy-mid)*0.25;if(h>=2){gaps.push([run,y-1]);if(!best||sc>best.sc)best={sc,cy}}run=-1}}
@@ -2072,7 +2083,7 @@ function occurrence(mi,near){const T=S.tl;let best=-1,bd=Infinity;const cur=near
 function measureStart(mi){const i=occurrence(mi);return i>=0?S.tl[i].start:0}
 
 /* ---------------- loading files ---------------- */
-async function openScoreFile(input){
+async function openScoreFile(input){pageLayout.lyr=null;
   const files=(Array.isArray(input)?input:[input]).filter(Boolean);if(!files.length)return;
   $('busy').textContent='악보 여는 중… ('+(files[0].name||'파일')+')';$('busy').hidden=false;
   try{await new Promise(r=>requestAnimationFrame(()=>setTimeout(r,30)))}catch(e){}
@@ -3940,7 +3951,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.47.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.47.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
