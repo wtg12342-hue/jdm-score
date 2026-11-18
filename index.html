@@ -694,6 +694,14 @@ button{touch-action:manipulation}
 .tf-hit{background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}.tf-hit:active,.tf-hit.hit{filter:brightness(.92)}
 .pgpanel{border-radius:12px}.libitem{border-radius:10px}.libitem:hover{border-color:rgba(217,166,72,.6)}
 .libfolders .fchip.on{color:var(--brass);border-color:rgba(217,166,72,.6);background:var(--brass-soft)}
+/* first screen: only the drawing of the logo */
+body .wbrand2 .lgr,body .wbrand2 .lgw{display:none!important}
+#wYt.linked{border-color:rgba(214,170,84,.55)!important}#wYt.linked small{display:block!important;color:#cbbd9f;font-size:12.5px;margin-top:3px}#wYt.linked small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}#wYt.linked b{color:var(--gold,#d6aa54)}
+@keyframes nextgo{0%,100%{box-shadow:0 0 0 0 rgba(214,170,84,.55)}50%{box-shadow:0 0 0 10px rgba(214,170,84,0)}}
+#wOpen.nextgo{animation:nextgo 1.6s ease-in-out infinite}
+@media (max-width:900px){body:has(#welcome:not([hidden])) #ytBox{visibility:hidden!important;pointer-events:none!important}}
+/* while matching on a phone the video sits on top, where its ad can be skipped */
+@media (max-width:900px){body.pinning #ytBox{position:fixed!important;top:66px!important;right:8px!important;left:auto!important;bottom:auto!important;width:56vw!important;max-width:340px;z-index:70!important;visibility:visible!important;box-shadow:0 10px 30px rgba(0,0,0,.6)}}
 /* back to the first screen */
 .backb{flex:none;display:grid;place-items:center;width:40px;height:40px;margin:0 2px 0 -6px;border:0;border-radius:12px;background:transparent;color:var(--ink,#eee);cursor:pointer}
 .backb:hover{background:rgba(255,255,255,.07)}.backb[hidden]{display:none!important}
@@ -2190,7 +2198,7 @@ function updateTitles(){
   $('srcLine').textContent=`${kind} · ${S.pages.length}쪽 · ${S.measures.length}마디`+(S.scoreBpm?` · ♩=${S.scoreBpm}`:'')+src;
 }
 function paintRange(el){const mn=+el.min||0,mx=+el.max||100;el.style.setProperty('--p',((+el.value-mn)/(mx-mn)*100)+'%')}
-function afterLoad(){
+function afterLoad(){if(S.scoreBpm>0&&!P.synced&&!libOpening)try{setBpm(S.scoreBpm,true)}catch(e){}
   // the cursor enters a line at its first note, not at the clef and time signature in front of it
   if(S.kind!=='xml'&&S.systems&&S.systems.length){const firsts=S.systems.map(q=>S.measures[(q.measures||[])[0]]).filter(Boolean);
     // (the clef takes the same room on every line: where a line's first mark was read further in than that, it was not the first note)
@@ -2909,7 +2917,7 @@ async function loadYouTube(url){
     songKey='y:'+(yt.id||'');applySong();
     yt.justAt=performance.now();
     if(loadSync()){follow.start();if(!desktop)toast('영상을 열었어요 ✓  저장해 둔 맞춤도 불러왔어요',3200)}
-    else if(!desktop&&!(S.tl&&S.tl.length))toast('영상을 열었어요 ✓  이제 악보를 열어 주세요',4000)
+    else if(!(S.tl&&S.tl.length)){toast('영상을 연결했어요 ✓',1800);wYtLinked()}
     else if(window.jdm&&window.jdm.ytRecStart){toast('유튜브를 불러왔어요. 템포와 첫 박을 자동으로 찾을게요.',3000);setTimeout(autoSync,300)}
     else if(!desktop){$('drawer').hidden=true;document.body.classList.remove('mixopen');showSyncAsk('tap')}
     else{openSync();toast('유튜브를 불러왔어요. 첫 박을 탭으로 맞춰 주세요.',3800)}};
@@ -2958,7 +2966,11 @@ function goHome(){dropSong();
   for(const id of ['colL','colR']){const c=$(id);if(c)c.innerHTML=''}try{clearLoop()}catch(e){}
   $('songName').textContent='JDM 악보 플레이어';$('srcLine').textContent='악보를 열어 주세요';
   $('welcome').hidden=false;$('backBtn').hidden=true;clearTimeout(toast._t);$('toast').hidden=true;try{wRecent()}catch(e){}try{updatePagesBtn()}catch(e){}window.scrollTo(0,0)}
-function dropYouTube(){follow.stop();if(M.type==='yt'&&yt.ready){try{yt.player.stopVideo()}catch(e){}}
+/* first screen: the YouTube card shows the linked song, and "악보 열기" is the next thing to press */
+function wYtLinked(){const w=$('wYt');if(!w)return;if(!w.dataset.b){w.dataset.b=w.querySelector('b').textContent;w.dataset.s=w.querySelector('small').textContent}
+  w.classList.add('linked');w.querySelector('b').textContent='✓ 영상 연결됨';w.querySelector('small').textContent=$('ytTitle').textContent||'';$('wOpen').classList.add('nextgo')}
+function wYtReset(){const w=$('wYt');if(!w||!w.dataset.b)return;w.classList.remove('linked');w.querySelector('b').textContent=w.dataset.b;w.querySelector('small').textContent=w.dataset.s;$('wOpen').classList.remove('nextgo')}
+function dropYouTube(){wYtReset();follow.stop();if(M.type==='yt'&&yt.ready){try{yt.player.stopVideo()}catch(e){}}
   if(yt.player instanceof DesktopYT){yt.player.destroy();yt.player=null;yt.ready=false}
   $('ytBox').hidden=true;$('ytBtn').classList.remove('on');if(M.type==='yt')M.type='none'}
 let wl=null;async function wake(on){try{if(on&&'wakeLock'in navigator)wl=await navigator.wakeLock.request('screen');else if(wl){wl.release();wl=null}}catch(e){}}
@@ -3566,9 +3578,10 @@ function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;
   const bpmNow=pin.tapBpm||S.scoreBpm||0;
   // two separate jobs, named apart: 1 the song's tempo (how fast), 2 the place in the score (where)
   if(pin.tapping){$('pbTap').textContent=pin.taps.length?('두드리기  '+pin.taps.length+' / '+PIN_TAPS):'여기를 두드리기';
-    $('pbK').textContent='1단계 · 곡의 템포 맞추기';$('pbT').textContent='노래 박자에 맞춰 버튼을 8번 두드리세요';$('pbS').textContent='발로 박자 세듯이 일정하게 두드려요. 드럼이 늦게 나오면 아래 줄을 밀어 건너뛰세요.';$('pinBar').hidden=false;return}
-  if(!n){$('pbK').textContent='2단계 · 악보 위치 맞추기'+(bpmNow?'   (템포 ♩='+bpmNow+')':'');t='지금 노래에 나오는 마디를 악보에서 누르세요';u='그 마디가 시작될 때 눌러요. 드럼이 나올 때까지 기다리지 말고 아래 줄을 밀어 건너뛰세요.'}
-  else{$('pbK').textContent='맞춤 완료 · 템포 ♩='+P.bpm;t='악보가 노래를 따라가요';u='노래 뒤쪽에서 지금 나오는 마디를 한 번 더 누르세요. 템포까지 알아서 맞춰져요.'}
+    $('pbK').textContent='템포 두드리기';$('pbT').textContent='노래 박자에 맞춰 버튼을 8번 두드리세요';$('pbS').textContent='발로 박자 세듯이 일정하게 두드려요. 드럼이 늦게 나오면 아래 줄을 밀어 건너뛰세요.';$('pinBar').hidden=false;return}
+  const src=pin.tapBpm&&pin.tapBpm!==S.scoreBpm?'두드린 템포':S.scoreBpm?'악보에 적힌 템포':'템포';
+  if(!n){$('pbK').textContent='마디 누르기'+(bpmNow?' · '+src+' ♩='+bpmNow:'');t='지금 나오는 마디를 악보에서 누르세요';u='광고는 위 영상에서 건너뛰세요. 드럼이 늦게 나오면 아래 줄을 밀어 넘겨요.'}
+  else{$('pbK').textContent='맞췄어요 ✓ · 템포 ♩='+P.bpm;t='악보가 노래를 따라가요';u='1분쯤 뒤에 그때 나오는 마디를 한 번 더 누르면 더 정확해져요. 다 됐으면 완료.'}
   $('pbT').textContent=t;$('pbS').textContent=u;$('pinBar').hidden=false}
 function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
   // (a bar that is played more than once: the pass nearest to where the song is thought to be; at first, the first pass)
@@ -3958,10 +3971,11 @@ document.getElementById('pbDn').onclick=()=>pinNudge(-1);document.getElementById
 document.getElementById('pbRetap').onclick=()=>{if(pin){pin.tapping=true;pin.taps=[];pinUI()}};
 function isPhoneUI(){return matchMedia('(max-width:900px),(orientation:landscape) and (max-height:500px)').matches}
 function openTapCoach(){if(!(S.scoreBpm>0))try{const A=autoTempo();if(A&&A.p)A.p.then(()=>{if(autoT===A&&pin)pinUI()})}catch(e){}
-  openCoach({kick:(yt.justAt&&performance.now()-yt.justAt<2500)?'영상을 열었어요 ✓  이제 악보와 맞춰요':'노래와 악보 맞추기',title:'세 가지만 하면 돼요',go:'시작하기',later:'나중에',
-  steps:[['곡의 템포 맞추기',S.scoreBpm>0?'악보에 적힌 템포 <em>♩='+S.scoreBpm+'</em> 을 써요. 따로 할 건 없어요.':'노래가 얼마나 빠른지 알려 줘요.<br>노래 박자에 맞춰 버튼을 <em>8번 두드려요</em>.'],
-    ['악보 위치 맞추기','노래가 악보의 어디쯤인지 알려 줘요.<br>지금 노래에 나오는 마디를 <em>악보에서 눌러요</em>.'],
-    ['뒤쪽에서 한 번 더','1분쯤 뒤에 지금 나오는 마디를 <em>한 번 더 눌러요</em>.<br>템포가 틀렸으면 알아서 고쳐져요.']],
+  const sb=S.scoreBpm>0;
+  openCoach({kick:'노래와 악보 맞추기',title:sb?'두 가지만 하면 돼요':'세 가지만 하면 돼요',go:'시작하기',later:'나중에',
+  steps:(sb?[]:[['템포 두드리기','노래 박자에 맞춰 버튼을 <em>8번 두드려요</em>.']]).concat([
+    ['마디 누르기',(sb?'템포는 악보 맨 위에 적힌 <em>♩='+S.scoreBpm+'</em> 으로 맞춰 놨어요.<br>':'')+'노래를 듣다가, 지금 나오는 마디를 <em>악보에서 눌러요</em>.'],
+    ['1분 뒤 한 번 더','조금 뒤에 그때 나오는 마디를 <em>한 번 더 눌러요</em>.<br>밀린 게 있으면 알아서 맞춰져요.']]),
   onGo:()=>pinStart(),onLater:()=>{}})}
 window.addEventListener('hashchange',()=>{if(shareTake())shareAsk()});
 window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElementById('licOv');if(shareTake()&&(!lo||lo.hidden)){shareAsk();return}if(isPhoneUI()&&!store.get('guideSeen',0)&&!S.pages.length&&(!lo||lo.hidden))openGuide()}catch(e){}},900));
@@ -4008,7 +4022,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.52.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.53.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
