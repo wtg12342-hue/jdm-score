@@ -4,9 +4,9 @@ android {
     compileSdk 36
     defaultConfig {
         applicationId 'kr.jdmdrum.score'
-        minSdk 23
+        minSdkVersion 24
         targetSdk 36
-        versionCode 13
+        versionCode 14
         versionName '1.0.0'
     }
     lint { abortOnError false; checkReleaseBuilds false }
