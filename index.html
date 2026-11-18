@@ -3581,7 +3581,7 @@ function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;
     $('pbK').textContent='템포 두드리기';$('pbT').textContent='노래 박자에 맞춰 버튼을 8번 두드리세요';$('pbS').textContent='발로 박자 세듯이 일정하게 두드려요. 드럼이 늦게 나오면 아래 줄을 밀어 건너뛰세요.';$('pinBar').hidden=false;return}
   const src=pin.tapBpm&&pin.tapBpm!==S.scoreBpm?'두드린 템포':S.scoreBpm?'악보에 적힌 템포':'템포';
   if(!n){$('pbK').textContent='마디 누르기'+(bpmNow?' · '+src+' ♩='+bpmNow:'');t='지금 나오는 마디를 악보에서 누르세요';u='광고는 위 영상에서 건너뛰세요. 드럼이 늦게 나오면 아래 줄을 밀어 넘겨요.'}
-  else{$('pbK').textContent='맞췄어요 ✓ · 템포 ♩='+P.bpm;t='악보가 노래를 따라가요';u='1분쯤 뒤에 그때 나오는 마디를 한 번 더 누르면 더 정확해져요. 다 됐으면 완료.'}
+  else{$('pbK').textContent='맞췄어요 ✓ · 템포 ♩='+P.bpm;t='악보가 노래를 따라가요';u='1분쯤 뒤에 그때 나오는 마디를 한 번 더 누르면, 노래 템포가 악보와 다를 때 노래에 맞게 고쳐요. 다 됐으면 완료.'}
   $('pbT').textContent=t;$('pbS').textContent=u;$('pinBar').hidden=false}
 function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
   // (a bar that is played more than once: the pass nearest to where the song is thought to be; at first, the first pass)
@@ -3977,7 +3977,7 @@ function openTapCoach(){if(!(S.scoreBpm>0))try{const A=autoTempo();if(A&&A.p)A.p
   openCoach({kick:'노래와 악보 맞추기',title:sb?'두 가지만 하면 돼요':'세 가지만 하면 돼요',go:'시작하기',later:'나중에',
   steps:(sb?[]:[['템포 두드리기','노래 박자에 맞춰 버튼을 <em>8번 두드려요</em>.']]).concat([
     ['마디 누르기',(sb?'템포는 악보 맨 위에 적힌 <em>♩='+S.scoreBpm+'</em> 으로 맞춰 놨어요.<br>':'')+'노래를 듣다가, 지금 나오는 마디를 <em>악보에서 눌러요</em>.'],
-    ['1분 뒤 한 번 더','조금 뒤에 그때 나오는 마디를 <em>한 번 더 눌러요</em>.<br>밀린 게 있으면 알아서 맞춰져요.']]),
+    ['템포 확인 (선택)','1분쯤 뒤에 그때 나오는 마디를 <em>한 번 더 눌러요</em>.<br>노래 템포가 악보와 다르면 노래에 맞게 고쳐요. (예: ♩=67 → 66)']]),
   onGo:()=>pinStart(),onLater:()=>{}})}
 window.addEventListener('hashchange',()=>{if(shareTake())shareAsk()});
 window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElementById('licOv');if(shareTake()&&(!lo||lo.hidden)){shareAsk();return}if(isPhoneUI()&&!store.get('guideSeen',0)&&!S.pages.length&&(!lo||lo.hidden))openGuide()}catch(e){}},900));
@@ -4024,7 +4024,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.54.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.54.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
