@@ -3748,7 +3748,7 @@ async function libSave(quiet){
     S.libId=e.id;saveMark(true);wRecent();if(!quiet)toast(`'${S.name}'을(를) 내 곡에 저장했어요. 다음엔 '내 곡'에서 바로 열면 돼요.`,2800);if(!$('libOv').hidden)libRender();return e}
   catch(err){console.error(err);toast('저장하지 못했어요 (저장 공간이 부족할 수 있어요).',4000);return null}}
 /* keep a saved song up to date when its timing is fixed again */
-let libT=0;function libTouch(){if(!S.libId)return;clearTimeout(libT);libT=setTimeout(()=>libSave(true),800)}
+let libT=0;function libTouch(){if(!S.libId)return;clearTimeout(libT);libT=setTimeout(()=>{if(S.libId)libSave(true)},800)}
 /* folders: a name on each song; empty folders are remembered on their own */
 let libFolder=store.get('libFolder','');
 function libFolderList(all){const set=new Set(store.get('libFolders',[]));all.forEach(e=>{if(e.folder)set.add(e.folder)});return [...set].sort((a,b)=>a.localeCompare(b,'ko'))}
@@ -3767,9 +3767,9 @@ function libFoldersUI(all){const box=$('libFolders');box.innerHTML='';const fl=l
 async function wRecent(){let all=[];try{all=await LDB.all()}catch(e){return}const box=$('wRecentList');box.innerHTML='';
   all.sort((a,b)=>(b.used||0)-(a.used||0));$('wRecent').hidden=!all.length;
   for(const e of all.slice(0,6)){const b=document.createElement('button');b.innerHTML='<span></span><small></small>';b.firstChild.textContent=e.title||e.scoreName||'곡';
-    const md=e.media?(e.media.type==='yt'?'유튜브':'음원 파일'):'음원 없음';b.lastChild.textContent=md+(e.folder?' · '+e.folder:'')+(e.sync?` · ♩${e.sync.bpm}`:'');
+    const md=e.media?(e.media.type==='yt'?'유튜브':'음원 파일'):'음원 없음';b.lastChild.textContent=(e.tmp?'저장 안 한 곡 · ':'')+md+(e.folder?' · '+e.folder:'')+(e.sync?` · ♩${e.sync.bpm}`:'');
     b.onclick=()=>libOpen(e.id);box.appendChild(b)}}
-async function libRender(){wRecent();const box=$('libList');let all=[];try{all=await LDB.all()}catch(e){box.innerHTML='<p class="libempty">이 화면에서는 저장 기능을 쓸 수 없어요.</p>';return}
+async function libRender(){wRecent();const box=$('libList');let all=[];try{all=(await LDB.all()).filter(e=>!e.tmp)}catch(e){box.innerHTML='<p class="libempty">이 화면에서는 저장 기능을 쓸 수 없어요.</p>';return}
   all.sort((a,b)=>(b.used||0)-(a.used||0));box.innerHTML='';libFoldersUI(all);
   if(!all.length){box.innerHTML='<p class="libempty">아직 저장한 곡이 없어요.<br>악보와 음원을 열고 박자를 맞춘 다음 \'지금 곡 저장\'을 누르세요.</p>';return}
   const fl=libFolderList(all),shown=libFolder?all.filter(e=>e.folder===libFolder):all;
@@ -4131,7 +4131,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.58.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.59.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4296,7 +4296,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   if(!enabled)return;
   // ---- the gates ----
   const wrap=(name,test)=>{const f=window[name];if(typeof f!=='function')return;window[name]=function(){if(!has()&&test.apply(this,arguments)){open(name);return}return f.apply(this,arguments)}};
-  const libSave0=window.libSave;window.libSave=async function(q){if(!has()&&!S.libId){let n=0;try{n=(await LDB.all()).length}catch(e){}if(n>=FREE_SONGS){open('libSave');toast('무료로는 '+FREE_SONGS+'곡까지 저장할 수 있어요.',3000);return null}}return libSave0.apply(this,arguments)};
+  const libSave0=window.libSave;window.libSave=async function(q){if(!has()&&!S.libId){let n=0;try{n=(await LDB.all()).filter(e=>!e.tmp).length}catch(e){}if(n>=FREE_SONGS){open('libSave');toast('무료로는 '+FREE_SONGS+'곡까지 저장할 수 있어요.',3000);return null}}return libSave0.apply(this,arguments)};
   wrap('setLoopEdge',()=>true);wrap('shareSync',()=>true);
   const lb=$('loopBtn');if(lb){const f=lb.onclick;lb.onclick=function(e){if(!has()&&!(P.loop.on||P.loopPick)){open('loop');return}return f&&f.call(this,e)}}
   const sp=$('speed');if(sp){const f=sp.oninput;sp.oninput=function(e){if(!has()&&+e.target.value!==100){setSpeed(100);open('speed');return}return f&&f.call(this,e)}}
@@ -4388,8 +4388,6 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
       b.title=sv?'내 곡에 저장돼 있어요. 고친 것도 저절로 저장돼요.':'눌러서 내 곡에 저장해요. 다음엔 내 곡에서 바로 열어요.'}
     const r=$('rotBtn');r.hidden=!has||!phone();if(!r.hidden){const land=innerWidth>innerHeight;r.querySelector('.t').textContent=land?'세로':'가로';r.title=land?'세로로 보기':'가로로 보기'}}
   setInterval(bar,600);addEventListener('resize',bar);bar();
-  // leaving a matched song that was never saved: save it on the way out
-  {const g=window.goHome;if(typeof g==='function')window.goHome=async function(){try{if(S.measures.length&&P.synced&&!S.libId&&typeof hasAudio==='function'&&hasAudio()&&!(window.PRO&&PRO.active()&&!PRO.has()))await libSave(true)}catch(e){}return g.apply(this,arguments)}}
   // ---- 2. landscape in one tap (Android: full screen and turned; iPhone cannot be turned by a page)
   $('rotBtn').onclick=async()=>{const land=innerWidth>innerHeight,so=screen.orientation;
     try{if(land){try{so&&so.unlock&&so.unlock()}catch(e){}if(document.fullscreenElement)await document.exitFullscreen();
@@ -4445,6 +4443,40 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   $('mpVol').oninput=e=>{const v=$('vol');v.value=e.target.value;v.dispatchEvent(new Event('input',{bubbles:true}));v.dispatchEvent(new Event('change',{bubbles:true}))};
   const close=()=>{pop.hidden=true};$('mpOk').onclick=close;pop.addEventListener('click',e=>{if(e.target===pop)close()});
   setInterval(()=>{const o=on();if($('qMst').textContent!==(o?'켬':'끔'))$('qMst').textContent=o?'켬':'끔'},500);ui();
+})();
+</script>
+<script>
+/* ===== 2.59 the open song survives leaving the app: kept by itself (not saved to 내 곡), and opened again where it was ===== */
+(function(){const $=id=>document.getElementById(id);const KEEP_MAX=5;let tmpId=null,sig='',busy=false,restoring=false;
+  const R=()=>store.get('resume',null),setR=v=>store.set('resume',v);
+  function now(){try{return M.time()||0}catch(e){return 0}}
+  function sigNow(){const m=libMedia();return JSON.stringify([(LIB.src||[]).map(f=>f.name+f.size),LIB.range,m&&(m.id||m.name),libSyncNow(),P.startAt,P.loop.on&&[P.loop.a,P.loop.b],P.speed,P.countIn,S.order&&S.order.length])}
+  async function keep(){if(busy||restoring||opening||!S.measures.length||!LIB.src||!LIB.src.length)return;
+    if(S.libId){setR({id:S.libId,t:now(),at:Date.now()});return}
+    const g=sigNow();if(g===sig&&tmpId){setR({id:tmpId,t:now(),at:Date.now()});return}busy=true;
+    try{const media=libMedia(),order=S.order&&S.order.length!==S.measures.length?formatOrder(S.order):null;
+      let e=tmpId?await LDB.get(tmpId).catch(()=>null):null;if(!e)e={id:'k'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now(),tmp:true,folder:''};
+      Object.assign(e,{tmp:true,title:S.name,scoreName:S.name,files:LIB.src.map(f=>({name:f.name,type:f.type||'',blob:f})),range:LIB.range||null,kind:S.kind,
+        media,sync:libSyncNow(),order,startAt:P.startAt||0,bpm:P.bpm,countIn:P.countIn,used:Date.now(),loop:P.loop.on?{a:P.loop.a,b:P.loop.b}:null,speed:P.speed});
+      await LDB.put(e);tmpId=e.id;sig=g;setR({id:e.id,t:now(),at:Date.now()});
+      // only the last few unsaved songs are kept
+      const all=(await LDB.all()).filter(x=>x.tmp).sort((a,b)=>(b.used||0)-(a.used||0));for(const x of all.slice(KEEP_MAX))await LDB.del(x.id)}
+    catch(err){}finally{busy=false}}
+  setInterval(keep,5000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')keep()});addEventListener('pagehide',keep);
+  // a kept song is saved for real: it becomes a normal song in 내 곡
+  {const ls=window.libSave;window.libSave=async function(){const id=tmpId;if(id&&!S.libId){const old=await LDB.get(id).catch(()=>null);
+      const e=await ls.apply(this,arguments);if(e&&e.id!==id){await LDB.del(id).catch(()=>{});tmpId=null}return e}return ls.apply(this,arguments)}}
+  // opening another song: the one before stays among the recent ones; going home on purpose: nothing to reopen
+  {const d=window.dropSong;if(typeof d==='function')window.dropSong=function(){const r=d.apply(this,arguments);tmpId=null;sig='';return r}}
+  {const g=window.goHome;if(typeof g==='function')window.goHome=async function(){await keep();const r=await g.apply(this,arguments);tmpId=null;sig='';setR(null);return r}}
+  let opening=false;{const lo=window.libOpen;window.libOpen=async function(id){opening=true;let r;try{r=await lo.apply(this,arguments)}finally{opening=false}try{const e=await LDB.get(id);if(e&&e.tmp&&S.libId===id){S.libId=null;tmpId=id;sig=sigNow()}}catch(x){}return r}}
+  // back in the app after it was closed: the same song, at the same place, stopped
+  async function resume(){const r=R();if(!r||!r.id||Date.now()-(r.at||0)>7*864e5)return;if(/[#&]s=/.test(location.hash||''))return;
+    if(S.measures.length||!$('welcome')||$('welcome').hidden)return;const e=await LDB.get(r.id).catch(()=>null);if(!e){setR(null);return}
+    restoring=true;try{await libOpen(r.id);const t=+r.t||0;if(t>1){for(let i=0;i<40;i++){await new Promise(z=>setTimeout(z,250));if((typeof mediaDur==='function'&&mediaDur()>0)||M.type==='file'){try{M.seek(t);if(typeof render==='function')render(true)}catch(x){}break}}}
+      toast('하던 곡을 다시 열었어요',2200)}catch(x){}finally{restoring=false}}
+  setTimeout(resume,900);
 })();
 </script>
 </body></html>
