@@ -1334,6 +1334,7 @@ body .wbrand2 .lgw{display:block;width:126px;height:19px;background:var(--lg-wor
     <div class="seg nodrag" role="group" aria-label="보기 방식">
       <button id="vSpread" aria-pressed="true" title="두 장씩"><svg class="i"><use href="#i-book"/></svg><span class="t">두 장</span></button><button id="vScroll" aria-pressed="false" title="스크롤"><svg class="i"><use href="#i-scroll"/></svg><span class="t">스크롤</span></button>
     </div>
+    <a class="ib buyTop" id="buyTop" href="#" target="_blank" rel="noopener" hidden>♪ 이 곡 악보 사기</a>
     <button class="ib proBtn" id="proBtn" hidden>Pro</button>
     <button class="ib icon" id="settingsBtn" title="설정 · 음악 맞추기"><svg class="i"><use href="#i-sliders"/></svg></button>
     <button class="ib icon" id="fsBtn" title="전체 화면 (F11)"><svg class="i"><use href="#i-full"/></svg></button>
@@ -1374,6 +1375,7 @@ body .wbrand2 .lgw{display:block;width:126px;height:19px;background:var(--lg-wor
           <button class="wprim" id="wOpen"><i class="wic"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></i><b>악보 열기</b><small>PDF · MusicXML</small><kbd>Ctrl O</kbd></button>
           <button class="wsec" id="wYt"><i class="wic"><svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.5 9.5v5l4-2.5z" fill="currentColor" stroke="none"/></svg></i><b>유튜브 링크</b><small>주소를 붙여 넣어요</small><kbd>Ctrl V</kbd></button>
         </div>
+        <a class="wbuy" id="wBuy" href="#" target="_blank" rel="noopener" hidden><i>♪</i><span><b>이 곡 JDM 드럼 악보가 있어요</b><small id="wBuyT"></small></span><em>사러 가기 →</em></a>
         <p class="whint">파일을 창에 끌어다 놓아도 열려요. <button class="wlink" id="wSample">예시 악보 열기</button></p>
       </div>
       <div class="wrecent" id="wRecent" hidden><div class="wrh"><h2>최근 연습한 곡</h2><button class="wlink" id="wAll">전체 보기</button></div><div class="wrlist" id="wRecentList"></div></div>
@@ -3923,6 +3925,16 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
 .pro-code summary{cursor:pointer;font:600 13.5px var(--f-ui);color:var(--muted);list-style:none}
 .pro-code summary::-webkit-details-marker{display:none}
 .pro-code input{margin-top:10px}.pro-code input::placeholder{letter-spacing:0;font-family:var(--f-ui);text-transform:none}.pro-code .lic-go{margin-top:8px}
+
+/* this song's JDM sheet on mapianist (not in the Play app) */
+.wbuy{display:flex;align-items:center;gap:12px;margin:12px 0 0;padding:12px 14px;border-radius:16px;text-decoration:none;color:var(--ink,#eee);background:linear-gradient(170deg,rgba(216,182,122,.16),rgba(216,182,122,.06));border:1px solid rgba(216,182,122,.4)}
+.wbuy[hidden]{display:none}
+.wbuy i{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:17px;color:#1a1307;background:var(--gold,#d8b67a)}
+.wbuy span{flex:1;min-width:0;display:grid;gap:2px}.wbuy b{font:700 14.5px var(--f-ui)}.wbuy small{font:500 12.5px var(--f-ui);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wbuy em{flex:none;font:700 13px var(--f-ui);font-style:normal;color:var(--gold,#d8b67a)}
+.ib.buyTop{height:30px;padding:0 12px;border-radius:999px;font:650 12.5px var(--f-ui);text-decoration:none;display:inline-flex;align-items:center;color:var(--gold,#d8b67a);border:1px solid rgba(216,182,122,.45);background:rgba(216,182,122,.08)}
+.ib.buyTop[hidden]{display:none}
+@media (max-width:760px){.ib.buyTop{display:none}}
 </style>
 <div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><label class="pbseek"><input type="range" id="pbSeek" min="0" max="1000" value="0" aria-label="노래 위치"><em id="pbTime">0:00</em></label><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">10초 ▶</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">템포 다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
@@ -4003,9 +4015,9 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   const IC={lib:'<path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.5l3.5 1-4 15-3.5-1z"/>',save:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',score:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
     audio:'<path d="M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2"/>',yt:'<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.5 9.5v5l4-2.5z"/>',pages:'<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/>',
     view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',curs:'<rect x="8.5" y="4" width="7" height="16" rx="3"/><path d="M3 9h3M3 15h3M18 9h3M18 15h3"/>',lesson:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l5-2.8z"/>',studio:'<path d="M4 11l8-6 8 6v8H4z"/><path d="M10 19v-5h4v5"/>',share:'<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.8l6.9-4M8.3 13.2l6.9 4"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17v.2"/>'};
-  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__cur','커서 모양 바꾸기','curs'],['__pro','JDM Pro','save'],['__share','학생에게 보내기','share'],['__sheet','악보 구매','lesson'],['__lesson','드럼 강의 보기','lesson'],['__studio','JDM 드럼 스튜디오 상담','studio'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
+  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__cur','커서 모양 바꾸기','curs'],['__buythis','이 곡 악보 사기','lesson',1],['__pro','JDM Pro','save'],['__share','학생에게 보내기','share'],['__sheet','악보 구매','lesson'],['__lesson','드럼 강의 보기','lesson'],['__studio','JDM 드럼 스튜디오 상담','studio'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
   const sh=$('moreSheet'),grid=$('msGrid');
-  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){if(id==='__sheet'&&typeof IN_PLAY_APP!=='undefined'&&IN_PLAY_APP)continue;let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__share')t={click:()=>shareSync()};if(id==='__pro'){if(!window.PRO||!PRO.active())continue;t={click:()=>PRO.open()};lb=PRO.has()&&!PRO.trialLeft()?'JDM Pro ✓':'JDM Pro'}if(id==='__cur')t={click:()=>curCycle()};if(id==='__lesson')t={click:()=>openOut(LINK_LESSON)};if(id==='__studio')t={click:()=>openOut(LINK_STUDIO)};if(id==='__sheet')t={click:()=>openOut(LINK_SHEET)};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
+  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){if(id==='__sheet'&&typeof IN_PLAY_APP!=='undefined'&&IN_PLAY_APP)continue;let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__share')t={click:()=>shareSync()};if(id==='__buythis'){const m=window.SHEETBUY&&SHEETBUY.now();if(!m)continue;t={click:()=>openOut(SHEETBUY.url(m))}}if(id==='__pro'){if(!window.PRO||!PRO.active())continue;t={click:()=>PRO.open()};lb=PRO.has()&&!PRO.trialLeft()?'JDM Pro ✓':'JDM Pro'}if(id==='__cur')t={click:()=>curCycle()};if(id==='__lesson')t={click:()=>openOut(LINK_LESSON)};if(id==='__studio')t={click:()=>openOut(LINK_STUDIO)};if(id==='__sheet')t={click:()=>openOut(LINK_SHEET)};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
       b.innerHTML='<svg viewBox="0 0 24 24">'+IC[ic]+'</svg><span></span>';b.lastChild.textContent=lb;b.onclick=()=>{close();setTimeout(()=>t.click(),30)};grid.appendChild(b)}sh.hidden=false}
   function close(){sh.hidden=true}
   $('moreBtn').onclick=open;$('msClose').onclick=close;sh.addEventListener('click',e=>{if(e.target===sh)close()});
@@ -4038,7 +4050,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.55.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.56.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4208,6 +4220,73 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   const lb=$('loopBtn');if(lb){const f=lb.onclick;lb.onclick=function(e){if(!has()&&!(P.loop.on||P.loopPick)){open('loop');return}return f&&f.call(this,e)}}
   const sp=$('speed');if(sp){const f=sp.oninput;sp.oninput=function(e){if(!has()&&+e.target.value!==100){setSpeed(100);open('speed');return}return f&&f.call(this,e)}}
   const ss0=window.setSpeed;window.setSpeed=function(v){if(!has()&&+v!==100)v=100;return ss0.call(this,v)};
+})();
+</script>
+<script>
+/* ===== JDM sheets on mapianist: when the open song (video title or score name) is one of ours, offer it. Never in the Play app. ===== */
+(function(){const $=id=>document.getElementById(id);
+  const CAT=[
+[247247,'리센느|rescene','loveattack|러브어택','리센느 - LOVE ATTACK'],
+[112671,'제이어스|jus','주사랑이내게들어와','제이어스 - 주 사랑이 내게 들어와'],
+[102490,'호시노겐|hoshinogen|星野源','恋|koi|코이','호시노 겐 - 恋 (Koi)'],
+[116087,'뉴제너레이션|newgeneration','turnitup|trunitup','뉴제너레이션워십 - Turn It Up'],
+[101634,'혁오|hyukoh','멋진헛간','혁오 - 멋진 헛간'],
+[110186,'제이어스|jus','시편139','제이어스 - 시편 139편'],
+[96803,'호시노겐|hoshinogen|星野源','喜劇|희극|kigeki','호시노 겐 - 喜劇 (희극)'],
+[92051,'태일|taeil','starlight|스타라이트','태일 - Starlight'],
+[90717,'wham|왬','lastchristmas|라스트크리스마스','Wham! - Last Christmas'],
+[114000,'seventeen|세븐틴','maestro|마에스트로','세븐틴 - MAESTRO'],
+[106029,'exo|엑소','첫눈|thefirstsnow','EXO - 첫눈'],
+[95318,'지수|jisoo','꽃|flower','지수 - 꽃'],
+[120277,'lucy|루시','낙화','LUCY - 낙화'],
+[115070,'aespa|에스파','supernova|슈퍼노바','에스파 - Supernova'],
+[110929,'비비|bibi','밤양갱','비비 - 밤양갱'],
+[100847,'멜로망스|melomance','선물|gift','멜로망스 - 선물'],
+[90716,'임영웅|limyoungwoong','londonboy|런던보이','임영웅 - LONDON BOY'],
+[95035,'샌드페블즈|sandpebbles','나어떡해','샌드 페블즈 - 나 어떡해'],
+[92113,'newjeans|뉴진스','ditto|디토','뉴진스 - Ditto'],
+[92064,'김태우|kimtaewoo','사랑비','김태우 - 사랑비'],
+[161907,'악뮤|akmu|악동뮤지션','소문의낙원','악뮤 - 소문의 낙원'],
+[95673,'christopher|크리스토퍼','bad','Christopher - Bad'],
+[92067,'sokodomo|소코도모','회전목마','sokodomo - 회전목마'],
+[92057,'진미령','미운사랑','진미령 - 미운 사랑'],
+[113016,'최예근','어른','최예근밴드 - 어른'],
+[95606,'ive|아이브','iam|아이엠','IVE - I AM'],
+[94284,'버스커|busker','벚꽃엔딩','버스커 버스커 - 벚꽃 엔딩'],
+[92813,'투모로우바이투게더|txt|tomorrowxtogether','sugarrushride|슈가러시라이드','TXT - Sugar Rush Ride'],
+[92065,'브레이브걸스|bravegirls','롤린|rollin','브레이브걸스 - 롤린'],
+[92055,'장범준|버스커|busker','흔들리는꽃들속에서','장범준 - 흔들리는 꽃들 속에서 네 샴푸향이 느껴진거야'],
+[92053,'이루|eru','흰눈','이루 - 흰눈'],
+[90720,'멜로망스|melomance','사랑인가봐','멜로망스 - 사랑인가봐'],
+[114609,'임영웅|limyoungwoong','온기','임영웅 - 온기'],
+[106375,'이찬혁|leechanhyuk','1조','이찬혁 - 1조'],
+[92061,'엠씨더맥스|mcthemax|엠씨더맥스','어디에도','엠씨더맥스 - 어디에도'],
+[259981,'성시경|sungsikyung','너는나의봄이다','성시경 - 너는 나의 봄이다'],
+[162493,'임재범|limjaebum','위로','임재범 - 위로'],
+[119388,'지민|jimin','who','지민 - Who'],
+[106420,'르세라핌|lesserafim','perfectnight|퍼펙트나이트','르세라핌 - Perfect Night'],
+[94803,'라이너스','연','라이너스 - 연'],
+[93657,'황민호|김추자','님은먼곳에','황민호 - 님은 먼 곳에'],
+[92741,'황민호|정의송','님이여','황민호 - 님이여'],
+[92299,'태양|taeyang','vibe|바이브','태양 - VIBE'],
+[92068,'윤종신|yoonjongshin','본능적으로','윤종신 - 본능적으로'],
+[92066,'10cm|십센치','finethankyouandyou','10cm - Fine thank you and you?'],
+[92063,'싸이|psy','챔피언|champion','싸이 - 챔피언'],
+[92054,'임영웅|limyoungwoong','사랑은늘도망가','임영웅 - 사랑은 늘 도망가']];
+  const n=t=>String(t||'').toLowerCase().normalize('NFC').replace(/[\s\-_.,·:;'"!?()\[\]{}<>\/&+~`|]/g,'');
+  const has=(t,keys,raw)=>keys.split('|').some(k=>k&&(raw&&/^[a-z0-9]{1,4}$/.test(k)?new RegExp('(^|[^a-z0-9])'+k+'([^a-z0-9]|$)').test(raw):t.includes(k)));
+  function find(text){const t=n(text);if(!t)return null;let best=null;
+    for(const e of CAT){const [id,ar,ti]=e;if(!has(t,ti))continue;const tk=ti.split('|').find(k=>t.includes(k));
+      const ok=has(t,ar,String(text).toLowerCase())||tk.length>=6;if(ok&&(!best||tk.length>best[1]))best=[e,tk.length]}return best&&best[0]}
+  const inPlay=typeof IN_PLAY_APP!=='undefined'&&IN_PLAY_APP;let cur=null;
+  const url=e=>'https://www.mapianist.com/sheet/'+e[0];
+  function offer(){if(inPlay){cur=null}else{let yt='';try{yt=(M.type==='yt'&&($('ytTitle').textContent||''))||''}catch(e){}
+      cur=find(yt)||find((typeof S!=='undefined'&&S.name)||'')}
+    const w=$('wBuy'),b=$('buyTop');if(w){w.hidden=!cur;if(cur){w.href=url(cur);$('wBuyT').textContent=cur[3]+' · 마피아니스트'}}
+    if(b){b.hidden=!cur||!(typeof S!=='undefined'&&S.measures&&S.measures.length);if(cur)b.href=url(cur)}}
+  window.SHEETBUY={now:()=>cur,url,find,offer};
+  for(const f of ['wYtLinked','wYtReset','afterLoad','dropSong','goHome']){const g=window[f];if(typeof g!=='function')continue;window[f]=function(){const r=g.apply(this,arguments);try{offer()}catch(e){}return r}}
+  setInterval(()=>{try{offer()}catch(e){}},3000);
 })();
 </script>
 </body></html>
