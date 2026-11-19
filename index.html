@@ -1334,6 +1334,7 @@ body .wbrand2 .lgw{display:block;width:126px;height:19px;background:var(--lg-wor
     <div class="seg nodrag" role="group" aria-label="보기 방식">
       <button id="vSpread" aria-pressed="true" title="두 장씩"><svg class="i"><use href="#i-book"/></svg><span class="t">두 장</span></button><button id="vScroll" aria-pressed="false" title="스크롤"><svg class="i"><use href="#i-scroll"/></svg><span class="t">스크롤</span></button>
     </div>
+    <button class="ib proBtn" id="proBtn" hidden>Pro</button>
     <button class="ib icon" id="settingsBtn" title="설정 · 음악 맞추기"><svg class="i"><use href="#i-sliders"/></svg></button>
     <button class="ib icon" id="fsBtn" title="전체 화면 (F11)"><svg class="i"><use href="#i-full"/></svg></button>
     <button class="ib icon morebtn" id="moreBtn" title="메뉴" aria-label="메뉴"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg></button>
@@ -3909,6 +3910,19 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
 }
 @media (orientation:landscape) and (max-height:500px){body .tf-card{grid-template-columns:1fr 200px;grid-template-areas:"bar hit" "snip hit" "main hit" "dots hit" "note hit" "row row"}body .tf-snip{max-height:56px}body .tf-note{display:none}body .tf-hit{height:100%;min-height:84px;margin:0}
   .co-card{padding-top:14px}.co-card h3{margin-bottom:10px;font-size:18px}.co-steps{gap:8px}.co-go{height:48px;margin-top:10px}}
+
+/* JDM Pro (web) */
+.ib.proBtn{height:30px;padding:0 12px;border-radius:999px;font:700 12.5px var(--f-ui);letter-spacing:.02em;color:#1a1307;background:linear-gradient(170deg,var(--gold-hi,#f0d9a8),var(--gold,#d8b67a));border:0}
+@media (max-width:760px){.ib.proBtn{display:none}}
+.pro-list{list-style:none;margin:4px 0 16px;padding:0;text-align:left;display:grid;gap:9px}
+.pro-list li{display:flex;gap:10px;align-items:center;font:500 14.5px/1.35 var(--f-ui);color:#e9e5dd}
+.pro-list li::before{content:"✓";flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;color:#1a1307;background:var(--gold,#d8b67a)}
+.pro-price{margin:0 0 12px;font:750 22px var(--f-ui);color:#f5f2ec}.pro-price small{font:500 13px var(--f-ui);color:var(--muted)}
+.pro-state{margin:0 0 14px;font:600 13px var(--f-ui);color:var(--gold,#d8b67a)}
+.pro-code{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+.pro-code summary{cursor:pointer;font:600 13.5px var(--f-ui);color:var(--muted);list-style:none}
+.pro-code summary::-webkit-details-marker{display:none}
+.pro-code input{margin-top:10px}.pro-code input::placeholder{letter-spacing:0;font-family:var(--f-ui);text-transform:none}.pro-code .lic-go{margin-top:8px}
 </style>
 <div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><label class="pbseek"><input type="range" id="pbSeek" min="0" max="1000" value="0" aria-label="노래 위치"><em id="pbTime">0:00</em></label><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">10초 ▶</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">템포 다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
@@ -3989,9 +4003,9 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   const IC={lib:'<path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.5l3.5 1-4 15-3.5-1z"/>',save:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',score:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
     audio:'<path d="M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2"/>',yt:'<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.5 9.5v5l4-2.5z"/>',pages:'<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/>',
     view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',curs:'<rect x="8.5" y="4" width="7" height="16" rx="3"/><path d="M3 9h3M3 15h3M18 9h3M18 15h3"/>',lesson:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l5-2.8z"/>',studio:'<path d="M4 11l8-6 8 6v8H4z"/><path d="M10 19v-5h4v5"/>',share:'<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.8l6.9-4M8.3 13.2l6.9 4"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17v.2"/>'};
-  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__cur','커서 모양 바꾸기','curs'],['__share','학생에게 보내기','share'],['__sheet','악보 구매','lesson'],['__lesson','드럼 강의 보기','lesson'],['__studio','JDM 드럼 스튜디오 상담','studio'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
+  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__cur','커서 모양 바꾸기','curs'],['__pro','JDM Pro','save'],['__share','학생에게 보내기','share'],['__sheet','악보 구매','lesson'],['__lesson','드럼 강의 보기','lesson'],['__studio','JDM 드럼 스튜디오 상담','studio'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
   const sh=$('moreSheet'),grid=$('msGrid');
-  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){if(id==='__sheet'&&typeof IN_PLAY_APP!=='undefined'&&IN_PLAY_APP)continue;let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__share')t={click:()=>shareSync()};if(id==='__cur')t={click:()=>curCycle()};if(id==='__lesson')t={click:()=>openOut(LINK_LESSON)};if(id==='__studio')t={click:()=>openOut(LINK_STUDIO)};if(id==='__sheet')t={click:()=>openOut(LINK_SHEET)};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
+  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){if(id==='__sheet'&&typeof IN_PLAY_APP!=='undefined'&&IN_PLAY_APP)continue;let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__share')t={click:()=>shareSync()};if(id==='__pro'){if(!window.PRO||!PRO.active())continue;t={click:()=>PRO.open()};lb=PRO.has()&&!PRO.trialLeft()?'JDM Pro ✓':'JDM Pro'}if(id==='__cur')t={click:()=>curCycle()};if(id==='__lesson')t={click:()=>openOut(LINK_LESSON)};if(id==='__studio')t={click:()=>openOut(LINK_STUDIO)};if(id==='__sheet')t={click:()=>openOut(LINK_SHEET)};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
       b.innerHTML='<svg viewBox="0 0 24 24">'+IC[ic]+'</svg><span></span>';b.lastChild.textContent=lb;b.onclick=()=>{close();setTimeout(()=>t.click(),30)};grid.appendChild(b)}sh.hidden=false}
   function close(){sh.hidden=true}
   $('moreBtn').onclick=open;$('msClose').onclick=close;sh.addEventListener('click',e=>{if(e.target===sh)close()});
@@ -4024,7 +4038,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.54.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.55.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4123,6 +4137,77 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   const gate=(name)=>{const f=window[name];if(typeof f!=='function')return;window[name]=function(){if(!ok){ask();return}return f.apply(this,arguments)}};
   ['openScoreFile','loadYouTube','loadAudioFile','libSave','openSearch'].forEach(gate);
   const li=$('licInfo');if(li){const upd=()=>{li.textContent=ok?'정식 버전':'체험판 (예시 악보만)';$('licBtn').hidden=ok};upd();new MutationObserver(upd).observe(document.body,{attributes:true,attributeFilter:['class']});$('licBtn').onclick=ask}
+})();
+</script>
+<div class="licov" id="proOv" hidden><div class="lic-card">
+  <button class="lic-x" id="proX" aria-label="닫기">✕</button>
+  <p class="lic-k">JDM Pro</p>
+  <h2 id="proH">이 기능은 Pro에서 쓸 수 있어요</h2>
+  <p class="pro-state" id="proState" hidden></p>
+  <ul class="pro-list"><li>곡 저장 무제한 (무료는 3곡)</li><li>구간 반복</li><li>속도 조절</li><li>학생에게 보내기</li></ul>
+  <p class="pro-price">4,900원 <small>한 번 결제로 계속</small></p>
+  <a class="lic-go" id="proBuy" href="#" target="_blank" rel="noopener" style="display:block;text-decoration:none;line-height:52px">구매하기</a>
+  <details class="pro-code" id="proCodeBox"><summary>코드가 있어요</summary>
+    <input id="proIn" type="text" placeholder="받은 코드를 넣어 주세요" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    <p class="lic-e" id="proErr" hidden>코드가 맞지 않아요. 다시 확인해 주세요.</p>
+    <button class="lic-go" id="proGo">확인</button></details>
+</div></div>
+<script>
+/* ===== JDM Pro (web/iPhone/PC browser). Free: open score, video/audio, sync, play, 3 saved songs.
+   Pro: unlimited saves, loop, speed, share. 7-day trial. Codes come from Polar (checked online) or are
+   student promo codes (only their hashes are here). Off until PRO_CFG.on, and never inside the Play app. ===== */
+(function(){const $=id=>document.getElementById(id);
+  const CFG=/*PRO_CFG*/{"on": false, "org": "", "buy": "", "promo": ["be288b06b3056e4197fd3e3e", "58bfd2eb2e7fc905ff8e13e6", "6564ccc0e49f823228597766", "b193d2d790bb577c13ff0395", "52e5d71a3d5821c97af6f279", "53182ca5c6cd45638c187d57", "2426c11f155fc4cff06ddec7", "b9bb4d490af6f939190bbaec", "9e7bd6896082d7662e018dc3", "1af52199522c4e6e5f530c98", "3931304af6865f37cad8d497", "826f5e282f43730e559952f5", "4f55a385820a91f024fbea1a", "8f7bf4b09ae3687114a19142", "e7ef734700b41f8f7f5274d2", "c809ef77952f35a127d43b15", "c215d7f3633531931918fda0", "e02c41064f7677db32ba9e88", "68f8d45b8d702ef3a334c7a4", "3f3a29ba4a64af7de4d3b4da", "eac71b6f03e535dee1c938e0", "4eb4d494b79eeb9a064d97b0", "bda0b6fc3b73280dd54f058f", "01dc318a60ff00e632798ea7", "ee50e0025eb1cbc3a58835da", "2ad86ed19c447bc66a86a260", "06f633888fda0593a1df0d72", "5357646c47ebc50614b84125", "f7ed6242bc87896b96621d3d", "64f53ba768346ea0c8a92092", "a805c1a22cba20066f3b5fda", "024a74913baf17067143c97c", "8fe8abe697c881ff0b1ba921", "aa322d4605932e7b3322e532", "285e8b65748c8d9d27eaa8b5", "ef9b6ef4895633eb6401fa15", "cb9cac4bf88b36ef53e87189", "8c44741771b4c09642e7444e", "045a614ac3fa3201dd0e9a92", "66190bc2002aea51d9a7eb18", "1866f0e2f03349db9057b0f0", "65c86c4da3c1ca7948b1ed1d", "ef0a5519b577afa072ba31a0", "567760dbe4c973868f0d7746", "6fc8c8d9680249cc68316039", "43b19917a30661e168c4c649", "d130fddbf44937a0c8aa8255", "9a3fc3d8ec14dec77fa6cc16", "2cda5db7cc10543102c942a4", "7a9f33eb7d52111499c6f824"]}/*END*/;
+  const TRIAL_DAYS=7,FREE_SONGS=3,ss=window.sessionStorage;
+  let test=null;try{const q=new URLSearchParams(location.search).get('pro');if(q==='test'||q==='trial'||q==='off'){ss.setItem('proTest',q)}test=ss.getItem('proTest')}catch(e){}
+  const inPlay=typeof IN_PLAY_APP!=='undefined'&&IN_PLAY_APP;
+  const enabled=!inPlay&&test!=='off'&&(CFG.on||test==='test'||test==='trial');
+  const get=(k,d)=>{try{const v=localStorage.getItem('jdmPro.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}};
+  const put=(k,v)=>{try{localStorage.setItem('jdmPro.'+k,JSON.stringify(v))}catch(e){}};
+  if(enabled&&test==='test'&&!ss.getItem('proTestInit')){ss.setItem('proTestInit','1');put('t0',Date.now()-8*864e5);put('lic',null)}
+  if(enabled&&test==='trial'&&!ss.getItem('proTestInit')){ss.setItem('proTestInit','1');put('t0',Date.now());put('lic',null)}
+  if(enabled&&!get('t0',0))put('t0',Date.now());
+  const trialLeft=()=>{if(!enabled)return 0;const left=get('t0',Date.now())+TRIAL_DAYS*864e5-Date.now();return left>0?Math.ceil(left/864e5):0};
+  const licensed=()=>{const l=get('lic',null);return !!(l&&l.ok)};
+  const has=()=>!enabled||licensed()||trialLeft()>0;
+  const norm=c=>String(c||'').trim();
+  async function promoOk(c){const n=c.toUpperCase().replace(/[^A-Z0-9]/g,'');if(!n||!CFG.promo||!CFG.promo.length)return false;
+    const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('jdm-pro|'+n));
+    const h=[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,24);return CFG.promo.includes(h)}
+  async function polarOk(c){if(!CFG.org)return null;
+    try{const r=await fetch('https://api.polar.sh/v1/customer-portal/license-keys/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:c,organization_id:CFG.org})});
+      if(r.status>=500)return null;if(!r.ok)return false;const j=await r.json();return j&&j.status==='granted'}catch(e){return null}}
+  async function check(c){c=norm(c);if(!c)return false;if(await promoOk(c))return 'promo';const p=await polarOk(c);return p===true?'polar':p}
+  // re-check a bought key now and then; keep Pro when offline
+  async function recheck(){const l=get('lic',null);if(!l||!l.ok||l.kind!=='polar')return;if(Date.now()-(l.at||0)<7*864e5)return;
+    const p=await polarOk(l.key);if(p===false){put('lic',null);ui()}else if(p===true){l.at=Date.now();put('lic',l)}}
+  let why='';
+  function ui(){const pb=$('proBtn');if(pb){pb.hidden=!enabled||licensed();pb.textContent=trialLeft()>0?'Pro 체험 '+trialLeft()+'일':'Pro'}
+    document.body.classList.toggle('pro',has())}
+  function open(reason){why=reason||'';const tl=trialLeft(),lic=licensed();
+    $('proH').textContent=lic?'Pro를 쓰고 있어요':reason?'이 기능은 Pro에서 쓸 수 있어요':'Pro로 더 편하게 연습해요';
+    const st=$('proState');st.hidden=!(lic||tl>0);st.textContent=lic?'고맙습니다! 모든 기능이 열려 있어요.':'무료 체험 '+tl+'일 남았어요';
+    const b=$('proBuy');b.hidden=lic||!CFG.buy;b.style.display=b.hidden?'none':'block';if(CFG.buy)b.href=CFG.buy;
+    $('proCodeBox').hidden=lic;$('proCodeBox').open=!CFG.buy;$('proErr').hidden=true;$('proIn').value='';
+    $('proOv').hidden=false;try{if(typeof pause==='function'&&transport.playing)pause()}catch(e){}}
+  function close(){$('proOv').hidden=true}
+  $('proX').onclick=close;$('proOv').addEventListener('click',e=>{if(e.target===$('proOv'))close()});
+  const go=async()=>{const c=norm($('proIn').value);if(!c)return;$('proGo').disabled=true;$('proGo').textContent='확인 중…';
+    const k=await check(c);$('proGo').disabled=false;$('proGo').textContent='확인';
+    if(k==='promo'||k==='polar'){put('lic',{ok:1,kind:k,key:c,at:Date.now()});close();ui();toast('Pro가 열렸어요. 고맙습니다!',3000)}
+    else{$('proErr').textContent=k===null?'인터넷 연결을 확인하고 다시 눌러 주세요.':'코드가 맞지 않아요. 다시 확인해 주세요.';$('proErr').hidden=false}};
+  $('proGo').onclick=go;$('proIn').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+  if($('proBtn'))$('proBtn').onclick=()=>open();
+  window.PRO={active:()=>enabled,has,trialLeft,open,licensed};
+  ui();setInterval(ui,60000);setTimeout(recheck,4000);
+  if(!enabled)return;
+  // ---- the gates ----
+  const wrap=(name,test)=>{const f=window[name];if(typeof f!=='function')return;window[name]=function(){if(!has()&&test.apply(this,arguments)){open(name);return}return f.apply(this,arguments)}};
+  const libSave0=window.libSave;window.libSave=async function(q){if(!has()&&!S.libId){let n=0;try{n=(await LDB.all()).length}catch(e){}if(n>=FREE_SONGS){open('libSave');toast('무료로는 '+FREE_SONGS+'곡까지 저장할 수 있어요.',3000);return null}}return libSave0.apply(this,arguments)};
+  wrap('setLoopEdge',()=>true);wrap('shareSync',()=>true);
+  const lb=$('loopBtn');if(lb){const f=lb.onclick;lb.onclick=function(e){if(!has()&&!(P.loop.on||P.loopPick)){open('loop');return}return f&&f.call(this,e)}}
+  const sp=$('speed');if(sp){const f=sp.oninput;sp.oninput=function(e){if(!has()&&+e.target.value!==100){setSpeed(100);open('speed');return}return f&&f.call(this,e)}}
+  const ss0=window.setSpeed;window.setSpeed=function(v){if(!has()&&+v!==100)v=100;return ss0.call(this,v)};
 })();
 </script>
 </body></html>
