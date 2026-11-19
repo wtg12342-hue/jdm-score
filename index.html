@@ -1454,7 +1454,7 @@ body .wbrand2 .lgw{display:block;width:126px;height:19px;background:var(--lg-wor
       <div class="row"><a class="btn sm" href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a><a class="btn sm" href="licenses.html" target="_blank" rel="noopener">오픈소스 라이선스</a><a class="btn sm" href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">유튜브 약관</a></div></div>
     <p class="note">재생 중 악보를 누르면 그 마디로 이동해요. 유튜브 주소를 복사해서 화면에서 Ctrl+V 하거나, 악보·음원 파일을 창에 끌어다 놓아도 돼요.<br>단축키: 스페이스 재생/정지 · M 노래 켜기/끄기 · [ ] 반복 시작/끝 · Esc 반복 해제 · ← → 이전/다음 줄 · ↑ ↓ 이전/다음 화면 · + − 템포 · Home 처음 · F11 전체 화면</p>
   </aside>
-  <div class="ytbox" id="ytBox" hidden><div class="ytbar"><i class="ytgrip" aria-hidden="true">⠿</i><span><svg class="i" style="width:15px;height:15px;color:var(--loop)"><use href="#i-yt"/></svg><span id="ytTitle">유튜브</span></span><span class="ytbtns"><button class="btn" id="ytHide" title="영상 창을 접어요. 소리와 악보는 그대로 계속돼요">숨기기</button><button class="btn" id="ytClose" title="유튜브를 끊고 창을 닫아요">닫기</button></span></div><div class="ytframe" id="ytFrame"><div id="ytPlayer"></div></div></div>
+  <div class="ytbox" id="ytBox" hidden><div class="ytbar"><span><svg class="i" style="width:15px;height:15px;color:var(--loop)"><use href="#i-yt"/></svg><span id="ytTitle">유튜브</span></span><span class="ytbtns"><button class="btn" id="ytHide" title="영상 창을 접어요. 소리와 악보는 그대로 계속돼요">숨기기</button><button class="btn" id="ytClose" title="유튜브를 끊고 창을 닫아요">닫기</button></span></div><div class="ytframe" id="ytFrame"><div id="ytPlayer"></div></div></div>
   <div class="pagesov" id="libOv" hidden><div class="pgpanel libpanel">
     <div class="pghead"><div><h2>내 곡</h2><p>악보·노래·맞춘 박자를 함께 저장해요.</p></div>
       <div class="row"><button class="btn play" id="libSave">지금 곡 저장</button><button class="btn" id="libClose">닫기</button></div></div>
@@ -3940,7 +3940,6 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
 
 /* ===== 2.57 tester feedback ===== */
 #rotBtn[hidden]{display:none!important}
-.ytgrip{display:none;font-style:normal;color:#8e877b;font-size:15px;padding:0 6px 0 2px;cursor:grab;touch-action:none}
 @media (max-width:900px),(orientation:landscape) and (max-height:500px){
   body.hasScore .tools>#saveBtn{width:auto!important;min-width:0!important;flex:none;display:inline-flex!important;align-items:center;gap:5px;height:34px;padding:0 13px 0 10px;margin:0 2px;border-radius:999px;border:1px solid rgba(216,182,122,.6);color:var(--gold-hi,#f0d9a8);background:rgba(216,182,122,.12)}
   body.hasScore .tools>#saveBtn .t{display:inline!important;font:700 13px var(--f-ui)}body.hasScore .tools>#saveBtn .i{width:17px;height:17px}
@@ -3950,10 +3949,7 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
   body.hasScore .tools>#rotBtn{width:auto!important;min-width:0!important;flex:none;margin-right:4px;display:inline-flex!important;align-items:center;gap:3px;padding:0 8px}
   body.hasScore .tools>#rotBtn .t{display:inline!important;font:600 12px var(--f-ui)}
   /* the video can be moved by its top bar, never off the screen (YouTube: at least 200x200, nothing on top of it) */
-  body.pinning .ytgrip,body.ytside .ytgrip{display:inline-block}
   body.pinning #ytBox{width:204px!important}
-  body.ytmoved.pinning #ytBox,body.ytmoved.ytside #ytBox{left:var(--ytX)!important;top:var(--ytY)!important;right:auto!important;bottom:auto!important}
-  body.pinning #ytBox .ytbar,body.ytside #ytBox .ytbar{touch-action:none;cursor:grab}
   /* pin bar: one row of buttons; the tempo tools open in its place */
   .pinbar #pbDn,.pinbar #pbUp,.pinbar #pbRetap{display:none}
   .pinbar.tempo #pbDn,.pinbar.tempo #pbUp,.pinbar.tempo #pbRetap{display:inline-block}
@@ -3982,9 +3978,17 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
 .ys-sug em{font-style:normal;color:var(--muted);font:500 12.5px var(--f-ui);align-self:center;margin-right:2px}
 .ys-note{padding:2px 4px 10px;font:500 13px var(--f-ui);color:var(--gold,#d8b67a)}
 
-@media (orientation:landscape) and (max-height:500px){body.ytL .pinbar{padding-left:228px;padding-right:12px}}
 body.ysopen #ytBox{visibility:hidden!important}
+
+@media (max-width:900px),(orientation:landscape) and (max-height:500px){
+  body .dock #loopBtn,body #loopBtn{width:auto!important;min-width:0!important;display:inline-flex!important;align-items:center;gap:5px;height:36px;padding:0 12px 0 10px!important;border-radius:999px;border:1px solid rgba(216,182,122,.5);color:var(--gold-hi,#f0d9a8)}
+  body #loopBtn .t{display:inline!important;font:700 12.5px var(--f-ui);white-space:nowrap}
+  body #loopBtn.loopon,body #loopBtn.picking{background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;border-color:transparent}
+}
+.loophint{position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--bar,56px) + 10px);z-index:62;padding:10px 16px;border-radius:999px;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;font:700 14px var(--f-ui);box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap;pointer-events:none}
+.loophint[hidden]{display:none}
 </style>
+<div class="loophint" id="loopHint" hidden></div>
 <div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><label class="pbseek"><input type="range" id="pbSeek" min="0" max="1000" value="0" aria-label="노래 위치"><em id="pbTime">0:00</em></label><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">10초 ▶</button><button id="pbTempo">템포 고치기</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
   <p class="co-kick" id="coKick"></p><h3 id="coTitle"></h3><ol class="co-steps" id="coSteps"></ol>
@@ -4099,7 +4103,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.57.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.57.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4365,25 +4369,15 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
       if(!so||!so.lock)throw 0;if(!document.fullscreenElement)await document.documentElement.requestFullscreen({navigationUI:'hide'});await so.lock('landscape')}
     catch(e){toast('폰을 옆으로 눕혀 주세요 (화면 자동 회전을 켜 주세요)',3000)}};
   document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement){try{screen.orientation.unlock()}catch(e){}}});
-  // ---- 3. the video: drag it by its top bar anywhere on the screen (kept whole on the screen)
-  {const box=$('ytBox'),bar0=box.querySelector('.ytbar');let d=null;
-    const clamp=(x,y)=>{const w=box.offsetWidth,h=box.offsetHeight,tb=document.querySelector('.topbar').getBoundingClientRect().bottom;
-      const pb=$('pinBar'),bot=document.body.classList.contains('pinning')&&pb&&!pb.hidden&&innerWidth<innerHeight?pb.getBoundingClientRect().top:innerHeight;
-      return [Math.max(4,Math.min(innerWidth-w-4,x)),Math.max(tb+4,Math.min(bot-h-4,y))]};
-    const set=(x,y)=>{[x,y]=clamp(x,y);document.body.style.setProperty('--ytX',x+'px');document.body.style.setProperty('--ytY',y+'px');document.body.classList.add('ytmoved')};
-    bar0.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const b=document.body.classList;if(!b.contains('pinning')&&!b.contains('ytside'))return;
-      const r=box.getBoundingClientRect();d={dx:e.clientX-r.left,dy:e.clientY-r.top,id:e.pointerId};try{bar0.setPointerCapture(e.pointerId)}catch(x){}e.preventDefault()});
-    bar0.addEventListener('pointermove',e=>{if(!d||e.pointerId!==d.id)return;set(e.clientX-d.dx,e.clientY-d.dy)});
-    const end=()=>{if(!d)return;d=null;const b=document.body.classList;
-      if(b.contains('pinning')&&innerWidth>innerHeight){const r=box.getBoundingClientRect(),left=r.left+r.width/2<innerWidth/2;b.toggle('ytL',left);set(left?4:innerWidth-r.width-8,innerHeight-r.height-6)}};
-    bar0.addEventListener('pointerup',end);bar0.addEventListener('pointercancel',end);
-    const re=()=>{if(!document.body.classList.contains('ytmoved'))return;const r=box.getBoundingClientRect();set(r.left,r.top)};addEventListener('resize',re);try{new ResizeObserver(re).observe($('pinBar'))}catch(e){}}
+  // ---- loop: say what to press while picking
+  {const lu=window.loopUI;if(typeof lu==='function')window.loopUI=function(){const r=lu.apply(this,arguments);const h=$('loopHint');
+    h.hidden=!P.loopPick;if(P.loopPick)h.textContent=P.loopPick===1?'① 반복을 시작할 마디를 누르세요':'② 반복을 끝낼 마디를 누르세요';return r}}
   // ---- 4. matching bars: a hint that the score scrolls, and the tempo tools folded away
   {let hint=null;const kill=()=>{if(hint){hint.remove();hint=null}};
     let shown=false;
     const ps=window.pinStart;if(typeof ps==='function')window.pinStart=function(){shown=false;const r=ps.apply(this,arguments);$('pinBar').classList.remove('tempo');$('pbTempo').textContent='템포 고치기';return r};
     function showHint(){if(shown||!phone()||store.get('pinHintSeen',0)>=3)return;shown=true;kill();store.set('pinHintSeen',(store.get('pinHintSeen',0)||0)+1);
-      document.body.style.setProperty('--pbH',$('pinBar').offsetHeight+'px');hint=document.createElement('div');hint.className='pinhint';hint.innerHTML='<b>↕</b>악보를 손가락으로 위아래로 밀어서<br>지금 들리는 마디를 찾아 톡 누르세요<small>영상은 위쪽 ⠿ 를 잡고 옮길 수 있어요</small>';document.body.appendChild(hint);
+      document.body.style.setProperty('--pbH',$('pinBar').offsetHeight+'px');hint=document.createElement('div');hint.className='pinhint';hint.innerHTML='<b>↕</b>악보를 손가락으로 위아래로 밀어서<br>지금 들리는 마디를 찾아 톡 누르세요';document.body.appendChild(hint);
       const sc=$('stand')||document;let n=0;const off=()=>{if(++n>3)kill()};sc.addEventListener('scroll',off,{capture:true,passive:true});setTimeout(kill,8000)}
     const pa=window.pinAt;if(typeof pa==='function')window.pinAt=function(){kill();store.set('pinHintSeen',3);return pa.apply(this,arguments)};
     const pd=window.pinDone;if(typeof pd==='function')window.pinDone=function(){kill();document.body.classList.remove('pinned');return pd.apply(this,arguments)};
@@ -4391,10 +4385,11 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
     const pu=window.pinUI;if(typeof pu==='function')window.pinUI=function(){const r=pu.apply(this,arguments);try{document.body.classList.toggle('pinned',!!(pin&&pin.pts.length));if(pin&&!pin.tapping&&!pin.pts.length)showHint();$('pbTempo').hidden=!pin||pin.tapping;if(!pin||pin.tapping)$('pinBar').classList.remove('tempo')}catch(e){}return r}}
   // ---- 5. search: spacing does not matter. YouTube's own suggestions put the spaces in; a query typed without them is searched as suggested
   {const sq=t=>String(t||'').replace(/\s+/g,'').toLowerCase();let sugSeq=0,sugT=0;
-    function suggest(q){return new Promise(res=>{if(!q||q.length<2)return res([]);const cb='__ys'+Math.random().toString(36).slice(2),sc=document.createElement('script');let done=false;
+    async function suggest(q){const a=await suggest1(q,0);return a.length?a:suggest1(q,1)}
+    function suggest1(q,alt){return new Promise(res=>{if(!q||q.length<2)return res([]);const cb='__ys'+Math.random().toString(36).slice(2),sc=document.createElement('script');let done=false;
       const end=v=>{if(done)return;done=true;try{delete window[cb]}catch(e){}sc.remove();res(v)};
       window[cb]=d=>{try{end(((d&&d[1])||[]).map(x=>Array.isArray(x)?x[0]:x).filter(x=>typeof x==='string').slice(0,6))}catch(e){end([])}};
-      sc.onerror=()=>end([]);sc.src='https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&hl=ko&gl=kr&q='+encodeURIComponent(q)+'&callback='+cb;document.head.appendChild(sc);setTimeout(()=>end([]),2500)})}
+      sc.onerror=()=>end([]);sc.charset='utf-8';sc.src='https://suggestqueries.google.com/complete/search?client='+(alt?'chrome':'youtube&ds=yt')+'&hl=ko&gl=kr&ie=utf-8&oe=utf-8&q='+encodeURIComponent(q)+'&callback='+cb;document.head.appendChild(sc);setTimeout(()=>end([]),2500)})}
     const box=$('ysSug');
     function chips(list,q){box.innerHTML='';const l=list.filter(x=>sq(x)!==sq(q)||x!==q).slice(0,4);if(!l.length){box.hidden=true;return}
       const em=document.createElement('em');em.textContent='혹시';box.appendChild(em);
@@ -4407,7 +4402,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
     window.runSearch=async function(){const q=$('ysQ').value.trim();box.hidden=true;
       if(q&&!/\s/.test(q)&&q.length>=3&&!(typeof ytId==='function'&&ytId(q))){const l=await suggest(q);const fix=l.find(x=>/\s/.test(x)&&sq(x)===sq(q))||l.find(x=>/\s/.test(x)&&sq(x).startsWith(sq(q)));
         if(fix){$('ysQ').value=fix;await runSearch0();const L=$('ysList');const n=document.createElement('div');n.className='ys-note';n.textContent='‘'+fix+'’(으)로 찾았어요';L.prepend(n);return}}
-      return runSearch0()}}
+      await runSearch0();if(q&&!/\s/.test(q)&&q.length>=4&&!(typeof ytId==='function'&&ytId(q))){const L=$('ysList');const n=document.createElement('div');n.className='ys-note';n.textContent='찾는 곡이 안 보이면 가수와 제목을 띄어서 다시 찾아보세요 (예: 리센느 러브어택)';L.prepend(n)}}}
 })();
 </script>
 </body></html>
