@@ -4050,7 +4050,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.56.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.56.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4284,7 +4284,13 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
       cur=find(yt)||find((typeof S!=='undefined'&&S.name)||'')}
     const w=$('wBuy'),b=$('buyTop');if(w){w.hidden=!cur;if(cur){w.href=url(cur);$('wBuyT').textContent=cur[3]+' · 마피아니스트'}}
     if(b){b.hidden=!cur||!(typeof S!=='undefined'&&S.measures&&S.measures.length);if(cur)b.href=url(cur)}}
-  window.SHEETBUY={now:()=>cur,url,find,offer};
+  // new sheets: the site keeps sheets.json up to date every day (from the mapianist profile)
+  function keysOf(name){const m=String(name).split(' - ');if(m.length<2)return null;const ar=m[0],ti=m.slice(1).join(' - ');
+    const alt=t=>t.split(/[()\/（）]|feat\./i).map(n).filter(k=>k.length>0&&!/영상|가사|레슨|쉬운|악보|버전|버젼|remix|ver$/.test(k));
+    const a=alt(ar),t=alt(ti.replace(/\((?:[^)]*?(영상|가사|레슨|쉬운|악보|버전|버젼|원곡)[^)]*)\)/g,''));if(!a.length||!t.length)return null;return [a.join('|'),t.join('|')]}
+  fetch('sheets.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.items)return;const have=new Set(CAT.map(e=>e[0]));
+    for(const it of j.items){if(have.has(it.id))continue;const k=keysOf(it.name);if(k)CAT.push([it.id,k[0],k[1],it.name.replace(/\s*\((?:[^)]*?(영상|가사|레슨|쉬운|악보)[^)]*)\)/g,'')])}offer()}).catch(()=>{});
+  window.SHEETBUY={now:()=>cur,url,find,offer,keysOf,CAT};
   for(const f of ['wYtLinked','wYtReset','afterLoad','dropSong','goHome']){const g=window[f];if(typeof g!=='function')continue;window[f]=function(){const r=g.apply(this,arguments);try{offer()}catch(e){}return r}}
   setInterval(()=>{try{offer()}catch(e){}},3000);
 })();

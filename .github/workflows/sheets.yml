@@ -1,0 +1,19 @@
+name: 악보 목록 업데이트
+on:
+  schedule:
+    - cron: '23 20 * * *'   # 매일 새벽 5시 23분 (한국)
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .github/sheets.py
+      - run: |
+          if [ -n "$(git status --porcelain sheets.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+            git add sheets.json && git commit -m "악보 목록 업데이트" && git push
+          fi
