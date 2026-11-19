@@ -4131,7 +4131,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.59.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.59.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4448,7 +4448,9 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== 2.59 the open song survives leaving the app: kept by itself (not saved to 내 곡), and opened again where it was ===== */
 (function(){const $=id=>document.getElementById(id);const KEEP_MAX=5;let tmpId=null,sig='',busy=false,restoring=false;
-  const R=()=>store.get('resume',null),setR=v=>store.set('resume',v);
+  // kept for this run of the app only: the phone reloading it in the background brings the song back,
+  // swiping the app away (a new run) starts from the first screen. The song stays among the recent ones either way.
+  const R=()=>{try{return JSON.parse(sessionStorage.getItem('jdmResume')||'null')}catch(e){return null}},setR=v=>{try{if(v)sessionStorage.setItem('jdmResume',JSON.stringify(v));else sessionStorage.removeItem('jdmResume')}catch(e){}};
   function now(){try{return M.time()||0}catch(e){return 0}}
   function sigNow(){const m=libMedia();return JSON.stringify([(LIB.src||[]).map(f=>f.name+f.size),LIB.range,m&&(m.id||m.name),libSyncNow(),P.startAt,P.loop.on&&[P.loop.a,P.loop.b],P.speed,P.countIn,S.order&&S.order.length])}
   async function keep(){if(busy||restoring||opening||!S.measures.length||!LIB.src||!LIB.src.length)return;
