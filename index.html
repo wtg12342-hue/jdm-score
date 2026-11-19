@@ -1528,7 +1528,7 @@ body .wbrand2 .lgw{display:block;width:126px;height:19px;background:var(--lg-wor
   <div class="mixbtn" id="quick">
     <button id="qTempo" title="템포·속도·소리"><svg viewBox="0 0 24 24"><path d="M4 21h16M8 21 11 3h2l3 18M7 14h10"/></svg><b id="qBpm">100</b><span id="qSpd">100%</span></button>
     <button id="qSong"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>노래</button>
-    <button id="qMetro"><svg viewBox="0 0 24 24"><path d="M8 21h8l-3-17h-2zM12 14l5-6"/></svg>메트로놈</button>
+    <button id="qMetro"><svg viewBox="0 0 24 24"><path d="M8 21h8l-3-17h-2zM12 14l5-6"/></svg>메트로놈<i class="qst" id="qMst">켬</i></button>
     <button id="qCi"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>예비박</button>
     <button id="qZoom" title="악보 확대 (두 손가락으로 벌려도 돼요)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M11 8v6M8 11h6"/></svg>확대 <b>100%</b></button>
     <button id="qSync"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>맞추기</button>
@@ -3987,7 +3987,35 @@ body.ysopen #ytBox{visibility:hidden!important}
 }
 .loophint{position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--bar,56px) + 10px);z-index:62;padding:10px 16px;border-radius:999px;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;font:700 14px var(--f-ui);box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap;pointer-events:none}
 .loophint[hidden]{display:none}
+
+/* metronome: on/off and its beat in one place */
+.mixbtn button{padding-left:9px;padding-right:9px}.mixbtn button.on::after{left:9px;right:9px}
+.mixbtn #qMetro .qst{font-style:normal;margin-left:4px;padding:1px 6px;border-radius:999px;font:700 10.5px/1.5 var(--f-ui);color:#24190a;background:#e7bb63}
+.mixbtn #qMetro:not(.on) .qst{background:rgba(255,255,255,.12);color:#a59c8d}
+.metropop{position:fixed;inset:0;z-index:75;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+.metropop[hidden]{display:none}
+.mp-card{width:min(420px,100%);margin:0 0 max(10px,env(safe-area-inset-bottom,0px));padding:18px 18px 14px;border-radius:22px 22px 18px 18px;background:#14120d;border:1px solid rgba(216,182,122,.35);box-shadow:0 -10px 40px rgba(0,0,0,.6)}
+.mp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.mp-row b{font:700 18px var(--f-ui);color:#f3ead8}
+.mp-sw{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 14px 0 6px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#a59c8d;font:700 14px var(--f-ui)}
+.mp-sw span{width:46px;height:28px;border-radius:999px;background:#3a352c;position:relative;transition:background .2s}
+.mp-sw span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#d8d2c6;transition:left .2s}
+.mp-sw em{font-style:normal}
+.mp-sw[aria-checked="true"]{color:#e7bb63;border-color:rgba(231,187,99,.5)}.mp-sw[aria-checked="true"] span{background:#c8932f}.mp-sw[aria-checked="true"] span::after{left:21px;background:#fff}
+.mp-l{margin:12px 0 7px;font:600 13px var(--f-ui);color:#a59c8d}
+.mp-seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mp-seg button{height:42px;padding:0 2px;font-size:13px!important;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#e9e5dd;font:600 14px var(--f-ui)}
+.mp-seg button[aria-pressed="true"]{background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;border-color:transparent}
+#mpVol{width:100%;height:30px;accent-color:#c8932f}
+.mp-ok{width:100%;height:46px;margin-top:14px;border-radius:14px;border:0;background:rgba(255,255,255,.08);color:#f3ead8;font:700 15px var(--f-ui)}
 </style>
+<div class="metropop" id="metroPop" hidden><div class="mp-card">
+  <div class="mp-row"><b>메트로놈</b><button class="mp-sw" id="mpSw" role="switch" aria-checked="true"><span></span><em id="mpSwT">켜짐</em></button></div>
+  <p class="mp-l">박자 소리</p>
+  <div class="mp-seg" id="mpSub"><button data-sub="1">4분음표</button><button data-sub="2">8분음표</button><button data-sub="4">16분음표</button><button data-sub="3">셋잇단</button></div>
+  <p class="mp-l">소리 크기</p>
+  <input type="range" id="mpVol" min="0" max="100" aria-label="메트로놈 소리 크기">
+  <button class="mp-ok" id="mpOk">확인</button>
+</div></div>
 <div class="loophint" id="loopHint" hidden></div>
 <div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><label class="pbseek"><input type="range" id="pbSeek" min="0" max="1000" value="0" aria-label="노래 위치"><em id="pbTime">0:00</em></label><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">10초 ▶</button><button id="pbTempo">템포 고치기</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
@@ -4103,7 +4131,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.57.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.58.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4403,6 +4431,20 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
       if(q&&!/\s/.test(q)&&q.length>=3&&!(typeof ytId==='function'&&ytId(q))){const l=await suggest(q);const fix=l.find(x=>/\s/.test(x)&&sq(x)===sq(q))||l.find(x=>/\s/.test(x)&&sq(x).startsWith(sq(q)));
         if(fix){$('ysQ').value=fix;await runSearch0();const L=$('ysList');const n=document.createElement('div');n.className='ys-note';n.textContent='‘'+fix+'’(으)로 찾았어요';L.prepend(n);return}}
       await runSearch0();if(q&&!/\s/.test(q)&&q.length>=4&&!(typeof ytId==='function'&&ytId(q))){const L=$('ysList');const n=document.createElement('div');n.className='ys-note';n.textContent='찾는 곡이 안 보이면 가수와 제목을 띄어서 다시 찾아보세요 (예: 리센느 러브어택)';L.prepend(n)}}}
+})();
+</script>
+<script>
+/* metronome pop-up (phone bar): switch, which notes it clicks, how loud */
+(function(){const $=id=>document.getElementById(id);const pop=$('metroPop');
+  const on=()=>$('metroBtn').classList.contains('on');
+  function ui(){const o=on();$('mpSw').setAttribute('aria-checked',o);$('mpSwT').textContent=o?'켜짐':'꺼짐';$('qMst').textContent=o?'켬':'끔';
+    document.querySelectorAll('#mpSub button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.sub===(P.sub||1)));$('mpVol').value=$('vol').value}
+  $('qMetro').onclick=()=>{ui();pop.hidden=false};
+  $('mpSw').onclick=()=>{$('metroBtn').click();ui()};
+  document.querySelectorAll('#mpSub button').forEach(b=>b.onclick=()=>{setSub(+b.dataset.sub);if(!on())$('metroBtn').click();ui()});
+  $('mpVol').oninput=e=>{const v=$('vol');v.value=e.target.value;v.dispatchEvent(new Event('input',{bubbles:true}));v.dispatchEvent(new Event('change',{bubbles:true}))};
+  const close=()=>{pop.hidden=true};$('mpOk').onclick=close;pop.addEventListener('click',e=>{if(e.target===pop)close()});
+  setInterval(()=>{const o=on();if($('qMst').textContent!==(o?'켬':'끔'))$('qMst').textContent=o?'켬':'끔'},500);ui();
 })();
 </script>
 </body></html>
