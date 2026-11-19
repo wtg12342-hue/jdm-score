@@ -3764,10 +3764,10 @@ function libFoldersUI(all){const box=$('libFolders');box.innerHTML='';const fl=l
     d.onclick=async()=>{if(d.dataset.sure!=='1'){d.dataset.sure='1';d.textContent='정말 삭제? (곡은 남아요)';setTimeout(()=>{d.dataset.sure='';d.textContent='폴더 삭제'},2500);return}
       for(const e of all.filter(e=>e.folder===libFolder)){e.folder='';await LDB.put(e)}store.set('libFolders',store.get('libFolders',[]).filter(x=>x!==libFolder));libFolder='';store.set('libFolder','');libRender()};box.appendChild(d)}}
 /* the start screen lists the songs saved last: one click opens one */
-async function wRecent(){let all=[];try{all=await LDB.all()}catch(e){return}const box=$('wRecentList');box.innerHTML='';
-  all.sort((a,b)=>(b.used||0)-(a.used||0));$('wRecent').hidden=!all.length;
+async function wRecent(){let all=[];try{all=(await LDB.all()).filter(e=>!e.tmp||Date.now()-(e.used||0)<864e5)}catch(e){return}const box=$('wRecentList');box.innerHTML='';
+  all.sort((a,b)=>(b.tmp?1:0)-(a.tmp?1:0)||(b.used||0)-(a.used||0));$('wRecent').hidden=!all.length;
   for(const e of all.slice(0,6)){const b=document.createElement('button');b.innerHTML='<span></span><small></small>';b.firstChild.textContent=e.title||e.scoreName||'곡';
-    const md=e.media?(e.media.type==='yt'?'유튜브':'음원 파일'):'음원 없음';b.lastChild.textContent=(e.tmp?'저장 안 한 곡 · ':'')+md+(e.folder?' · '+e.folder:'')+(e.sync?` · ♩${e.sync.bpm}`:'');
+    const md=e.media?(e.media.type==='yt'?'유튜브':'음원 파일'):'음원 없음';if(e.tmp)b.classList.add('wcont');b.lastChild.textContent=(e.tmp?'이어서 하기 · 저장 안 한 곡 · ':'')+md+(e.folder?' · '+e.folder:'')+(e.sync?` · ♩${e.sync.bpm}`:'');
     b.onclick=()=>libOpen(e.id);box.appendChild(b)}}
 async function libRender(){wRecent();const box=$('libList');let all=[];try{all=(await LDB.all()).filter(e=>!e.tmp)}catch(e){box.innerHTML='<p class="libempty">이 화면에서는 저장 기능을 쓸 수 없어요.</p>';return}
   all.sort((a,b)=>(b.used||0)-(a.used||0));box.innerHTML='';libFoldersUI(all);
@@ -4007,6 +4007,7 @@ body.ysopen #ytBox{visibility:hidden!important}
 .mp-seg button[aria-pressed="true"]{background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;border-color:transparent}
 #mpVol{width:100%;height:30px;accent-color:#c8932f}
 .mp-ok{width:100%;height:46px;margin-top:14px;border-radius:14px;border:0;background:rgba(255,255,255,.08);color:#f3ead8;font:700 15px var(--f-ui)}
+.wcont small{color:var(--gold,#d8b67a)!important;font-weight:600}
 </style>
 <div class="metropop" id="metroPop" hidden><div class="mp-card">
   <div class="mp-row"><b>메트로놈</b><button class="mp-sw" id="mpSw" role="switch" aria-checked="true"><span></span><em id="mpSwT">켜짐</em></button></div>
@@ -4131,7 +4132,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.59.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.59.2';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4447,14 +4448,14 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 </script>
 <script>
 /* ===== 2.59 the open song survives leaving the app: kept by itself (not saved to 내 곡), and opened again where it was ===== */
-(function(){const $=id=>document.getElementById(id);const KEEP_MAX=5;let tmpId=null,sig='',busy=false,restoring=false;
+(function(){const $=id=>document.getElementById(id);const KEEP_MAX=1;let tmpId=null,sig='',busy=false,restoring=false;const DAY=864e5;
   // kept for this run of the app only: the phone reloading it in the background brings the song back,
   // swiping the app away (a new run) starts from the first screen. The song stays among the recent ones either way.
   const R=()=>{try{return JSON.parse(sessionStorage.getItem('jdmResume')||'null')}catch(e){return null}},setR=v=>{try{if(v)sessionStorage.setItem('jdmResume',JSON.stringify(v));else sessionStorage.removeItem('jdmResume')}catch(e){}};
   function now(){try{return M.time()||0}catch(e){return 0}}
   function sigNow(){const m=libMedia();return JSON.stringify([(LIB.src||[]).map(f=>f.name+f.size),LIB.range,m&&(m.id||m.name),libSyncNow(),P.startAt,P.loop.on&&[P.loop.a,P.loop.b],P.speed,P.countIn,S.order&&S.order.length])}
   async function keep(){if(busy||restoring||opening||!S.measures.length||!LIB.src||!LIB.src.length)return;
-    if(S.libId){setR({id:S.libId,t:now(),at:Date.now()});return}
+    if(S.libId){setR({id:S.libId,t:now(),at:Date.now()});dropKept(null);return}
     const g=sigNow();if(g===sig&&tmpId){setR({id:tmpId,t:now(),at:Date.now()});return}busy=true;
     try{const media=libMedia(),order=S.order&&S.order.length!==S.measures.length?formatOrder(S.order):null;
       let e=tmpId?await LDB.get(tmpId).catch(()=>null):null;if(!e)e={id:'k'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now(),tmp:true,folder:''};
@@ -4464,6 +4465,9 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
       // only the last few unsaved songs are kept
       const all=(await LDB.all()).filter(x=>x.tmp).sort((a,b)=>(b.used||0)-(a.used||0));for(const x of all.slice(KEEP_MAX))await LDB.del(x.id)}
     catch(err){}finally{busy=false}}
+  // the unsaved song is only there to carry on: just the last one, for a day
+  async function dropKept(except){try{for(const x of (await LDB.all()).filter(x=>x.tmp&&x.id!==except))await LDB.del(x.id)}catch(e){}}
+  (async()=>{try{for(const x of (await LDB.all()).filter(x=>x.tmp&&Date.now()-(x.used||0)>DAY))await LDB.del(x.id)}catch(e){}try{wRecent()}catch(e){}})();
   setInterval(keep,5000);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')keep()});addEventListener('pagehide',keep);
   // a kept song is saved for real: it becomes a normal song in 내 곡
