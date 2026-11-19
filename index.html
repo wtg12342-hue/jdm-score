@@ -1323,6 +1323,7 @@ body .wbrand2 .lgw{display:block;width:126px;height:19px;background:var(--lg-wor
 
   <div class="tools">
     <button class="ib" id="libBtn" title="내 곡: 악보·음원·맞춘 박자를 저장해 두고 한 번에 다시 열기"><svg class="i"><use href="#i-lib"/></svg><span class="t">내 곡</span></button>
+    <button class="ib" id="rotBtn" hidden title="가로로 보기"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="11" rx="2"/><path d="M8 4.5h5.5a3 3 0 0 1 3 3V8"/><path d="M14.5 6l2 2 2-2"/></svg><span class="t">가로</span></button>
     <button class="ib" id="saveBtn" title="지금 곡 저장 (Ctrl+S): 악보·음원·맞춘 박자·반복 구간을 '내 곡'에 저장해요"><svg class="i" id="saveIco"><use href="#i-save"/></svg><span class="t" id="saveLbl">저장</span></button>
     <button class="ib" id="openScore" title="악보 열기 — PDF 또는 MusicXML (여러 개 가능)"><svg class="i"><use href="#i-score"/></svg><span class="t">악보</span></button>
     <button class="ib" id="openAudio" title="음원 열기 — mp3, wav, m4a"><svg class="i"><use href="#i-audio"/></svg><span class="t" id="audioLbl">음원</span></button>
@@ -1453,7 +1454,7 @@ body .wbrand2 .lgw{display:block;width:126px;height:19px;background:var(--lg-wor
       <div class="row"><a class="btn sm" href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a><a class="btn sm" href="licenses.html" target="_blank" rel="noopener">오픈소스 라이선스</a><a class="btn sm" href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">유튜브 약관</a></div></div>
     <p class="note">재생 중 악보를 누르면 그 마디로 이동해요. 유튜브 주소를 복사해서 화면에서 Ctrl+V 하거나, 악보·음원 파일을 창에 끌어다 놓아도 돼요.<br>단축키: 스페이스 재생/정지 · M 노래 켜기/끄기 · [ ] 반복 시작/끝 · Esc 반복 해제 · ← → 이전/다음 줄 · ↑ ↓ 이전/다음 화면 · + − 템포 · Home 처음 · F11 전체 화면</p>
   </aside>
-  <div class="ytbox" id="ytBox" hidden><div class="ytbar"><span><svg class="i" style="width:15px;height:15px;color:var(--loop)"><use href="#i-yt"/></svg><span id="ytTitle">유튜브</span></span><span class="ytbtns"><button class="btn" id="ytHide" title="영상 창을 접어요. 소리와 악보는 그대로 계속돼요">숨기기</button><button class="btn" id="ytClose" title="유튜브를 끊고 창을 닫아요">닫기</button></span></div><div class="ytframe" id="ytFrame"><div id="ytPlayer"></div></div></div>
+  <div class="ytbox" id="ytBox" hidden><div class="ytbar"><i class="ytgrip" aria-hidden="true">⠿</i><span><svg class="i" style="width:15px;height:15px;color:var(--loop)"><use href="#i-yt"/></svg><span id="ytTitle">유튜브</span></span><span class="ytbtns"><button class="btn" id="ytHide" title="영상 창을 접어요. 소리와 악보는 그대로 계속돼요">숨기기</button><button class="btn" id="ytClose" title="유튜브를 끊고 창을 닫아요">닫기</button></span></div><div class="ytframe" id="ytFrame"><div id="ytPlayer"></div></div></div>
   <div class="pagesov" id="libOv" hidden><div class="pgpanel libpanel">
     <div class="pghead"><div><h2>내 곡</h2><p>악보·노래·맞춘 박자를 함께 저장해요.</p></div>
       <div class="row"><button class="btn play" id="libSave">지금 곡 저장</button><button class="btn" id="libClose">닫기</button></div></div>
@@ -1473,7 +1474,8 @@ body .wbrand2 .lgw{display:block;width:126px;height:19px;background:var(--lg-wor
   <div class="dropzone" id="dropZone" hidden>여기에 놓으면 열려요</div>
   <div class="ytsearch" id="ytSearch" hidden><div class="ys-panel">
     <div class="ys-head"><svg class="i" style="color:#ff4e45;width:22px;height:22px"><use href="#i-yt"/></svg><b>유튜브에서 노래 찾기</b><button class="sp-x" id="ysClose" aria-label="닫기">✕</button></div>
-    <form class="ys-bar" id="ysForm"><input type="search" id="ysQ" placeholder="곡 제목, 가수 (예: 잔나비 주저하는 연인들을 위해)" autocomplete="off"><button class="btn play" type="submit">검색</button></form>
+    <form class="ys-bar" id="ysForm"><input type="search" id="ysQ" placeholder="곡 제목, 가수 (띄어쓰기 안 해도 돼요)" autocomplete="off"><button class="btn play" type="submit">검색</button></form>
+    <div class="ys-sug" id="ysSug" hidden></div>
     <div class="ys-list" id="ysList"></div>
     <div class="ys-foot"><span>링크가 있으면 여기에 붙여 넣어도 돼요</span><input type="text" id="ysUrl" placeholder="https://youtu.be/..."><button class="btn" id="ysUrlGo">불러오기</button></div>
   </div></div>
@@ -3575,7 +3577,7 @@ function pinTap(){if(!pin||!pin.tapping)return;const now=performance.now()/1000,
     if(bpm>=40&&bpm<=240){pin.auto=false;pin.tapBpm=bpm;pin.B=60/bpm;pin.tapping=false;setBpm(bpm);const q=pin.pts[0];if(q){setOffset(q.t-q.b*pin.B);P.synced=true;follow.reset();saveSync();render(true)}}else{tp.length=0;toast('다시 두드려 주세요',1500)}}
   pinUI()}
 function pinDone(){if(!pin)return;const ok=pin.ok||pin.pts.length>0;pin=null;document.body.classList.remove('pinning');$('pinBar').hidden=true;
-  if(ok){saveSync();toast('저장했어요',1600)}}
+  if(ok){saveSync();autoSave('맞췄어요 ✓ 내 곡에 저장했어요')}}
 function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;let t,u;
   $('pbTap').hidden=!pin.tapping;$('pbSkip').hidden=!pin.tapping;$('pbRetap').hidden=$('pbDn').hidden=$('pbUp').hidden=pin.tapping;
   const bpmNow=pin.tapBpm||S.scoreBpm||0;
@@ -3583,8 +3585,8 @@ function pinUI(){if(!pin)return;const n=pin.pts.length,last=n?pin.pts[n-1]:null;
   if(pin.tapping){$('pbTap').textContent=pin.taps.length?('두드리기  '+pin.taps.length+' / '+PIN_TAPS):'여기를 두드리기';
     $('pbK').textContent='템포 두드리기';$('pbT').textContent='노래 박자에 맞춰 버튼을 8번 두드리세요';$('pbS').textContent='발로 박자 세듯이 일정하게 두드려요. 드럼이 늦게 나오면 아래 줄을 밀어 건너뛰세요.';$('pinBar').hidden=false;return}
   const src=pin.tapBpm&&pin.tapBpm!==S.scoreBpm?'두드린 템포':S.scoreBpm?'악보에 적힌 템포':'템포';
-  if(!n){$('pbK').textContent='마디 누르기'+(bpmNow?' · '+src+' ♩='+bpmNow:'');t='지금 나오는 마디를 악보에서 누르세요';u='광고는 위 영상에서 건너뛰세요. 드럼이 늦게 나오면 아래 줄을 밀어 넘겨요.'}
-  else{$('pbK').textContent='맞췄어요 ✓ · 템포 ♩='+P.bpm;t='악보가 노래를 따라가요';u='1분쯤 뒤에 그때 나오는 마디를 한 번 더 누르면, 노래 템포가 악보와 다를 때 노래에 맞게 고쳐요. 다 됐으면 완료.'}
+  if(!n){$('pbK').textContent='마디 누르기'+(bpmNow?' · '+src+' ♩='+bpmNow:'');t='지금 들리는 마디를 악보에서 톡 누르세요';u='악보는 손가락으로 위아래로 밀면 넘어가요. 광고는 영상에서 건너뛰세요.'}
+  else{$('pbK').textContent='맞췄어요 ✓ · 템포 ♩='+P.bpm;t='악보가 노래를 따라가요';u='어긋나면 그때 들리는 마디를 또 누르세요. 1분쯤 지나서 누르면 템포도 같이 고쳐져요. 다 됐으면 완료.'}
   $('pbT').textContent=t;$('pbS').textContent=u;$('pinBar').hidden=false}
 function pinAt(mi){const t=M.time()-0.03,T=S.tl;let ti=-1;
   // (a bar that is played more than once: the pass nearest to where the song is thought to be; at first, the first pass)
@@ -3935,8 +3937,55 @@ body.curnote .col .cur{background:rgba(190,155,92,.34)!important;border-radius:9
 .ib.buyTop{height:30px;padding:0 12px;border-radius:999px;font:650 12.5px var(--f-ui);text-decoration:none;display:inline-flex;align-items:center;color:var(--gold,#d8b67a);border:1px solid rgba(216,182,122,.45);background:rgba(216,182,122,.08)}
 .ib.buyTop[hidden]{display:none}
 @media (max-width:760px){.ib.buyTop{display:none}}
+
+/* ===== 2.57 tester feedback ===== */
+#rotBtn[hidden]{display:none!important}
+.ytgrip{display:none;font-style:normal;color:#8e877b;font-size:15px;padding:0 6px 0 2px;cursor:grab;touch-action:none}
+@media (max-width:900px),(orientation:landscape) and (max-height:500px){
+  body.hasScore .tools>#saveBtn{width:auto!important;min-width:0!important;flex:none;display:inline-flex!important;align-items:center;gap:5px;height:34px;padding:0 13px 0 10px;margin:0 2px;border-radius:999px;border:1px solid rgba(216,182,122,.6);color:var(--gold-hi,#f0d9a8);background:rgba(216,182,122,.12)}
+  body.hasScore .tools>#saveBtn .t{display:inline!important;font:700 13px var(--f-ui)}body.hasScore .tools>#saveBtn .i{width:17px;height:17px}
+  body.hasScore .tools>#saveBtn.saved{border-color:rgba(255,255,255,.14);color:#a59d8f;background:none}
+  body.hasScore .tools>#saveBtn::after,body.hasScore .tools>#rotBtn::after{display:none}
+  body.hasScore .tools>#libBtn,body.hasScore .tools>#openScore{display:none!important}
+  body.hasScore .tools>#rotBtn{width:auto!important;min-width:0!important;flex:none;margin-right:4px;display:inline-flex!important;align-items:center;gap:3px;padding:0 8px}
+  body.hasScore .tools>#rotBtn .t{display:inline!important;font:600 12px var(--f-ui)}
+  /* the video can be moved by its top bar, never off the screen (YouTube: at least 200x200, nothing on top of it) */
+  body.pinning .ytgrip,body.ytside .ytgrip{display:inline-block}
+  body.pinning #ytBox{width:204px!important}
+  body.ytmoved.pinning #ytBox,body.ytmoved.ytside #ytBox{left:var(--ytX)!important;top:var(--ytY)!important;right:auto!important;bottom:auto!important}
+  body.pinning #ytBox .ytbar,body.ytside #ytBox .ytbar{touch-action:none;cursor:grab}
+  /* pin bar: one row of buttons; the tempo tools open in its place */
+  .pinbar #pbDn,.pinbar #pbUp,.pinbar #pbRetap{display:none}
+  .pinbar.tempo #pbDn,.pinbar.tempo #pbUp,.pinbar.tempo #pbRetap{display:inline-block}
+  .pinbar.tempo #pbBack,.pinbar.tempo #pbHead{display:none}
+  .pinbar #pbDn[hidden],.pinbar #pbUp[hidden],.pinbar #pbRetap[hidden],.pinbar #pbTempo[hidden]{display:none!important}
+  .pinbar div{flex-wrap:nowrap}.pinbar.tempo div{flex-wrap:wrap}.pinbar button{padding:0 12px;flex:none}
+  body.pinned .pinbar span{display:none}
+  .pinbar b{font-size:16px}.pinbar span{font-size:13px}
+}
+@media (orientation:landscape) and (max-height:500px){
+  body .pinbar{grid-template-columns:auto 1fr auto;column-gap:14px;row-gap:2px;padding:6px 12px max(6px,env(safe-area-inset-bottom,0px));padding-right:228px}
+  body .pinbar i{grid-column:1/3;grid-row:1;margin:0;font-size:11.5px;padding:3px 9px}
+  body .pinbar b{grid-column:1/3;grid-row:2;font-size:14.5px}
+  body .pinbar span{display:none}
+  body .pinbar .pbseek{grid-column:1/3;grid-row:3;margin-top:2px}
+  body .pinbar div{grid-column:3;grid-row:1/4;margin:0;flex-wrap:wrap;justify-content:flex-end;max-width:250px;gap:6px}
+  body .pinbar button{height:32px;font-size:13px}
+  body .pinbar button.tapbig{grid-column:1/3;grid-row:3;height:48px;margin:2px 0 0}
+  body.pinning #ytBox{top:auto!important;bottom:6px!important;right:8px!important}
+}
+.pinhint{position:fixed;left:12px;right:12px;bottom:calc(var(--pbH,300px) + 10px);margin:0 auto;z-index:60;pointer-events:none;padding:12px 16px;border-radius:16px;background:rgba(18,16,11,.92);border:1px solid #c8932f;color:#f3ead8;font:600 14.5px/1.45 var(--f-ui);text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:phin .3s ease-out;max-width:420px}
+.pinhint small{display:block;margin-top:6px;font:500 12.5px var(--f-ui);color:#b9b2a4}.pinhint b{display:block;font-size:26px;line-height:1.1;margin-bottom:4px;color:#e7bb63;animation:phbob 1.4s ease-in-out infinite}
+@keyframes phin{from{opacity:0;transform:translateY(10px)}}@keyframes phbob{50%{transform:translateY(6px)}}
+.ys-sug{display:flex;flex-wrap:wrap;gap:6px;padding:0 4px 10px 6px}.ys-sug[hidden]{display:none}
+.ys-sug button{height:32px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#e9e5dd;font:500 13px var(--f-ui)}
+.ys-sug em{font-style:normal;color:var(--muted);font:500 12.5px var(--f-ui);align-self:center;margin-right:2px}
+.ys-note{padding:2px 4px 10px;font:500 13px var(--f-ui);color:var(--gold,#d8b67a)}
+
+@media (orientation:landscape) and (max-height:500px){body.ytL .pinbar{padding-left:228px;padding-right:12px}}
+body.ysopen #ytBox{visibility:hidden!important}
 </style>
-<div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><label class="pbseek"><input type="range" id="pbSeek" min="0" max="1000" value="0" aria-label="노래 위치"><em id="pbTime">0:00</em></label><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">10초 ▶</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">템포 다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
+<div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><label class="pbseek"><input type="range" id="pbSeek" min="0" max="1000" value="0" aria-label="노래 위치"><em id="pbTime">0:00</em></label><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">10초 ▶</button><button id="pbTempo">템포 고치기</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
   <p class="co-kick" id="coKick"></p><h3 id="coTitle"></h3><ol class="co-steps" id="coSteps"></ol>
   <div class="co-bar" id="coBar" hidden><p id="coBarT"></p><canvas id="coBarC"></canvas><div class="co-barb"><button id="coPrev">◀ 앞 마디</button><button id="coNext">뒤 마디 ▶</button></div><small>이 마디가 아니면 화살표로 바꾸세요.</small></div><div class="co-demo" id="coDemo" hidden></div><p class="co-note" id="coNote" hidden></p>
@@ -4050,7 +4099,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.56.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.57.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4293,6 +4342,72 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   window.SHEETBUY={now:()=>cur,url,find,offer,keysOf,CAT};
   for(const f of ['wYtLinked','wYtReset','afterLoad','dropSong','goHome']){const g=window[f];if(typeof g!=='function')continue;window[f]=function(){const r=g.apply(this,arguments);try{offer()}catch(e){}return r}}
   setInterval(()=>{try{offer()}catch(e){}},3000);
+})();
+</script>
+<script>
+/* ===== 2.57 tester feedback: saving that people notice, landscape in one tap, a movable video, clearer bar matching, search without exact spacing ===== */
+(function(){const $=id=>document.getElementById(id);
+  const phone=()=>typeof isPhoneUI==='function'&&isPhoneUI();
+  // ---- 1. saving: a labelled button on the phone, and the song is saved by itself once it is matched
+  window.autoSave=async function(msg){let e=null;try{if(!(window.PRO&&PRO.active()&&!PRO.has()&&!S.libId))e=await libSave(true)}catch(x){}
+    toast(e?msg:'맞췄어요 ✓ 위의 \'저장\'을 눌러 내 곡에 저장하세요',2600)};
+  function bar(){const has=S.measures&&S.measures.length>0&&$('welcome').hidden;document.body.classList.toggle('hasScore',!!has);
+    const b=$('saveBtn');if(phone()){const sv=!!S.libId;b.classList.toggle('saved',sv);if(!b.classList.contains('done'))$('saveLbl').textContent=sv?'저장됨':'저장';
+      b.title=sv?'내 곡에 저장돼 있어요. 고친 것도 저절로 저장돼요.':'눌러서 내 곡에 저장해요. 다음엔 내 곡에서 바로 열어요.'}
+    const r=$('rotBtn');r.hidden=!has||!phone();if(!r.hidden){const land=innerWidth>innerHeight;r.querySelector('.t').textContent=land?'세로':'가로';r.title=land?'세로로 보기':'가로로 보기'}}
+  setInterval(bar,600);addEventListener('resize',bar);bar();
+  // leaving a matched song that was never saved: save it on the way out
+  {const g=window.goHome;if(typeof g==='function')window.goHome=async function(){try{if(S.measures.length&&P.synced&&!S.libId&&typeof hasAudio==='function'&&hasAudio()&&!(window.PRO&&PRO.active()&&!PRO.has()))await libSave(true)}catch(e){}return g.apply(this,arguments)}}
+  // ---- 2. landscape in one tap (Android: full screen and turned; iPhone cannot be turned by a page)
+  $('rotBtn').onclick=async()=>{const land=innerWidth>innerHeight,so=screen.orientation;
+    try{if(land){try{so&&so.unlock&&so.unlock()}catch(e){}if(document.fullscreenElement)await document.exitFullscreen();
+        if(innerWidth>innerHeight){try{if(so&&so.lock){await document.documentElement.requestFullscreen({navigationUI:'hide'});await so.lock('portrait')}}catch(e){toast('폰을 세로로 세워 주세요',2200)}}return}
+      if(!so||!so.lock)throw 0;if(!document.fullscreenElement)await document.documentElement.requestFullscreen({navigationUI:'hide'});await so.lock('landscape')}
+    catch(e){toast('폰을 옆으로 눕혀 주세요 (화면 자동 회전을 켜 주세요)',3000)}};
+  document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement){try{screen.orientation.unlock()}catch(e){}}});
+  // ---- 3. the video: drag it by its top bar anywhere on the screen (kept whole on the screen)
+  {const box=$('ytBox'),bar0=box.querySelector('.ytbar');let d=null;
+    const clamp=(x,y)=>{const w=box.offsetWidth,h=box.offsetHeight,tb=document.querySelector('.topbar').getBoundingClientRect().bottom;
+      const pb=$('pinBar'),bot=document.body.classList.contains('pinning')&&pb&&!pb.hidden&&innerWidth<innerHeight?pb.getBoundingClientRect().top:innerHeight;
+      return [Math.max(4,Math.min(innerWidth-w-4,x)),Math.max(tb+4,Math.min(bot-h-4,y))]};
+    const set=(x,y)=>{[x,y]=clamp(x,y);document.body.style.setProperty('--ytX',x+'px');document.body.style.setProperty('--ytY',y+'px');document.body.classList.add('ytmoved')};
+    bar0.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const b=document.body.classList;if(!b.contains('pinning')&&!b.contains('ytside'))return;
+      const r=box.getBoundingClientRect();d={dx:e.clientX-r.left,dy:e.clientY-r.top,id:e.pointerId};try{bar0.setPointerCapture(e.pointerId)}catch(x){}e.preventDefault()});
+    bar0.addEventListener('pointermove',e=>{if(!d||e.pointerId!==d.id)return;set(e.clientX-d.dx,e.clientY-d.dy)});
+    const end=()=>{if(!d)return;d=null;const b=document.body.classList;
+      if(b.contains('pinning')&&innerWidth>innerHeight){const r=box.getBoundingClientRect(),left=r.left+r.width/2<innerWidth/2;b.toggle('ytL',left);set(left?4:innerWidth-r.width-8,innerHeight-r.height-6)}};
+    bar0.addEventListener('pointerup',end);bar0.addEventListener('pointercancel',end);
+    const re=()=>{if(!document.body.classList.contains('ytmoved'))return;const r=box.getBoundingClientRect();set(r.left,r.top)};addEventListener('resize',re);try{new ResizeObserver(re).observe($('pinBar'))}catch(e){}}
+  // ---- 4. matching bars: a hint that the score scrolls, and the tempo tools folded away
+  {let hint=null;const kill=()=>{if(hint){hint.remove();hint=null}};
+    let shown=false;
+    const ps=window.pinStart;if(typeof ps==='function')window.pinStart=function(){shown=false;const r=ps.apply(this,arguments);$('pinBar').classList.remove('tempo');$('pbTempo').textContent='템포 고치기';return r};
+    function showHint(){if(shown||!phone()||store.get('pinHintSeen',0)>=3)return;shown=true;kill();store.set('pinHintSeen',(store.get('pinHintSeen',0)||0)+1);
+      document.body.style.setProperty('--pbH',$('pinBar').offsetHeight+'px');hint=document.createElement('div');hint.className='pinhint';hint.innerHTML='<b>↕</b>악보를 손가락으로 위아래로 밀어서<br>지금 들리는 마디를 찾아 톡 누르세요<small>영상은 위쪽 ⠿ 를 잡고 옮길 수 있어요</small>';document.body.appendChild(hint);
+      const sc=$('stand')||document;let n=0;const off=()=>{if(++n>3)kill()};sc.addEventListener('scroll',off,{capture:true,passive:true});setTimeout(kill,8000)}
+    const pa=window.pinAt;if(typeof pa==='function')window.pinAt=function(){kill();store.set('pinHintSeen',3);return pa.apply(this,arguments)};
+    const pd=window.pinDone;if(typeof pd==='function')window.pinDone=function(){kill();document.body.classList.remove('pinned');return pd.apply(this,arguments)};
+    $('pbTempo').onclick=()=>{const on=$('pinBar').classList.toggle('tempo');$('pbTempo').textContent=on?'← 돌아가기':'템포 고치기'};
+    const pu=window.pinUI;if(typeof pu==='function')window.pinUI=function(){const r=pu.apply(this,arguments);try{document.body.classList.toggle('pinned',!!(pin&&pin.pts.length));if(pin&&!pin.tapping&&!pin.pts.length)showHint();$('pbTempo').hidden=!pin||pin.tapping;if(!pin||pin.tapping)$('pinBar').classList.remove('tempo')}catch(e){}return r}}
+  // ---- 5. search: spacing does not matter. YouTube's own suggestions put the spaces in; a query typed without them is searched as suggested
+  {const sq=t=>String(t||'').replace(/\s+/g,'').toLowerCase();let sugSeq=0,sugT=0;
+    function suggest(q){return new Promise(res=>{if(!q||q.length<2)return res([]);const cb='__ys'+Math.random().toString(36).slice(2),sc=document.createElement('script');let done=false;
+      const end=v=>{if(done)return;done=true;try{delete window[cb]}catch(e){}sc.remove();res(v)};
+      window[cb]=d=>{try{end(((d&&d[1])||[]).map(x=>Array.isArray(x)?x[0]:x).filter(x=>typeof x==='string').slice(0,6))}catch(e){end([])}};
+      sc.onerror=()=>end([]);sc.src='https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&hl=ko&gl=kr&q='+encodeURIComponent(q)+'&callback='+cb;document.head.appendChild(sc);setTimeout(()=>end([]),2500)})}
+    const box=$('ysSug');
+    function chips(list,q){box.innerHTML='';const l=list.filter(x=>sq(x)!==sq(q)||x!==q).slice(0,4);if(!l.length){box.hidden=true;return}
+      const em=document.createElement('em');em.textContent='혹시';box.appendChild(em);
+      for(const x of l){const b=document.createElement('button');b.type='button';b.textContent=x;b.onclick=()=>{$('ysQ').value=x;box.hidden=true;runSearch0()};box.appendChild(b)}box.hidden=false}
+    $('ysQ').addEventListener('input',()=>{clearTimeout(sugT);const q=$('ysQ').value.trim(),my=++sugSeq;if(!q){box.hidden=true;return}sugT=setTimeout(async()=>{const l=await suggest(q);if(my===sugSeq)chips(l,q)},280)});
+    {const os=window.openSearch,cs=window.closeSearch;
+      window.openSearch=function(){try{if(transport.playing)pause()}catch(e){}document.body.classList.add('ysopen');return os.apply(this,arguments)};
+      window.closeSearch=function(){document.body.classList.remove('ysopen');return cs.apply(this,arguments)}}
+    const runSearch0=window.runSearch;
+    window.runSearch=async function(){const q=$('ysQ').value.trim();box.hidden=true;
+      if(q&&!/\s/.test(q)&&q.length>=3&&!(typeof ytId==='function'&&ytId(q))){const l=await suggest(q);const fix=l.find(x=>/\s/.test(x)&&sq(x)===sq(q))||l.find(x=>/\s/.test(x)&&sq(x).startsWith(sq(q)));
+        if(fix){$('ysQ').value=fix;await runSearch0();const L=$('ysList');const n=document.createElement('div');n.className='ys-note';n.textContent='‘'+fix+'’(으)로 찾았어요';L.prepend(n);return}}
+      return runSearch0()}}
 })();
 </script>
 </body></html>
