@@ -491,7 +491,9 @@ function findStaves(c,_boost){
         for(let l=0;l<4;l++){const y=Math.round(qq.t+gg*(l+0.5));if(m[y*W+x]){busy++;break}}}
       // (a few specks - the rest's end ticks, a dotted barline - are not notes: notes leave many more)
       if(tot&&busy/tot>0.08&&(global.__busyOld||busy>g*0.35)){s.mdbg.push(['busy',busy,tot]);continue}
-      const n=readNumber(m,W,H,xa,xb,q.t-g*3.2,q.t-g*0.15,g);
+      let n=readNumber(m,W,H,xa,xb,q.t-g*3.2,q.t-g*0.15,g);
+      // (a scanned staff line bends up into the bottom of the number and spoils it: read again a little higher)
+      if(!(n>=2)&&!global.__mrLowOld){const n2=readNumber(m,W,H,xa,xb,q.t-g*3.2,q.t-g*0.5,g);if(n2>=2)n=n2}
       s.mdbg.push(['n',n]);if(n>=2&&n<=99)s.multi[i]=n;
     }
     // a line that opens with a multi-bar rest: a stroke of the rest's bar (or its end tick) can split off a sliver with
