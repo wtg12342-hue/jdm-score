@@ -4300,7 +4300,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.67.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.67.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['metroPop',()=>{$('metroPop').hidden=true}],['proOv',()=>{$('proOv').hidden=true}],
@@ -4778,7 +4778,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   const items=[];function overlays(){items.length=0;
     for(const el of [$('colL'),$('colR')]){if(!el||el.hidden)continue;const vi=el.dataset.vp;if(vi===''||vi==null||!built.vpages[+vi])continue;
       for(const it of built.vpages[+vi].items){const c=it.s.spreadCanvas;if(!c||c.parentNode!==el)continue;let o=c._ann;if(!o){o=document.createElement('canvas');o.className='annv';c._ann=o;hook(o)}
-        o._it=it;o.style.left=it.x+'px';o.style.top=it.y+'px';o.style.width=it.w+'px';o.style.height=it.h+'px';el.appendChild(o);items.push(o)}}
+        const pad=Math.round(Math.min(24,it.h*.18));o._pad=pad;o._it=it;o.style.left=it.x+'px';o.style.top=(it.y-pad)+'px';o.style.width=it.w+'px';o.style.height=(it.h+2*pad)+'px';el.appendChild(o);items.push(o)}}
     for(const st of built.strips||[]){if(st.sys<0||!st.el||!st.el.isConnected||$('scrollview').hidden)continue;let o=st.el._ann;if(!o){o=document.createElement('canvas');o.className='annv';o.style.left='0';o.style.top='0';o.style.width='100%';o.style.height='100%';st.el._ann=o;hook(o)}
       o._it={s:st,x:0,y:0,w:st.w*scale.strip,h:st.h*scale.strip};if(o.parentNode!==st.el)st.el.appendChild(o);items.push(o)}
     drawAll()}
@@ -4786,60 +4786,62 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   const lv=window.layoutViews;window.layoutViews=function(){const r=lv.apply(this,arguments);try{overlays()}catch(e){}return r};
   const sysTop=si=>S.systems[si]?S.systems[si].y0:0;
   function geom(o){const it=o._it,s=it.s,k=it.w/s.w,kh=it.h/s.h;return {s,k,kh,x0:s.x,y0:sysTop(s.sys)}}
-  function drawOne(o){const it=o._it;if(!it)return;const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(it.w*dpr),H=Math.round(it.h*dpr);if(o.width!==W)o.width=W;if(o.height!==H)o.height=H;
-    const g=o.getContext('2d');g.clearRect(0,0,W,H);const G=geom(o),sx=x=>(x-G.x0)*G.k*dpr,sy=y=>y*G.kh*dpr;
+  function drawOne(o){const it=o._it;if(!it)return;const dpr=Math.min(2,devicePixelRatio||1),pad=o._pad||0,W=Math.round(it.w*dpr),H=Math.round((it.h+2*pad)*dpr);if(o.width!==W)o.width=W;if(o.height!==H)o.height=H;
+    const g=o.getContext('2d');g.clearRect(0,0,W,H);const G=geom(o),sx=x=>(x-G.x0)*G.k*dpr,sy=y=>(y*G.kh+pad)*dpr;
     for(const st of A.strokes){if(st.sys!==G.s.sys||st.pts.length<1)continue;g.save();g.lineCap='round';g.lineJoin='round';
       if(st.t==='hl'){g.globalAlpha=.33;g.globalCompositeOperation='multiply'}g.strokeStyle=st.c;g.lineWidth=Math.max(1,st.w*G.k*dpr);g.beginPath();
       st.pts.forEach((p,i)=>i?g.lineTo(sx(p[0]),sy(p[1])):g.moveTo(sx(p[0]),sy(p[1])));if(st.pts.length===1)g.lineTo(sx(st.pts[0][0])+.1,sy(st.pts[0][1]));g.stroke();g.restore()}
     // bar notes: a yellow tag at the top of the bar
     for(const mi in A.notes){const m=S.measures[mi];if(!m||m.sys!==G.s.sys)continue;if(m.x1<G.x0||m.x0>G.x0+G.s.w)continue;const txt=A.notes[mi].t||'';if(!txt)continue;
-      const fs=Math.max(11,Math.min(15,12*Math.max(.8,G.k*3)))*dpr,x=Math.max(2*dpr,sx(m.x0)+2*dpr),y=2*dpr;g.font=`700 ${fs}px Pretendard, sans-serif`;
+      const fs=Math.max(11,Math.min(15,12*Math.max(.8,G.k*3)))*dpr,x=Math.max(2*dpr,sx(m.x0)+2*dpr),y=(pad+2)*dpr;g.font=`700 ${fs}px Pretendard, sans-serif`;
       const label='✎ '+(txt.length>14?txt.slice(0,13)+'…':txt),tw=Math.min(g.measureText(label).width,sx(m.x1)-x-4*dpr),h=fs*1.5;if(tw<20)continue;
       g.fillStyle='#fff3b0';g.strokeStyle='rgba(120,90,0,.5)';g.lineWidth=dpr;g.beginPath();if(g.roundRect)g.roundRect(x,y,tw+12*dpr,h,5*dpr);else g.rect(x,y,tw+12*dpr,h);g.fill();g.stroke();
       g.save();g.beginPath();g.rect(x,y,tw+10*dpr,h);g.clip();g.fillStyle='#3a2a00';g.textBaseline='middle';g.fillText(label,x+6*dpr,y+h/2+dpr);g.restore()}}
   function drawAll(){for(const o of items)try{drawOne(o)}catch(e){}}
   // ---- input: mouse, finger, stylus. With a stylus, the finger scrolls. Two fingers always scroll.
   let cur=null,penSeen=false;const touches=new Map();
-  function toScore(o,e){const r=o.getBoundingClientRect(),G=geom(o);return [G.x0+(e.clientX-r.left)/G.k,(e.clientY-r.top)/G.kh]}
+  function under(x,y){for(const o of items){const r=o.getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return o}return null}
+  function toScore(o,e){const r=o.getBoundingClientRect(),G=geom(o);return [G.x0+(e.clientX-r.left)/G.k,(e.clientY-r.top-(o._pad||0))/G.kh]}
   function barAt(o,x){const G=geom(o),sys=S.systems[G.s.sys];if(!sys)return -1;let mi=sys.measures.find(i=>x>=S.measures[i].x0&&x<S.measures[i].x1);return mi==null?-1:mi}
   function hook(o){
-    o.addEventListener('pointerdown',e=>{if(!on)return;e.preventDefault();e.stopPropagation();if(e.pointerType==='pen')penSeen=true;
+    o.addEventListener('pointerdown',e=>{if(!on)return;e.stopPropagation();if(e.pointerType==='pen')penSeen=true;
       touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
       if((e.pointerType==='touch'&&penSeen)||touches.size>1){if(cur){A.strokes.pop();cur=null;drawAll()}return}
       const p=toScore(o,e),G=geom(o);
       if(tool==='note'){const mi=barAt(o,p[0]);if(mi>=0)openNote(mi);return}
-      if(tool==='er'){erase(G.s.sys,p,o);cur={er:true,o};return}
-      try{o.setPointerCapture(e.pointerId)}catch(x){}
-      const w=(tool==='hl'?16:2.6)/G.k;cur={o,st:{sys:G.s.sys,t:tool,c:tool==='hl'?'#ffd400':color,w,pts:[p]}};A.strokes.push(cur.st);drawOne(o)});
+      if(tool==='er'){cur={er:true,o,dels:[]};erase(G.s.sys,p,o);return}
+      const w=(tool==='hl'?16:2.6)/G.k;cur={o,g:Date.now(),px:(tool==='hl'?16:2.6),st:{sys:G.s.sys,t:tool,c:tool==='hl'?'#ffd400':color,w,pts:[p]}};cur.st.g=cur.g;cur.segs=[cur.st];A.strokes.push(cur.st);drawOne(o)});
     o.addEventListener('pointermove',e=>{if(!on)return;const t=touches.get(e.pointerId);
       if(touches.size>1||(e.pointerType==='touch'&&penSeen)){if(t){const box=o.closest('.col,#scrollview')||document.scrollingElement;const dy=e.clientY-t.y;box.scrollTop-=dy;touches.set(e.pointerId,{x:e.clientX,y:e.clientY})}return}
-      if(t)touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!cur)return;e.preventDefault();
-      if(cur.er){erase(geom(cur.o).s.sys,toScore(cur.o,e),cur.o);return}
+      if(t)touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!cur)return;
+      if(cur.er){const o2=under(e.clientX,e.clientY)||cur.o;erase(geom(o2).s.sys,toScore(o2,e),o2);return}
+      {const o2=under(e.clientX,e.clientY);if(o2&&o2!==cur.o){const G2=geom(o2),p2=toScore(o2,e),pts=cur.lx!=null?[toScore(o2,{clientX:cur.lx,clientY:cur.ly}),p2]:[p2];cur.lx=e.clientX;cur.ly=e.clientY;cur.o=o2;cur.st={sys:G2.s.sys,t:cur.st.t,c:cur.st.c,w:cur.px/G2.k,pts,g:cur.g};cur.segs.push(cur.st);A.strokes.push(cur.st);drawOne(o2);return}}
+      cur.lx=e.clientX;cur.ly=e.clientY;
       const p=toScore(cur.o,e),l=cur.st.pts[cur.st.pts.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])*geom(cur.o).k<1.2)return;cur.st.pts.push(p.map(v=>Math.round(v*10)/10));drawOne(cur.o)});
-    const up=e=>{touches.delete(e.pointerId);if(!cur)return;if(cur.st){undo.push({add:cur.st});save();drawAll()}else if(cur.er)save();cur=null};
-    o.addEventListener('pointerup',up);o.addEventListener('pointercancel',up);
+    if(!window.__annUp){window.__annUp=1;addEventListener('pointerup',e=>ANN._up(e),true);addEventListener('pointercancel',e=>ANN._up(e),true)}
     o.addEventListener('click',e=>{if(on){e.stopPropagation();e.preventDefault()}},true)}
+  function up(e){touches.delete(e.pointerId);if(!cur)return;if(cur.st){undo.push({adds:cur.segs});save();drawAll()}else if(cur.er){if(cur.dels.length)undo.push({dels:cur.dels});save()}cur=null}
   function erase(sys,p,o){const G=geom(o),r=14/G.k;let hit=false;
-    A.strokes=A.strokes.filter(st=>{if(st.sys!==sys)return true;const near=st.pts.some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<r+st.w/2);if(near){undo.push({del:st});hit=true}return !near});if(hit)drawAll()}
+    A.strokes=A.strokes.filter(st=>{if(st.sys!==sys)return true;const near=st.pts.some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<r+st.w/2);if(near){(cur&&cur.dels?cur.dels:undo.push({dels:[]})&&undo[undo.length-1].dels).push(st);hit=true}return !near});if(hit)drawAll()}
   // ---- bar notes
   let noteMi=-1;
-  function openNote(mi){noteMi=mi;$('npK').textContent=barNo(mi)+'마디 메모';$('npT').value=(A.notes[mi]&&A.notes[mi].t)||'';$('npDel').hidden=!A.notes[mi];$('notePop').hidden=false;setTimeout(()=>$('npT').focus(),50)}
+  function openNote(mi){noteMi=mi;npAt=Date.now();$('npK').textContent=barNo(mi)+'마디 메모';$('npT').value=(A.notes[mi]&&A.notes[mi].t)||'';$('npDel').hidden=!A.notes[mi];$('notePop').hidden=false;setTimeout(()=>$('npT').focus(),50)}
   $('npOk').onclick=()=>{const t=$('npT').value.trim();const old=A.notes[noteMi];if(t)A.notes[noteMi]={t,at:Date.now()};else delete A.notes[noteMi];undo.push({note:noteMi,old});save();drawAll();$('notePop').hidden=true};
   $('npDel').onclick=()=>{undo.push({note:noteMi,old:A.notes[noteMi]});delete A.notes[noteMi];save();drawAll();$('notePop').hidden=true};
-  $('npCancel').onclick=()=>{$('notePop').hidden=true};$('notePop').addEventListener('click',e=>{if(e.target===$('notePop'))$('notePop').hidden=true});
+  $('npCancel').onclick=()=>{$('notePop').hidden=true};let npAt=0;$('notePop').addEventListener('click',e=>{if(e.target===$('notePop')&&Date.now()-npAt>600)$('notePop').hidden=true});
   // while playing: a bar with a note shows it on top for a moment
   let lastMi=-1,nt=0;setInterval(()=>{if(!S.measures.length||on)return;let L=null;try{if(!transport.playing){lastMi=-1;return}L=locate(Math.max(0,currentBeat()))}catch(e){return}
     if(!L||L.mi===lastMi)return;lastMi=L.mi;const n=A.notes[L.mi];if(!n||!n.t)return;const b=$('noteToast');b.innerHTML='';const sm=document.createElement('small');sm.textContent=barNo(L.mi)+'마디';b.appendChild(sm);b.appendChild(document.createTextNode(n.t));
     b.hidden=false;clearTimeout(nt);nt=setTimeout(()=>b.hidden=true,3200)},150);
   // ---- the bar of tools
-  const HINT={pen:'손가락·펜·마우스로 악보에 그려요',hl:'형광펜으로 칠해요',er:'지울 선을 문질러요',note:'메모할 마디를 톡 누르세요'};
+  const HINT={pen:'손가락·펜·마우스로 그려요 · 저절로 저장돼요',hl:'형광펜으로 칠해요',er:'지울 선을 문질러요',note:'메모할 마디를 톡 누르세요'};
   function setTool(t){tool=t;document.querySelectorAll('#annBar .ab-tools button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$('abCol').style.opacity=t==='pen'?'1':'.25';
     const h=$('annHint');h.textContent=HINT[t]+(t==='pen'||t==='hl'?' · 두 손가락으로 넘겨요':'');h.hidden=false}
   document.querySelectorAll('#annBar .ab-tools button').forEach(b=>b.onclick=()=>setTool(b.dataset.t));
   document.querySelectorAll('#abCol button').forEach(b=>b.onclick=()=>{color=b.dataset.c;document.querySelectorAll('#abCol button').forEach(x=>x.classList.toggle('on',x===b))});
-  $('abUndo').onclick=()=>{const u=undo.pop();if(!u)return;if(u.add)A.strokes=A.strokes.filter(x=>x!==u.add);else if(u.del)A.strokes.push(u.del);else if(u.note!=null){if(u.old)A.notes[u.note]=u.old;else delete A.notes[u.note]}save();drawAll()};
+  $('abUndo').onclick=()=>{const u=undo.pop();if(!u)return;if(u.adds)A.strokes=A.strokes.filter(x=>!u.adds.includes(x));else if(u.add)A.strokes=A.strokes.filter(x=>x!==u.add);else if(u.dels)A.strokes.push(...u.dels);else if(u.del)A.strokes.push(u.del);else if(u.note!=null){if(u.old)A.notes[u.note]=u.old;else delete A.notes[u.note]}save();drawAll()};
   let sure=0;$('abClear').onclick=()=>{if(Date.now()-sure>2500){sure=Date.now();$('abClear').textContent='정말 다 지우기';setTimeout(()=>$('abClear').textContent='다 지우기',2500);return}
-    A.strokes.forEach(st=>undo.push({del:st}));A.strokes=[];A.notes={};save();drawAll();$('abClear').textContent='다 지우기'};
+    undo.push({dels:A.strokes.slice()});A.strokes=[];A.notes={};save();drawAll();$('abClear').textContent='다 지우기'};
   function open(){if(!S.measures.length)return;try{if(transport.playing)pause()}catch(e){}on=true;document.body.classList.add('annon');
     $('annBar').hidden=false;document.body.style.setProperty('--abH',$('annBar').offsetHeight+'px');setTool(tool);overlays()}
   function close(){on=false;document.body.classList.remove('annon');$('annBar').hidden=true;$('annHint').hidden=true;cur=null;touches.clear()}
@@ -4851,7 +4853,12 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   // saved songs carry their marks (for sending to a student later)
   {const ls=window.libSave;window.libSave=async function(){const e=await ls.apply(this,arguments);try{if(e&&key){e.ann=A;await LDB.put(e)}}catch(x){}return e}}
   {const lo=window.libOpen;window.libOpen=async function(id){const r=await lo.apply(this,arguments);try{const e=await LDB.get(id);if(e&&e.ann&&scoreKey()&&!store.get(scoreKey(),null)){store.set(scoreKey(),e.ann);load()}}catch(x){}return r}}
-  window.ANN={open,close,get:()=>A};
+  {let pu=0;const fire=(el,fn)=>{el.addEventListener('pointerup',e=>{if(e.button>0)return;pu=Date.now();e.preventDefault();fn(e)});el.onclick=e=>{if(Date.now()-pu<700)return;fn(e)}};
+    document.querySelectorAll('#annBar .ab-tools button').forEach(b=>fire(b,()=>setTool(b.dataset.t)));
+    document.querySelectorAll('#abCol button').forEach(b=>{const f=b.onclick;fire(b,f)});
+    for(const id of ['abUndo','abClear','abDone','npOk','npDel','npCancel']){const el=$(id),f=el.onclick;fire(el,f)}}
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save()});
+  window.ANN={open,close,get:()=>A,_up:up};
 })();
 </script>
 </body></html>
