@@ -3397,7 +3397,7 @@ function saveSync(){if(!songKey||!hasAudio())return;libTouch();store.set(syncKey
 let libPend=null,libOpening=false;
 function loadSync(){if(!songKey||!S.measures.length)return false;
   // a song opened from '내 곡' uses the timing saved with it, as it is: no listening again
-  let v=null;if(libPend&&libPend.key===songKey){v=libPend.v;libPend=null}else v=store.get(syncKey(),null);if(!v||!v.bpm)return false;
+  let v=null;if(libPend&&libPend.key===songKey){v=libPend.v;libPend=null}else v=(window.PRO&&PRO.active()&&!PRO.has()&&!(S.libId&&!/^[kr]/.test(S.libId)))?null:store.get(syncKey(),null);if(!v||!v.bpm)return false;
   if(v.order){const o=parseOrder(v.order);if(o){buildTimeline(o);render(true)}}
   P.map=null;setBpm(v.bpm);setOffset(v.offset);if(v.map&&v.map.t&&v.map.t.length>8){P.map={i0:v.map.i0,t:Float64Array.from(v.map.t,x=>x/1000)};P.offset=P.map.t[P.map.i0]}P.synced=true;updateChip();
   syncHint(`지난번에 맞춘 값을 불러왔어요: ${v.bpm} BPM, 첫 박 ${fmtT(v.offset)}. 다시 재려면 '자동 측정'을 누르세요.`);
@@ -3766,11 +3766,12 @@ function libFoldersUI(all){const box=$('libFolders');box.innerHTML='';const fl=l
       for(const e of all.filter(e=>e.folder===libFolder)){e.folder='';await LDB.put(e)}store.set('libFolders',store.get('libFolders',[]).filter(x=>x!==libFolder));libFolder='';store.set('libFolder','');libRender()};box.appendChild(d)}}
 /* the start screen lists the songs saved last: one click opens one */
 async function wRecent(){let all=[];try{all=(await LDB.all()).filter(e=>!e.tmp||Date.now()-(e.used||0)<864e5)}catch(e){return}const box=$('wRecentList');box.innerHTML='';
-  all.sort((a,b)=>(b.tmp?1:0)-(a.tmp?1:0)||(b.used||0)-(a.used||0));$('wRecent').hidden=!all.length;
+  all.sort((a,b)=>(b.tmp?1:0)-(a.tmp?1:0)||(!b.rec?1:0)-(!a.rec?1:0)||(b.used||0)-(a.used||0));
+  {const sg=e=>(e.files||[]).map(f=>f.name+':'+(f.blob&&f.blob.size)).join('|'),seen=new Set();all=all.filter(e=>{const k=sg(e);if(seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>(b.tmp?1:0)-(a.tmp?1:0)||(b.used||0)-(a.used||0))}$('wRecent').hidden=!all.length;
   for(const e of all.slice(0,6)){const b=document.createElement('button');b.innerHTML='<span></span><small></small>';b.firstChild.textContent=e.title||e.scoreName||'곡';
-    const md=e.media?(e.media.type==='yt'?'유튜브':'음원 파일'):'음원 없음';if(e.tmp)b.classList.add('wcont');b.lastChild.textContent=(e.tmp?'이어서 하기 · 저장 안 한 곡 · ':'')+md+(e.folder?' · '+e.folder:'')+(e.sync?` · ♩${e.sync.bpm}`:'');
+    const md=e.media?(e.media.type==='yt'?'유튜브':'음원 파일'):'음원 없음';if(e.tmp)b.classList.add('wcont');if(e.rec)b.classList.add('wrec');b.lastChild.textContent=(e.tmp?'이어서 하기 · 저장 안 한 곡 · ':e.rec?'최근 · 박자는 다시 맞춰요 · ':'')+md+(e.folder?' · '+e.folder:'')+(e.sync?` · ♩${e.sync.bpm}`:'');
     b.onclick=()=>libOpen(e.id);box.appendChild(b)}}
-async function libRender(){wRecent();const box=$('libList');let all=[];try{all=(await LDB.all()).filter(e=>!e.tmp)}catch(e){box.innerHTML='<p class="libempty">이 화면에서는 저장 기능을 쓸 수 없어요.</p>';return}
+async function libRender(){wRecent();const box=$('libList');let all=[];try{all=(await LDB.all()).filter(e=>!e.tmp&&!e.rec)}catch(e){box.innerHTML='<p class="libempty">이 화면에서는 저장 기능을 쓸 수 없어요.</p>';return}
   all.sort((a,b)=>(b.used||0)-(a.used||0));box.innerHTML='';libFoldersUI(all);
   if(!all.length){box.innerHTML='<p class="libempty">아직 저장한 곡이 없어요.<br>악보와 음원을 열고 박자를 맞춘 다음 \'지금 곡 저장\'을 누르세요.</p>';return}
   const fl=libFolderList(all),shown=libFolder?all.filter(e=>e.folder===libFolder):all;
@@ -4009,6 +4010,7 @@ body.ysopen #ytBox{visibility:hidden!important}
 #mpVol{width:100%;height:30px;accent-color:#d8b67a}
 .mp-ok{width:100%;height:46px;margin-top:14px;border-radius:14px;border:0;background:rgba(255,255,255,.08);color:#f3ead8;font:700 15px var(--f-ui)}
 .wcont small{color:var(--gold,#d8b67a)!important;font-weight:600}
+.wrec small{color:#a9a194!important}
 
 /* ===== 2.60 matching on a phone held upright: video top-left, the guide beside it, the whole score below with nothing over it ===== */
 .pintop{display:none}
@@ -4227,7 +4229,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.64.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.65.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['metroPop',()=>{$('metroPop').hidden=true}],['proOv',()=>{$('proOv').hidden=true}],
@@ -4252,7 +4254,8 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
         const t=$('updBar');if(!t)return;t.hidden=false;$('updGo').onclick=()=>{w.postMessage('skip')}};
       if(reg.waiting&&navigator.serviceWorker.controller)ask(reg.waiting);
       reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)ask(w)})});
-      setInterval(()=>reg.update().catch(()=>{}),30*60*1000)}).catch(()=>{});
+      setInterval(()=>reg.update().catch(()=>{}),5*60*1000);
+      document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update().catch(()=>{})})}).catch(()=>{});
     let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()})}
 })();
 </script>
@@ -4393,7 +4396,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   if(!enabled)return;
   // ---- the gates ----
   const wrap=(name,test)=>{const f=window[name];if(typeof f!=='function')return;window[name]=function(){if(!has()&&test.apply(this,arguments)){open(name);return}return f.apply(this,arguments)}};
-  const libSave0=window.libSave;window.libSave=async function(q){if(!has()&&!S.libId){let n=0;try{n=(await LDB.all()).filter(e=>!e.tmp).length}catch(e){}if(n>=FREE_SONGS){open('libSave');toast('무료로는 '+FREE_SONGS+'곡까지 저장할 수 있어요.',3000);return null}}return libSave0.apply(this,arguments)};
+  const libSave0=window.libSave;window.libSave=async function(q){if(!has()&&!S.libId){let n=0;try{n=(await LDB.all()).filter(e=>!e.tmp&&!e.rec).length}catch(e){}if(n>=FREE_SONGS){open('libSave');toast('무료로는 '+FREE_SONGS+'곡까지 저장할 수 있어요.',3000);return null}}return libSave0.apply(this,arguments)};
   wrap('setLoopEdge',()=>true);wrap('shareSync',()=>true);
   const lb=$('loopBtn');if(lb){const f=lb.onclick;lb.onclick=function(e){if(!has()&&!(P.loop.on||P.loopPick)){open('loop');return}return f&&f.call(this,e)}}
   const sp=$('speed');if(sp){const f=sp.oninput;sp.oninput=function(e){if(!has()&&+e.target.value!==100){setSpeed(100);open('speed');return}return f&&f.call(this,e)}}
@@ -4558,9 +4561,16 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
       Object.assign(e,{tmp:true,title:S.name,scoreName:S.name,files:LIB.src.map(f=>({name:f.name,type:f.type||'',blob:f})),range:LIB.range||null,kind:S.kind,
         media,sync:libSyncNow(),order,startAt:P.startAt||0,bpm:P.bpm,countIn:P.countIn,used:Date.now(),loop:P.loop.on?{a:P.loop.a,b:P.loop.b}:null,speed:P.speed});
       await LDB.put(e);tmpId=e.id;sig=g;setR({id:e.id,t:now(),at:Date.now()});
+      keepRecent(e).catch(()=>{});
       // only the last few unsaved songs are kept
       const all=(await LDB.all()).filter(x=>x.tmp).sort((a,b)=>(b.used||0)-(a.used||0));for(const x of all.slice(KEEP_MAX))await LDB.del(x.id)}
     catch(err){}finally{busy=false}}
+  // recent songs: score and video come back, the matching does not (that is what saving is for)
+  const RECENT_MAX=5;
+  async function keepRecent(e){const fs=x=>(x.files||[]).map(f=>f.name+':'+(f.blob&&f.blob.size)).join('|'),k=fs(e);const all=await LDB.all();
+    let r=all.find(x=>x.rec&&fs(x)===k);if(!r)r={id:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now(),rec:true,folder:''};
+    Object.assign(r,{rec:true,title:e.title,scoreName:e.scoreName,files:e.files,range:e.range,kind:e.kind,media:e.media,sync:null,order:null,startAt:0,bpm:e.bpm,countIn:e.countIn,loop:null,speed:100,used:Date.now()});
+    await LDB.put(r);const recs=(await LDB.all()).filter(x=>x.rec).sort((a,b)=>(b.used||0)-(a.used||0));for(const x of recs.slice(RECENT_MAX))await LDB.del(x.id)}
   // the unsaved song is only there to carry on: just the last one, for a day
   async function dropKept(except){try{for(const x of (await LDB.all()).filter(x=>x.tmp&&x.id!==except))await LDB.del(x.id)}catch(e){}}
   (async()=>{try{for(const x of (await LDB.all()).filter(x=>x.tmp&&Date.now()-(x.used||0)>DAY))await LDB.del(x.id)}catch(e){}try{wRecent()}catch(e){}})();
@@ -4568,11 +4578,13 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')keep()});addEventListener('pagehide',keep);
   // a kept song is saved for real: it becomes a normal song in 내 곡
   {const ls=window.libSave;window.libSave=async function(){const id=tmpId;if(id&&!S.libId){const old=await LDB.get(id).catch(()=>null);
-      const e=await ls.apply(this,arguments);if(e&&e.id!==id){await LDB.del(id).catch(()=>{});tmpId=null}return e}return ls.apply(this,arguments)}}
+      const e=await ls.apply(this,arguments);if(e&&e.id!==id){await LDB.del(id).catch(()=>{});tmpId=null}dropRec(e);return e}const e=await ls.apply(this,arguments);dropRec(e);return e}
+  async function dropRec(e){if(!e)return;try{const fs=x=>(x.files||[]).map(f=>f.name+':'+(f.blob&&f.blob.size)).join('|'),k=fs(e);for(const x of (await LDB.all()).filter(x=>x.rec&&fs(x)===k))await LDB.del(x.id)}catch(x){}}}
   // opening another song: the one before stays among the recent ones; going home on purpose: nothing to reopen
   {const d=window.dropSong;if(typeof d==='function')window.dropSong=function(){const r=d.apply(this,arguments);tmpId=null;sig='';return r}}
-  {const g=window.goHome;if(typeof g==='function')window.goHome=async function(){await keep();const r=await g.apply(this,arguments);tmpId=null;sig='';setR(null);return r}}
-  let opening=false;{const lo=window.libOpen;window.libOpen=async function(id){opening=true;let r;try{r=await lo.apply(this,arguments)}finally{opening=false}try{const e=await LDB.get(id);if(e&&e.tmp&&S.libId===id){S.libId=null;tmpId=id;sig=sigNow()}}catch(x){}return r}}
+  {const g=window.goHome;if(typeof g==='function')window.goHome=async function(){await keep();const r=await g.apply(this,arguments);tmpId=null;sig='';setR(null);try{hideSyncAsk();$('syncPop').hidden=true}catch(e){}return r}}
+  let opening=false;{const lo=window.libOpen;window.libOpen=async function(id){opening=true;let r;try{r=await lo.apply(this,arguments)}finally{opening=false}try{const e=await LDB.get(id);if(e&&e.tmp&&S.libId===id){S.libId=null;tmpId=id;sig=sigNow()}
+      if(e&&e.rec&&S.libId===id){S.libId=null;tmpId=null;sig='';setTimeout(()=>toast('박자를 다시 맞춰 주세요 · 저장하면 다음엔 바로 맞아요',3600),2400)}}catch(x){}return r}}
   // back in the app after it was closed: the same song, at the same place, stopped
   async function resume(){const r=R();if(!r||!r.id||Date.now()-(r.at||0)>7*864e5)return;if(/[#&]s=/.test(location.hash||''))return;
     if(S.measures.length||!$('welcome')||$('welcome').hidden)return;const e=await LDB.get(r.id).catch(()=>null);if(!e){setR(null);return}
