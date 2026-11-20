@@ -4008,6 +4008,27 @@ body.ysopen #ytBox{visibility:hidden!important}
 #mpVol{width:100%;height:30px;accent-color:#c8932f}
 .mp-ok{width:100%;height:46px;margin-top:14px;border-radius:14px;border:0;background:rgba(255,255,255,.08);color:#f3ead8;font:700 15px var(--f-ui)}
 .wcont small{color:var(--gold,#d8b67a)!important;font-weight:600}
+
+/* ===== 2.60 matching on a phone held upright: video top-left, the guide beside it, the whole score below with nothing over it ===== */
+.pintop{display:none}
+.pbone{display:none}
+@media (max-width:900px) and (orientation:portrait){
+  body.pinning #ytBox{top:calc(var(--tbB,60px) + 6px)!important;left:6px!important;right:auto!important;width:204px!important;max-width:none!important;height:auto!important;border-radius:14px;overflow:hidden}
+  body.pinning #ytBox .ytbar{display:none!important}
+  body.pinning #ytBox .ytframe{width:204px!important;height:204px!important;min-height:204px!important;aspect-ratio:auto!important}
+  body.pinning .pintop{display:flex;flex-direction:column;justify-content:center;gap:7px;position:fixed;z-index:69;top:calc(var(--tbB,60px) + 6px);left:218px;right:8px;height:204px;overflow:hidden}
+  body.pinning .pintop[hidden]{display:none}
+  .pintop::before{content:"";position:fixed;left:0;right:0;top:var(--tbB,60px);height:216px;background:#0b0a08;z-index:-1}
+  .pintop i{align-self:flex-start;font-style:normal;padding:4px 10px;border-radius:999px;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;font:700 12px/1.3 var(--f-ui)}
+  .pintop b{font:800 17px/1.35 var(--f-ui);color:#f0c46c;word-break:keep-all}
+  .pintop span{font:500 13px/1.45 var(--f-ui);color:#cfc7b8;word-break:keep-all}
+  body.pinning #stand{position:fixed!important;left:0;right:0;top:calc(var(--tbB,60px) + 216px);bottom:var(--pbH2,190px);z-index:40;border-top:1px solid rgba(216,182,122,.35)}
+  body.pinning .pinbar>i,body.pinning .pinbar>b,body.pinning .pinbar>span{display:none!important}
+  body.pinning .pinbar{padding-top:10px}
+  .pinhint{display:none!important}
+  body.pinning .pbone:not([hidden]){display:grid;width:100%;height:58px;margin:0 0 10px;border:0;border-radius:16px;background:linear-gradient(180deg,#e7bb63,#c8932f);color:#24190a;place-content:center;gap:1px}
+  .pinbar .pbone b{display:block!important;font:800 17px var(--f-ui);color:#24190a!important}.pinbar .pbone small{font:600 12px var(--f-ui);color:#3a2a10}
+}
 </style>
 <div class="metropop" id="metroPop" hidden><div class="mp-card">
   <div class="mp-row"><b>메트로놈</b><button class="mp-sw" id="mpSw" role="switch" aria-checked="true"><span></span><em id="mpSwT">켜짐</em></button></div>
@@ -4018,7 +4039,8 @@ body.ysopen #ytBox{visibility:hidden!important}
   <button class="mp-ok" id="mpOk">확인</button>
 </div></div>
 <div class="loophint" id="loopHint" hidden></div>
-<div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><label class="pbseek"><input type="range" id="pbSeek" min="0" max="1000" value="0" aria-label="노래 위치"><em id="pbTime">0:00</em></label><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">10초 ▶</button><button id="pbTempo">템포 고치기</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
+<div class="pintop" id="pinTop" hidden><i id="ptK"></i><b id="ptT"></b><span id="ptS"></span></div>
+<div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbOne" class="pbone" hidden><b>지금이 1마디!</b><small>노래가 시작되는 순간 누르세요</small></button><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><label class="pbseek"><input type="range" id="pbSeek" min="0" max="1000" value="0" aria-label="노래 위치"><em id="pbTime">0:00</em></label><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">10초 ▶</button><button id="pbTempo">템포 고치기</button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
   <p class="co-kick" id="coKick"></p><h3 id="coTitle"></h3><ol class="co-steps" id="coSteps"></ol>
   <div class="co-bar" id="coBar" hidden><p id="coBarT"></p><canvas id="coBarC"></canvas><div class="co-barb"><button id="coPrev">◀ 앞 마디</button><button id="coNext">뒤 마디 ▶</button></div><small>이 마디가 아니면 화살표로 바꾸세요.</small></div><div class="co-demo" id="coDemo" hidden></div><p class="co-note" id="coNote" hidden></p>
@@ -4132,7 +4154,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.59.2';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.60.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
@@ -4483,6 +4505,22 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
     restoring=true;try{await libOpen(r.id);const t=+r.t||0;if(t>1){for(let i=0;i<40;i++){await new Promise(z=>setTimeout(z,250));if((typeof mediaDur==='function'&&mediaDur()>0)||M.type==='file'){try{M.seek(t);if(typeof render==='function')render(true)}catch(x){}break}}}
       toast('하던 곡을 다시 열었어요',2200)}catch(x){}finally{restoring=false}}
   setTimeout(resume,900);
+})();
+</script>
+<script>
+/* 2.60: the matching guide next to the video, and "지금이 1마디" for the song's first beat */
+(function(){const $=id=>document.getElementById(id);
+  function sync(){const on=!!pin&&!$('pinBar').hidden;$('pinTop').hidden=!on;if(!on)return;
+    const tb=document.querySelector('.topbar').getBoundingClientRect().bottom;document.body.style.setProperty('--tbB',Math.round(tb)+'px');
+    document.body.style.setProperty('--pbH2',$('pinBar').offsetHeight+'px');
+    const n=pin.pts.length,tapping=pin.tapping;$('ptK').textContent=$('pbK').textContent;
+    if(tapping){$('ptT').textContent=$('pbT').textContent;$('ptS').textContent=$('pbS').textContent}
+    else if(!n){$('ptT').textContent='노래를 들으면서 악보에 맞춰 주세요';$('ptS').textContent='노래가 시작되는 순간 아래 금색 버튼을 누르거나, 지금 들리는 마디를 악보에서 톡 누르세요.'}
+    else{$('ptT').textContent='맞췄어요 ✓ 커서가 노래를 따라가요';$('ptS').textContent='어긋나면 그때 들리는 마디를 악보에서 톡. 잘 맞으면 완료.'}
+    $('pbOne').hidden=tapping||n>0}
+  const pu=window.pinUI;window.pinUI=function(){const r=pu.apply(this,arguments);try{sync()}catch(e){}return r};
+  setInterval(()=>{try{sync()}catch(e){}},400);addEventListener('resize',()=>{try{sync()}catch(e){}});
+  $('pbOne').onclick=()=>{if(!pin||!S.tl.length)return;const mi=S.tl[0].mi;pinAt(mi);toast('1마디를 노래에 맞췄어요',1600)};
 })();
 </script>
 </body></html>
