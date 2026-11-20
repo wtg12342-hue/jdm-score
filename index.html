@@ -4104,6 +4104,20 @@ body .syncpop.grp .sp-row,body .syncpop.grp .sp-grid,body .syncpop.grp .sp-actio
 body .syncpop.grp .sp-gs>.sp-g.mvold,body .syncask .sa-grp.mvold{display:none!important}
 @media (orientation:landscape) and (max-height:500px){body .syncpop.grp .sp-gs{display:block}body .syncpop .mv2{grid-template-columns:1fr 1fr;margin-top:6px}body .syncpop .mv2 .mvc>div{grid-template-columns:repeat(3,1fr)}body .syncpop .mv2 button{height:34px}
   body .syncpop .sp-g.more>div{grid-template-columns:1fr 1fr}body .syncask .sa-btns.grp>.mv2{grid-column:span 2;margin-top:0}body .syncask .mv2 .mvc>div{grid-template-columns:repeat(2,1fr)}body .syncask .mv2 button{height:34px}}
+
+/* ===== 2.66 맞추기 panel: one row of six (blue left, brown right), "지금 여기" in the main colour, and the score free while picking ===== */
+body .syncpop .mv2{grid-template-columns:1fr 1fr!important;gap:6px 8px}
+body .syncpop .mv2 .mvc>div{grid-template-columns:repeat(3,1fr)!important;gap:5px}
+body .syncpop .mv2 button{height:44px!important;padding:0 2px;font-size:12.5px!important;white-space:nowrap}
+body .syncpop .mv2 .mvc>em{font-size:12px}
+body .syncpop .sp-g.more{margin-top:10px}body .syncpop .sp-g.more>em{display:none}
+body .syncpop .sp-g.more>div{grid-template-columns:1fr 1fr!important;gap:8px}
+body .syncpop .sp-g.more .btn{height:44px!important;font:700 14px var(--f-ui)!important;border-radius:12px}
+body .syncpop .sp-g.more .btn.main{background:#d8b67a;border-color:#d8b67a;color:#24190a}
+body.aligning #syncPop{display:none!important}
+.alignhint{position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--tbB,60px) + 10px);z-index:62;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:#d8b67a;color:#24190a;font:700 14px var(--f-ui);box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap}
+.alignhint[hidden]{display:none}
+.alignhint button{height:32px;padding:0 12px;border-radius:999px;border:0;background:rgba(0,0,0,.18);color:#24190a;font:700 13px var(--f-ui)}
 </style>
 <div class="metropop" id="metroPop" hidden><div class="mp-card">
   <div class="mp-row"><b>메트로놈</b><button class="mp-sw" id="mpSw" role="switch" aria-checked="true"><span></span><em id="mpSwT">켜짐</em></button></div>
@@ -4114,6 +4128,7 @@ body .syncpop.grp .sp-gs>.sp-g.mvold,body .syncask .sa-grp.mvold{display:none!im
   <button class="mp-ok" id="mpOk">확인</button>
 </div></div>
 <div class="loophint" id="loopHint" hidden></div>
+<div class="alignhint" id="alignHint" hidden><span>지금 들리는 마디를 악보에서 톡</span><button id="alignX">취소</button></div>
 <div class="pintop" id="pinTop" hidden><i id="ptK"></i><b id="ptT"></b><span id="ptS"></span></div>
 <div class="pinbar" id="pinBar" hidden><i id="pbK"></i><b id="pbT"></b><span id="pbS"></span><button id="pbOne" class="pbone" hidden><b>지금이 1마디!</b><small>노래가 시작되는 순간 누르세요</small></button><p class="pbnot1" id="pbNot1" hidden>노래가 1마디부터 시작하지 않으면? 노래 첫 소리가 날 때 <b>그 마디를 악보에서 톡</b> 누르세요.</p><button id="pbTap" class="tapbig" hidden>여기를 두드리기</button><label class="pbseek"><input type="range" id="pbSeek" min="0" max="1000" value="0" aria-label="노래 위치"><em id="pbTime">0:00</em></label><div><button id="pbSkip" hidden>건너뛰기</button><button id="pbBack">◀ 10초</button><button id="pbHead">10초 ▶</button><button id="pbTempo">템포 고치기</button><button id="pbLate" class="pbfix" hidden><b>커서가 노래보다 늦어요</b><small>템포 +1 (빠르게)</small></button><button id="pbEarly" class="pbfix" hidden><b>커서가 노래보다 빨라요</b><small>템포 −1 (느리게)</small></button><button id="pbDn">템포 −1</button><button id="pbUp">템포 +1</button><button id="pbRetap">다시 두드리기</button><button id="pbDone" class="go">완료</button></div></div>
 <div class="coach" id="coach" hidden><div class="co-card">
@@ -4229,7 +4244,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.65.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.66.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['metroPop',()=>{$('metroPop').hidden=true}],['proOv',()=>{$('proOv').hidden=true}],
@@ -4675,6 +4690,23 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
     // the panel only has beat/bar: drop the 0.02s row there
     w.querySelectorAll('.mvc>div').forEach(d=>d.firstChild.remove());box.insertBefore(w,box.firstChild);
     const sa=window.showSyncAsk;window.showSyncAsk=function(kind){const r=sa.apply(this,arguments);w.hidden=kind==='tap';return r}}}
+})();
+</script>
+<script>
+/* 2.66: order the six move buttons as one row (◀1마디 ◀1박 ◀0.02 | 0.02▶ 1박▶ 1마디▶), short main button, and the panel steps aside while a bar is picked */
+(function(){const $=id=>document.getElementById(id);const pop=$('syncPop');if(!pop)return;
+  const L=pop.querySelector('.mv2 .mvc.l>div');if(L){const b=[...L.children];L.innerHTML='';[b[2],b[1],b[0]].forEach(x=>L.appendChild(x))}
+  const more=pop.querySelector('.sp-g.more>div');if(more){const bs=[...more.querySelectorAll('button')];
+    const here=bs.find(b=>/마디를 악보에서/.test(b.textContent));if(here){here.textContent='지금 여기 (마디 누르기)';here.classList.add('main');more.insertBefore(here,more.firstChild)}
+    const again=bs.find(b=>/처음부터/.test(b.textContent));if(again)again.textContent='처음부터 다시';
+    const auto=bs.find(b=>/자동/.test(b.textContent));if(auto)auto.remove()}
+  // while picking a bar: the panel hides, a short line says what to do; after the press the panel comes back
+  let back=false;const sap=window.setAlignPick;window.setAlignPick=function(v){const was=!pop.hidden;const r=sap.apply(this,arguments);
+    $('alignHint').hidden=!P.alignPick;if(P.alignPick){back=was;try{clearTimeout(toast._t);$('toast').hidden=true}catch(e){}document.body.style.setProperty('--tbB',Math.round(document.querySelector('.topbar').getBoundingClientRect().bottom)+'px')}
+    else if(back){back=false}return r};
+  const ab=window.alignBarNow;window.alignBarNow=function(){const r=ab.apply(this,arguments);$('alignHint').hidden=true;if(P.alignPick)setAlignPick(false);return r};
+  $('alignX').onclick=()=>{setAlignPick(false);$('alignHint').hidden=true};
+  setInterval(()=>{if(!P.alignPick&&!$('alignHint').hidden)$('alignHint').hidden=true},500);
 })();
 </script>
 </body></html>
