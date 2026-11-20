@@ -4072,6 +4072,18 @@ body .syncask .sa-btns.grp .sa-end .btn{height:38px;padding:0 18px}
   body .syncask .sa-btns.grp .sa-end .btn{height:34px}
 }
 .pinhint{display:none!important}
+
+/* ===== 2.63 no tempo buttons while matching (tempo is the BPM control); the 맞추기 panel in plain groups, nothing to scroll ===== */
+.pinbar #pbTempo,.pinbar .pbfix,.pinbar #pbDn,.pinbar #pbUp,.pinbar #pbRetap,.pinbar .pbrow2{display:none!important}
+.sp-g{margin-top:10px}
+.sp-g>em{display:block;font-style:normal;font:600 12.5px var(--f-ui);color:#cfc7b8;margin:0 0 6px}
+.sp-g>div{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sp-g button{height:40px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:#e9e5dd;font:650 13px var(--f-ui);cursor:pointer}
+.sp-g.more>div{grid-template-columns:1fr}
+.sp-g.more .btn{height:40px;justify-content:center;font-size:13.5px}
+body .syncpop.grp .sp-row,body .syncpop.grp .sp-grid,body .syncpop.grp .sp-actions{display:none!important}
+@media (max-width:900px){body .syncpop{max-height:calc(100% - 16px)!important}body .syncpop .sp-note{display:none}body .syncpop .sp-g button,body .syncpop .sp-g .btn{height:38px}}
+@media (orientation:landscape) and (max-height:500px){body .syncpop.grp .sp-gs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}body .syncpop .sp-g{margin-top:6px}body .syncpop .sp-g>div{grid-template-columns:1fr}body .syncpop .sp-g button,body .syncpop .sp-g .btn{height:32px}}
 </style>
 <div class="metropop" id="metroPop" hidden><div class="mp-card">
   <div class="mp-row"><b>메트로놈</b><button class="mp-sw" id="mpSw" role="switch" aria-checked="true"><span></span><em id="mpSwT">켜짐</em></button></div>
@@ -4197,9 +4209,10 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.62.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.63.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
+    ['metroPop',()=>{$('metroPop').hidden=true}],['proOv',()=>{$('proOv').hidden=true}],
     ['libOv',()=>{const b=document.querySelector('#libOv .sp-x,#libOv [data-close],#libClose');b?b.click():($('libOv').hidden=true)}],
     ['pagesOv',()=>{const b=document.querySelector('#pagesOv .sp-x,#pagesOv [data-close],#pgCancel');b?b.click():($('pagesOv').hidden=true)}],
     ['drawer',()=>$('closeDrawer').click()]];
@@ -4574,7 +4587,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
     pb.insertBefore(row,btns);row.appendChild($('pbLate'));row.appendChild($('pbEarly'))}
   $('pbLate').onclick=()=>{pinNudge(1);toast('템포를 ♩='+P.bpm+' 로 빠르게 했어요',1600)};
   $('pbEarly').onclick=()=>{pinNudge(-1);toast('템포를 ♩='+P.bpm+' 로 느리게 했어요',1600)};
-  function upd(){if(!pin){return}const n=pin.pts.length,t=pin.tapping;$('pbLate').hidden=$('pbEarly').hidden=t||!n;$('pbNot1').hidden=t||n>0;$('pinBar').classList.toggle('has1',!t&&(!$('pbOne').hidden||n>0));
+  function upd(){if(!pin){return}const n=pin.pts.length,t=pin.tapping;$('pbLate').hidden=$('pbEarly').hidden=t||!n;$('pbNot1').hidden=t||n>0;$('pinBar').classList.toggle('has1',!t&&!$('pbOne').hidden);
     $('pbLate').querySelector('small').textContent='템포 +1 → ♩='+(Math.round(P.bpm)+1);$('pbEarly').querySelector('small').textContent='템포 −1 → ♩='+(Math.round(P.bpm)-1)}
   const pu=window.pinUI;window.pinUI=function(){const r=pu.apply(this,arguments);try{upd()}catch(e){}return r};setInterval(()=>{try{upd()}catch(e){}},500);
   // after matching: the check panel in groups with plain headings
@@ -4588,6 +4601,24 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
     q('-beat').textContent='커서 1박 앞으로 ▶';q('-bar').textContent='커서 1마디 앞으로 ▶';q('beat').textContent='◀ 커서 1박 뒤로';q('bar').textContent='◀ 커서 1마디 뒤로';
     const sa=window.showSyncAsk;window.showSyncAsk=function(kind){const r=sa.apply(this,arguments);const tap=kind==='tap';late.hidden=early.hidden=drift.hidden=tap;$('saTap').hidden=!tap;
       if(!tap){$('saTitle').textContent='악보가 노래와 맞나요?';$('saSub').textContent="금색 커서가 드럼 소리와 같이 가면 '맞아요'를 누르세요."}return r}}
+})();
+</script>
+<script>
+/* 2.63: the 맞추기 panel (after matching) in plain groups */
+(function(){const $=id=>document.getElementById(id);const pop=$('syncPop');if(!pop)return;pop.classList.add('grp');
+  $('spHint').innerHTML='재생하면서 <b>금색 커서</b>와 <b>드럼 소리</b>를 비교해 보세요.';
+  const q=k=>pop.querySelector('.sp-grid [data-shift="'+k+'"]');
+  const mk=(lbl,keys,names,cls)=>{const g=document.createElement('div');g.className='sp-g'+(cls?' '+cls:'');const em=document.createElement('em');em.textContent=lbl;const row=document.createElement('div');
+    keys.forEach((k,i)=>{const src=q(k),b=document.createElement('button');b.textContent=names[i];b.onclick=()=>src.click();row.appendChild(b)});g.appendChild(em);g.appendChild(row);return g};
+  const late=mk('커서가 노래보다 늦으면 → 커서를 앞으로',['-0.02','-beat','-bar'],['0.02초 ▶','1박 ▶','1마디 ▶']);
+  const early=mk('커서가 노래보다 빠르면 → 커서를 뒤로',['0.02','beat','bar'],['◀ 0.02초','◀ 1박','◀ 1마디']);
+  const more=document.createElement('div');more.className='sp-g more';const em=document.createElement('em');em.textContent='많이 틀리면';const row=document.createElement('div');
+  const b1=document.createElement('button');b1.className='btn';b1.textContent='지금 들리는 마디를 악보에서 누르기';b1.onclick=()=>$('spHere').click();
+  const b2=document.createElement('button');b2.className='btn';b2.textContent='처음부터 다시 맞추기';b2.onclick=()=>$('spFix').click();
+  const b3=document.createElement('button');b3.className='btn';b3.textContent='다시 자동 맞추기';b3.onclick=()=>$('spAuto').click();
+  row.appendChild(b1);row.appendChild(b2);if(!$('spAuto').hidden&&!(typeof isPhoneUI==='function'&&isPhoneUI()))row.appendChild(b3);more.appendChild(em);more.appendChild(row);
+  const wrap=document.createElement('div');wrap.className='sp-gs';[late,early,more].forEach(e=>wrap.appendChild(e));
+  pop.insertBefore(wrap,pop.querySelector('.sp-note'));
 })();
 </script>
 </body></html>
