@@ -1323,6 +1323,7 @@ body .wbrand2 .lgw{display:block;width:126px;height:19px;background:var(--lg-wor
 
   <div class="tools">
     <button class="ib" id="libBtn" title="내 곡: 악보·음원·맞춘 박자를 저장해 두고 한 번에 다시 열기"><svg class="i"><use href="#i-lib"/></svg><span class="t">내 곡</span></button>
+    <button class="ib" id="annBtn" hidden title="악보에 표시·메모"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg><span class="t">메모</span></button>
     <button class="ib" id="rotBtn" hidden title="가로로 보기"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="11" rx="2"/><path d="M8 4.5h5.5a3 3 0 0 1 3 3V8"/><path d="M14.5 6l2 2 2-2"/></svg><span class="t">가로</span></button>
     <button class="ib" id="saveBtn" title="지금 곡 저장 (Ctrl+S): 악보·음원·맞춘 박자·반복 구간을 '내 곡'에 저장해요"><svg class="i" id="saveIco"><use href="#i-save"/></svg><span class="t" id="saveLbl">저장</span></button>
     <button class="ib" id="openScore" title="악보 열기 — PDF 또는 MusicXML (여러 개 가능)"><svg class="i"><use href="#i-score"/></svg><span class="t">악보</span></button>
@@ -4118,6 +4119,43 @@ body.aligning #syncPop{display:none!important}
 .alignhint{position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--tbB,60px) + 10px);z-index:62;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:#d8b67a;color:#24190a;font:700 14px var(--f-ui);box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap}
 .alignhint[hidden]{display:none}
 .alignhint button{height:32px;padding:0 12px;border-radius:999px;border:0;background:rgba(0,0,0,.18);color:#24190a;font:700 13px var(--f-ui)}
+
+/* ===== 2.67 drawing and notes on the score (mouse, finger, pen) ===== */
+canvas.annv{position:absolute;pointer-events:none;z-index:3}
+body.annon canvas.annv{pointer-events:auto;touch-action:none;cursor:crosshair}
+.annfab{position:fixed;z-index:30;right:14px;bottom:calc(var(--annB,120px));display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px 0 11px;border-radius:999px;border:1px solid rgba(216,182,122,.6);background:rgba(16,14,10,.92);color:#d8b67a;font:700 13px var(--f-ui);box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.annfab[hidden]{display:none}.annfab svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+body.annon .annfab{display:none}
+.annbar{position:fixed;z-index:72;left:50%;transform:translateX(-50%);bottom:max(10px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 16px);padding:8px 10px;border-radius:18px;background:rgba(14,13,10,.96);border:1px solid rgba(216,182,122,.45);box-shadow:0 10px 30px rgba(0,0,0,.55)}
+.annbar[hidden]{display:none}
+.ab-tools,.ab-col,.ab-act{display:flex;gap:5px;align-items:center}
+.ab-tools button{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:52px;height:46px;border-radius:12px;border:1px solid transparent;background:none;color:#cfc7b8;font:600 11px var(--f-ui)}
+.ab-tools button svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ab-tools button.on{background:#d8b67a;color:#24190a}
+.ab-col button{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:var(--c)}
+.ab-col button.on{border-color:#fff;box-shadow:0 0 0 2px #d8b67a}
+.ab-act button{height:38px;padding:0 12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#e9e5dd;font:700 13px var(--f-ui)}
+.ab-act button.main{background:#d8b67a;border-color:#d8b67a;color:#24190a}
+.annhint{position:fixed;z-index:71;left:50%;transform:translateX(-50%);bottom:calc(var(--abH,70px) + 18px);padding:8px 14px;border-radius:999px;background:rgba(14,13,10,.92);color:#e9e5dd;font:600 13px var(--f-ui);white-space:nowrap;pointer-events:none}
+.annhint[hidden]{display:none}
+.notepop{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
+.notepop[hidden]{display:none}
+.np-card{width:min(460px,100%);margin:0 0 max(10px,env(safe-area-inset-bottom,0px));padding:16px;border-radius:20px;background:#14120d;border:1px solid rgba(216,182,122,.4)}
+.np-k{margin:0 0 8px;font:700 15px var(--f-ui);color:#d8b67a}
+.np-card textarea{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:#0b0a08;color:#f3ead8;font:500 16px/1.5 var(--f-ui);resize:none}
+.np-btns{display:flex;gap:8px;margin-top:10px}.np-btns button{flex:1;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#e9e5dd;font:700 14px var(--f-ui)}
+.np-btns button.main{background:#d8b67a;border-color:#d8b67a;color:#24190a}#npDel{flex:.7;color:#ff8a80}
+.notetoast{position:fixed;z-index:65;left:50%;transform:translateX(-50%);top:calc(var(--tbB,60px) + 10px);max-width:calc(100vw - 24px);padding:10px 16px;border-radius:14px;background:#fff3b0;color:#3a2a00;font:700 15px/1.4 var(--f-ui);box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none}
+.notetoast[hidden]{display:none}.notetoast small{display:block;font:600 11.5px var(--f-ui);opacity:.7}
+@media (max-width:520px){.ab-tools button{width:46px}.ab-act button{padding:0 10px}}
+
+#annBtn[hidden]{display:none!important}.annfab{display:none!important}
+body.hasScore .tools>#annBtn{display:inline-flex!important;align-items:center;gap:3px;width:auto!important;min-width:0!important;flex:none;padding:0 8px}
+body.hasScore .tools>#annBtn .t{display:inline!important;font:600 12px var(--f-ui)}body.hasScore .tools>#annBtn::after{display:none}
+body.annon .tools>#annBtn{color:#d8b67a}
+.annbar{width:min(560px,calc(100vw - 16px));box-sizing:border-box}
+.annbar .ab-tools{flex:1 1 100%;justify-content:space-between}.annbar .ab-tools button{flex:1}
+.annbar .ab-col{flex:1}.annbar .ab-act{flex:none}
 </style>
 <div class="metropop" id="metroPop" hidden><div class="mp-card">
   <div class="mp-row"><b>메트로놈</b><button class="mp-sw" id="mpSw" role="switch" aria-checked="true"><span></span><em id="mpSwT">켜짐</em></button></div>
@@ -4127,6 +4165,24 @@ body.aligning #syncPop{display:none!important}
   <input type="range" id="mpVol" min="0" max="100" aria-label="메트로놈 소리 크기">
   <button class="mp-ok" id="mpOk">확인</button>
 </div></div>
+<button class="annfab" id="annFab" hidden title="악보에 표시·메모"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg><span>표시·메모</span></button>
+<div class="annbar" id="annBar" hidden>
+  <div class="ab-tools">
+    <button data-t="pen" class="on" title="펜"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg><span>펜</span></button>
+    <button data-t="hl" title="형광펜"><svg viewBox="0 0 24 24"><path d="M9 15l-4 4h6l1-1M8 14l6-10 5 3-6 10z"/></svg><span>형광펜</span></button>
+    <button data-t="er" title="지우개"><svg viewBox="0 0 24 24"><path d="M4 16l8-8 6 6-6 6H8z"/><path d="M14 20h6"/></svg><span>지우개</span></button>
+    <button data-t="note" title="마디 메모"><svg viewBox="0 0 24 24"><path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4M8 9h8M8 13h5"/></svg><span>마디 메모</span></button>
+  </div>
+  <div class="ab-col" id="abCol"><button data-c="#e5484d" class="on" style="--c:#e5484d"></button><button data-c="#2f6fe4" style="--c:#2f6fe4"></button><button data-c="#1f9d55" style="--c:#1f9d55"></button><button data-c="#1d1d1f" style="--c:#1d1d1f"></button></div>
+  <div class="ab-act"><button id="abUndo" title="되돌리기">↶</button><button id="abClear">다 지우기</button><button id="abDone" class="main">완료</button></div>
+</div>
+<div class="annhint" id="annHint" hidden></div>
+<div class="notepop" id="notePop" hidden><div class="np-card">
+  <p class="np-k" id="npK">5마디 메모</p>
+  <textarea id="npT" rows="3" placeholder="예: 여기서 크래시 세게! 16비트 흔들리지 않게"></textarea>
+  <div class="np-btns"><button id="npDel">삭제</button><button id="npCancel">취소</button><button id="npOk" class="main">저장</button></div>
+</div></div>
+<div class="notetoast" id="noteToast" hidden></div>
 <div class="loophint" id="loopHint" hidden></div>
 <div class="alignhint" id="alignHint" hidden><span>지금 들리는 마디를 악보에서 톡</span><button id="alignX">취소</button></div>
 <div class="pintop" id="pinTop" hidden><i id="ptK"></i><b id="ptT"></b><span id="ptS"></span></div>
@@ -4209,9 +4265,9 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   const IC={lib:'<path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.5l3.5 1-4 15-3.5-1z"/>',save:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',score:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
     audio:'<path d="M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2"/>',yt:'<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.5 9.5v5l4-2.5z"/>',pages:'<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/>',
     view:'<path d="M4 6h16M4 12h16M4 18h10"/>',sync:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',curs:'<rect x="8.5" y="4" width="7" height="16" rx="3"/><path d="M3 9h3M3 15h3M18 9h3M18 15h3"/>',lesson:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l5-2.8z"/>',studio:'<path d="M4 11l8-6 8 6v8H4z"/><path d="M10 19v-5h4v5"/>',share:'<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.8l6.9-4M8.3 13.2l6.9 4"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17v.2"/>'};
-  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__cur','커서 모양 바꾸기','curs'],['__buythis','이 곡 악보 사기','lesson',1],['__pro','JDM Pro','save'],['__share','학생에게 보내기','share'],['__sheet','악보 구매','lesson'],['__lesson','드럼 강의 보기','lesson'],['__studio','JDM 드럼 스튜디오 상담','studio'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
+  const items=[['libBtn','내 곡','lib',1],['saveBtn','저장','save'],['openScore','악보 열기','score',1],['openAudio','음원 열기','audio'],['ytBtn','유튜브','yt'],['pagesBtn','쪽 고르기','pages'],['__view','보기 바꾸기','view'],['syncChip','맞추기','sync'],['settingsBtn','설정','set'],['__cur','커서 모양 바꾸기','curs'],['__buythis','이 곡 악보 사기','lesson',1],['__ann','악보에 표시·메모','lesson',1],['__pro','JDM Pro','save'],['__share','학생에게 보내기','share'],['__sheet','악보 구매','lesson'],['__lesson','드럼 강의 보기','lesson'],['__studio','JDM 드럼 스튜디오 상담','studio'],['__help','사용법','help'],['fsBtn','전체 화면','fs']];
   const sh=$('moreSheet'),grid=$('msGrid');
-  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){if(id==='__sheet'&&typeof IN_PLAY_APP!=='undefined'&&IN_PLAY_APP)continue;let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__share')t={click:()=>shareSync()};if(id==='__buythis'){const m=window.SHEETBUY&&SHEETBUY.now();if(!m)continue;t={click:()=>openOut(SHEETBUY.url(m))}}if(id==='__pro'){if(!window.PRO||!PRO.active())continue;t={click:()=>PRO.open()};lb=PRO.has()&&!PRO.trialLeft()?'JDM Pro ✓':'JDM Pro'}if(id==='__cur')t={click:()=>curCycle()};if(id==='__lesson')t={click:()=>openOut(LINK_LESSON)};if(id==='__studio')t={click:()=>openOut(LINK_STUDIO)};if(id==='__sheet')t={click:()=>openOut(LINK_SHEET)};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
+  function open(){grid.innerHTML='';for(let [id,lb,ic,hot] of items){if(id==='__sheet'&&typeof IN_PLAY_APP!=='undefined'&&IN_PLAY_APP)continue;let t=$(id);if(id==='__help')t={click:()=>openGuide()};if(id==='__share')t={click:()=>shareSync()};if(id==='__buythis'){const m=window.SHEETBUY&&SHEETBUY.now();if(!m)continue;t={click:()=>openOut(SHEETBUY.url(m))}}if(id==='__ann'){if(!S.measures.length)continue;t={click:()=>ANN.open()}}if(id==='__pro'){if(!window.PRO||!PRO.active())continue;t={click:()=>PRO.open()};lb=PRO.has()&&!PRO.trialLeft()?'JDM Pro ✓':'JDM Pro'}if(id==='__cur')t={click:()=>curCycle()};if(id==='__lesson')t={click:()=>openOut(LINK_LESSON)};if(id==='__studio')t={click:()=>openOut(LINK_STUDIO)};if(id==='__sheet')t={click:()=>openOut(LINK_SHEET)};if(id==='__view'&&built.reel)continue;if(id==='__view'){const toScroll=P.view==='spread';t={click:()=>setView(toScroll?'scroll':'spread')};lb=toScroll?'스크롤로 보기':'쪽으로 보기'}if(!t||t.hidden)continue;const b=document.createElement('button');if(hot)b.className='hot';
       b.innerHTML='<svg viewBox="0 0 24 24">'+IC[ic]+'</svg><span></span>';b.lastChild.textContent=lb;b.onclick=()=>{close();setTimeout(()=>t.click(),30)};grid.appendChild(b)}sh.hidden=false}
   function close(){sh.hidden=true}
   $('moreBtn').onclick=open;$('msClose').onclick=close;sh.addEventListener('click',e=>{if(e.target===sh)close()});
@@ -4244,7 +4300,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.66.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.67.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['metroPop',()=>{$('metroPop').hidden=true}],['proOv',()=>{$('proOv').hidden=true}],
@@ -4707,6 +4763,95 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   const ab=window.alignBarNow;window.alignBarNow=function(){const r=ab.apply(this,arguments);$('alignHint').hidden=true;if(P.alignPick)setAlignPick(false);return r};
   $('alignX').onclick=()=>{setAlignPick(false);$('alignHint').hidden=true};
   setInterval(()=>{if(!P.alignPick&&!$('alignHint').hidden)$('alignHint').hidden=true},500);
+})();
+</script>
+<script>
+/* ===== 2.67 marks on the score: pen, highlighter, eraser, and a note on a bar.
+   Kept in score coordinates (line, x along the line, y from the line's top), so they sit on the same notes on a phone,
+   a tablet and a computer, whatever the layout. Saved with the song; a teacher's layer (later) is drawn under the user's own. ===== */
+(function(){const $=id=>document.getElementById(id);
+  let A={strokes:[],notes:{}},key='',tool='pen',color='#e5484d',on=false,undo=[];
+  const scoreKey=()=>S.measures.length?'ann.'+(S.name||'')+':'+S.measures.length:'';
+  function load(){key=scoreKey();A=key?store.get(key,null)||{strokes:[],notes:{}}:{strokes:[],notes:{}};A.strokes=A.strokes||[];A.notes=A.notes||{};undo=[];drawAll()}
+  function save(){if(!key)return;try{store.set(key,A)}catch(e){toast('메모를 더 저장할 공간이 없어요',2400)}try{if(S.libId)libTouch()}catch(e){}}
+  // ---- overlays on every drawn piece of the score
+  const items=[];function overlays(){items.length=0;
+    for(const el of [$('colL'),$('colR')]){if(!el||el.hidden)continue;const vi=el.dataset.vp;if(vi===''||vi==null||!built.vpages[+vi])continue;
+      for(const it of built.vpages[+vi].items){const c=it.s.spreadCanvas;if(!c||c.parentNode!==el)continue;let o=c._ann;if(!o){o=document.createElement('canvas');o.className='annv';c._ann=o;hook(o)}
+        o._it=it;o.style.left=it.x+'px';o.style.top=it.y+'px';o.style.width=it.w+'px';o.style.height=it.h+'px';el.appendChild(o);items.push(o)}}
+    for(const st of built.strips||[]){if(st.sys<0||!st.el||!st.el.isConnected||$('scrollview').hidden)continue;let o=st.el._ann;if(!o){o=document.createElement('canvas');o.className='annv';o.style.left='0';o.style.top='0';o.style.width='100%';o.style.height='100%';st.el._ann=o;hook(o)}
+      o._it={s:st,x:0,y:0,w:st.w*scale.strip,h:st.h*scale.strip};if(o.parentNode!==st.el)st.el.appendChild(o);items.push(o)}
+    drawAll()}
+  const ps=window.placeSpread;window.placeSpread=function(){const r=ps.apply(this,arguments);try{overlays()}catch(e){}return r};
+  const lv=window.layoutViews;window.layoutViews=function(){const r=lv.apply(this,arguments);try{overlays()}catch(e){}return r};
+  const sysTop=si=>S.systems[si]?S.systems[si].y0:0;
+  function geom(o){const it=o._it,s=it.s,k=it.w/s.w,kh=it.h/s.h;return {s,k,kh,x0:s.x,y0:sysTop(s.sys)}}
+  function drawOne(o){const it=o._it;if(!it)return;const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(it.w*dpr),H=Math.round(it.h*dpr);if(o.width!==W)o.width=W;if(o.height!==H)o.height=H;
+    const g=o.getContext('2d');g.clearRect(0,0,W,H);const G=geom(o),sx=x=>(x-G.x0)*G.k*dpr,sy=y=>y*G.kh*dpr;
+    for(const st of A.strokes){if(st.sys!==G.s.sys||st.pts.length<1)continue;g.save();g.lineCap='round';g.lineJoin='round';
+      if(st.t==='hl'){g.globalAlpha=.33;g.globalCompositeOperation='multiply'}g.strokeStyle=st.c;g.lineWidth=Math.max(1,st.w*G.k*dpr);g.beginPath();
+      st.pts.forEach((p,i)=>i?g.lineTo(sx(p[0]),sy(p[1])):g.moveTo(sx(p[0]),sy(p[1])));if(st.pts.length===1)g.lineTo(sx(st.pts[0][0])+.1,sy(st.pts[0][1]));g.stroke();g.restore()}
+    // bar notes: a yellow tag at the top of the bar
+    for(const mi in A.notes){const m=S.measures[mi];if(!m||m.sys!==G.s.sys)continue;if(m.x1<G.x0||m.x0>G.x0+G.s.w)continue;const txt=A.notes[mi].t||'';if(!txt)continue;
+      const fs=Math.max(11,Math.min(15,12*Math.max(.8,G.k*3)))*dpr,x=Math.max(2*dpr,sx(m.x0)+2*dpr),y=2*dpr;g.font=`700 ${fs}px Pretendard, sans-serif`;
+      const label='✎ '+(txt.length>14?txt.slice(0,13)+'…':txt),tw=Math.min(g.measureText(label).width,sx(m.x1)-x-4*dpr),h=fs*1.5;if(tw<20)continue;
+      g.fillStyle='#fff3b0';g.strokeStyle='rgba(120,90,0,.5)';g.lineWidth=dpr;g.beginPath();if(g.roundRect)g.roundRect(x,y,tw+12*dpr,h,5*dpr);else g.rect(x,y,tw+12*dpr,h);g.fill();g.stroke();
+      g.save();g.beginPath();g.rect(x,y,tw+10*dpr,h);g.clip();g.fillStyle='#3a2a00';g.textBaseline='middle';g.fillText(label,x+6*dpr,y+h/2+dpr);g.restore()}}
+  function drawAll(){for(const o of items)try{drawOne(o)}catch(e){}}
+  // ---- input: mouse, finger, stylus. With a stylus, the finger scrolls. Two fingers always scroll.
+  let cur=null,penSeen=false;const touches=new Map();
+  function toScore(o,e){const r=o.getBoundingClientRect(),G=geom(o);return [G.x0+(e.clientX-r.left)/G.k,(e.clientY-r.top)/G.kh]}
+  function barAt(o,x){const G=geom(o),sys=S.systems[G.s.sys];if(!sys)return -1;let mi=sys.measures.find(i=>x>=S.measures[i].x0&&x<S.measures[i].x1);return mi==null?-1:mi}
+  function hook(o){
+    o.addEventListener('pointerdown',e=>{if(!on)return;e.preventDefault();e.stopPropagation();if(e.pointerType==='pen')penSeen=true;
+      touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if((e.pointerType==='touch'&&penSeen)||touches.size>1){if(cur){A.strokes.pop();cur=null;drawAll()}return}
+      const p=toScore(o,e),G=geom(o);
+      if(tool==='note'){const mi=barAt(o,p[0]);if(mi>=0)openNote(mi);return}
+      if(tool==='er'){erase(G.s.sys,p,o);cur={er:true,o};return}
+      try{o.setPointerCapture(e.pointerId)}catch(x){}
+      const w=(tool==='hl'?16:2.6)/G.k;cur={o,st:{sys:G.s.sys,t:tool,c:tool==='hl'?'#ffd400':color,w,pts:[p]}};A.strokes.push(cur.st);drawOne(o)});
+    o.addEventListener('pointermove',e=>{if(!on)return;const t=touches.get(e.pointerId);
+      if(touches.size>1||(e.pointerType==='touch'&&penSeen)){if(t){const box=o.closest('.col,#scrollview')||document.scrollingElement;const dy=e.clientY-t.y;box.scrollTop-=dy;touches.set(e.pointerId,{x:e.clientX,y:e.clientY})}return}
+      if(t)touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!cur)return;e.preventDefault();
+      if(cur.er){erase(geom(cur.o).s.sys,toScore(cur.o,e),cur.o);return}
+      const p=toScore(cur.o,e),l=cur.st.pts[cur.st.pts.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])*geom(cur.o).k<1.2)return;cur.st.pts.push(p.map(v=>Math.round(v*10)/10));drawOne(cur.o)});
+    const up=e=>{touches.delete(e.pointerId);if(!cur)return;if(cur.st){undo.push({add:cur.st});save();drawAll()}else if(cur.er)save();cur=null};
+    o.addEventListener('pointerup',up);o.addEventListener('pointercancel',up);
+    o.addEventListener('click',e=>{if(on){e.stopPropagation();e.preventDefault()}},true)}
+  function erase(sys,p,o){const G=geom(o),r=14/G.k;let hit=false;
+    A.strokes=A.strokes.filter(st=>{if(st.sys!==sys)return true;const near=st.pts.some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<r+st.w/2);if(near){undo.push({del:st});hit=true}return !near});if(hit)drawAll()}
+  // ---- bar notes
+  let noteMi=-1;
+  function openNote(mi){noteMi=mi;$('npK').textContent=barNo(mi)+'마디 메모';$('npT').value=(A.notes[mi]&&A.notes[mi].t)||'';$('npDel').hidden=!A.notes[mi];$('notePop').hidden=false;setTimeout(()=>$('npT').focus(),50)}
+  $('npOk').onclick=()=>{const t=$('npT').value.trim();const old=A.notes[noteMi];if(t)A.notes[noteMi]={t,at:Date.now()};else delete A.notes[noteMi];undo.push({note:noteMi,old});save();drawAll();$('notePop').hidden=true};
+  $('npDel').onclick=()=>{undo.push({note:noteMi,old:A.notes[noteMi]});delete A.notes[noteMi];save();drawAll();$('notePop').hidden=true};
+  $('npCancel').onclick=()=>{$('notePop').hidden=true};$('notePop').addEventListener('click',e=>{if(e.target===$('notePop'))$('notePop').hidden=true});
+  // while playing: a bar with a note shows it on top for a moment
+  let lastMi=-1,nt=0;setInterval(()=>{if(!S.measures.length||on)return;let L=null;try{if(!transport.playing){lastMi=-1;return}L=locate(Math.max(0,currentBeat()))}catch(e){return}
+    if(!L||L.mi===lastMi)return;lastMi=L.mi;const n=A.notes[L.mi];if(!n||!n.t)return;const b=$('noteToast');b.innerHTML='';const sm=document.createElement('small');sm.textContent=barNo(L.mi)+'마디';b.appendChild(sm);b.appendChild(document.createTextNode(n.t));
+    b.hidden=false;clearTimeout(nt);nt=setTimeout(()=>b.hidden=true,3200)},150);
+  // ---- the bar of tools
+  const HINT={pen:'손가락·펜·마우스로 악보에 그려요',hl:'형광펜으로 칠해요',er:'지울 선을 문질러요',note:'메모할 마디를 톡 누르세요'};
+  function setTool(t){tool=t;document.querySelectorAll('#annBar .ab-tools button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$('abCol').style.opacity=t==='pen'?'1':'.25';
+    const h=$('annHint');h.textContent=HINT[t]+(t==='pen'||t==='hl'?' · 두 손가락으로 넘겨요':'');h.hidden=false}
+  document.querySelectorAll('#annBar .ab-tools button').forEach(b=>b.onclick=()=>setTool(b.dataset.t));
+  document.querySelectorAll('#abCol button').forEach(b=>b.onclick=()=>{color=b.dataset.c;document.querySelectorAll('#abCol button').forEach(x=>x.classList.toggle('on',x===b))});
+  $('abUndo').onclick=()=>{const u=undo.pop();if(!u)return;if(u.add)A.strokes=A.strokes.filter(x=>x!==u.add);else if(u.del)A.strokes.push(u.del);else if(u.note!=null){if(u.old)A.notes[u.note]=u.old;else delete A.notes[u.note]}save();drawAll()};
+  let sure=0;$('abClear').onclick=()=>{if(Date.now()-sure>2500){sure=Date.now();$('abClear').textContent='정말 다 지우기';setTimeout(()=>$('abClear').textContent='다 지우기',2500);return}
+    A.strokes.forEach(st=>undo.push({del:st}));A.strokes=[];A.notes={};save();drawAll();$('abClear').textContent='다 지우기'};
+  function open(){if(!S.measures.length)return;try{if(transport.playing)pause()}catch(e){}on=true;document.body.classList.add('annon');
+    $('annBar').hidden=false;document.body.style.setProperty('--abH',$('annBar').offsetHeight+'px');setTool(tool);overlays()}
+  function close(){on=false;document.body.classList.remove('annon');$('annBar').hidden=true;$('annHint').hidden=true;cur=null;touches.clear()}
+  $('abDone').onclick=close;$('annFab').onclick=open;$('annBtn').onclick=()=>on?close():open();
+  // the pen button sits above the player controls
+  setInterval(()=>{const has=S.measures.length&&$('welcome').hidden&&!(typeof pin!=='undefined'&&pin);$('annFab').hidden=true;$('annBtn').hidden=!has;
+    if(has){const b=innerHeight-$('stand').getBoundingClientRect().bottom+12;document.body.style.setProperty('--annB',Math.max(70,b)+'px')}
+    if(scoreKey()!==key)load()},500);
+  // saved songs carry their marks (for sending to a student later)
+  {const ls=window.libSave;window.libSave=async function(){const e=await ls.apply(this,arguments);try{if(e&&key){e.ann=A;await LDB.put(e)}}catch(x){}return e}}
+  {const lo=window.libOpen;window.libOpen=async function(id){const r=await lo.apply(this,arguments);try{const e=await LDB.get(id);if(e&&e.ann&&scoreKey()&&!store.get(scoreKey(),null)){store.set(scoreKey(),e.ann);load()}}catch(x){}return r}}
+  window.ANN={open,close,get:()=>A};
 })();
 </script>
 </body></html>
