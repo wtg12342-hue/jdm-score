@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>:root{color-scheme:dark}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>JDM 악보 플레이어</title>
 <meta name="description" content="드럼 악보를 노래에 맞춰 넘겨 주는 연습 앱">
@@ -490,7 +490,7 @@ body.glide .cur{transition:transform .22s cubic-bezier(.2,.7,.2,1),top .22s,heig
 @media (prefers-reduced-motion:reduce){.col.turned>canvas{animation:none}}
 /* ---------- phone ---------- */
 .dmix{display:contents}
-button{touch-action:manipulation}
+button{touch-action:pan-x pan-y}
 .stand{touch-action:none}
 .welcome,.drawer,.pagesov,.pggrid{touch-action:pan-y}
 @media (pointer:coarse){.card kbd,.whint{display:none}}
@@ -4156,6 +4156,11 @@ body.annon .tools>#annBtn{color:#d8b67a}
 .annbar{width:min(560px,calc(100vw - 16px));box-sizing:border-box}
 .annbar .ab-tools{flex:1 1 100%;justify-content:space-between}.annbar .ab-tools button{flex:1}
 .annbar .ab-col{flex:1}.annbar .ab-act{flex:none}
+
+/* 2.67.2 the page itself never zooms like a picture; only the score zooms (two fingers on the score) */
+html,body{touch-action:pan-x pan-y}
+
+@media (max-height:520px){.annbar{width:auto;max-width:calc(100vw - 16px);flex-wrap:nowrap;padding:6px 8px;gap:6px}.annbar .ab-tools{flex:none}.annbar .ab-tools button{flex:none;padding:6px 10px}.annbar .ab-col{flex:none}.annhint{bottom:auto;top:calc(var(--tbH,56px) + 6px)}}
 </style>
 <div class="metropop" id="metroPop" hidden><div class="mp-card">
   <div class="mp-row"><b>메트로놈</b><button class="mp-sw" id="mpSw" role="switch" aria-checked="true"><span></span><em id="mpSwT">켜짐</em></button></div>
@@ -4300,7 +4305,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.67.1';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.67.2';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['metroPop',()=>{$('metroPop').hidden=true}],['proOv',()=>{$('proOv').hidden=true}],
@@ -4799,20 +4804,20 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
       g.save();g.beginPath();g.rect(x,y,tw+10*dpr,h);g.clip();g.fillStyle='#3a2a00';g.textBaseline='middle';g.fillText(label,x+6*dpr,y+h/2+dpr);g.restore()}}
   function drawAll(){for(const o of items)try{drawOne(o)}catch(e){}}
   // ---- input: mouse, finger, stylus. With a stylus, the finger scrolls. Two fingers always scroll.
-  let cur=null,penSeen=false;const touches=new Map();
+  let cur=null,penSeen=false,pinch0=0,pinching=false;const touches=new Map();
   function under(x,y){for(const o of items){const r=o.getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return o}return null}
   function toScore(o,e){const r=o.getBoundingClientRect(),G=geom(o);return [G.x0+(e.clientX-r.left)/G.k,(e.clientY-r.top-(o._pad||0))/G.kh]}
   function barAt(o,x){const G=geom(o),sys=S.systems[G.s.sys];if(!sys)return -1;let mi=sys.measures.find(i=>x>=S.measures[i].x0&&x<S.measures[i].x1);return mi==null?-1:mi}
   function hook(o){
     o.addEventListener('pointerdown',e=>{if(!on)return;e.stopPropagation();if(e.pointerType==='pen')penSeen=true;
       touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
-      if((e.pointerType==='touch'&&penSeen)||touches.size>1){if(cur){A.strokes.pop();cur=null;drawAll()}return}
+      if((e.pointerType==='touch'&&penSeen)||touches.size>1){if(cur&&cur.segs){A.strokes=A.strokes.filter(x=>!cur.segs.includes(x));cur=null;drawAll()}if(touches.size===2){const v=[...touches.values()];pinch0=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);pinching=false}return}
       const p=toScore(o,e),G=geom(o);
       if(tool==='note'){const mi=barAt(o,p[0]);if(mi>=0)openNote(mi);return}
       if(tool==='er'){cur={er:true,o,dels:[]};erase(G.s.sys,p,o);return}
       const w=(tool==='hl'?16:2.6)/G.k;cur={o,g:Date.now(),px:(tool==='hl'?16:2.6),st:{sys:G.s.sys,t:tool,c:tool==='hl'?'#ffd400':color,w,pts:[p]}};cur.st.g=cur.g;cur.segs=[cur.st];A.strokes.push(cur.st);drawOne(o)});
     o.addEventListener('pointermove',e=>{if(!on)return;const t=touches.get(e.pointerId);
-      if(touches.size>1||(e.pointerType==='touch'&&penSeen)){if(t){const box=o.closest('.col,#scrollview')||document.scrollingElement;const dy=e.clientY-t.y;box.scrollTop-=dy;touches.set(e.pointerId,{x:e.clientX,y:e.clientY})}return}
+      if(touches.size>1||(e.pointerType==='touch'&&penSeen)){if(touches.size===2&&t){const v=[...touches.entries()].map(([k,q])=>k===e.pointerId?{x:e.clientX,y:e.clientY}:q);if(Math.abs(Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y)-pinch0)>24)pinching=true}if(pinching){if(t)touches.set(e.pointerId,{x:e.clientX,y:e.clientY});return}if(t){const box=o.closest('.col,#scrollview')||document.scrollingElement;const dy=e.clientY-t.y;box.scrollTop-=dy;touches.set(e.pointerId,{x:e.clientX,y:e.clientY})}return}
       if(t)touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!cur)return;
       if(cur.er){const o2=under(e.clientX,e.clientY)||cur.o;erase(geom(o2).s.sys,toScore(o2,e),o2);return}
       {const o2=under(e.clientX,e.clientY);if(o2&&o2!==cur.o){const G2=geom(o2),p2=toScore(o2,e),pts=cur.lx!=null?[toScore(o2,{clientX:cur.lx,clientY:cur.ly}),p2]:[p2];cur.lx=e.clientX;cur.ly=e.clientY;cur.o=o2;cur.st={sys:G2.s.sys,t:cur.st.t,c:cur.st.c,w:cur.px/G2.k,pts,g:cur.g};cur.segs.push(cur.st);A.strokes.push(cur.st);drawOne(o2);return}}
@@ -4820,7 +4825,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
       const p=toScore(cur.o,e),l=cur.st.pts[cur.st.pts.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])*geom(cur.o).k<1.2)return;cur.st.pts.push(p.map(v=>Math.round(v*10)/10));drawOne(cur.o)});
     if(!window.__annUp){window.__annUp=1;addEventListener('pointerup',e=>ANN._up(e),true);addEventListener('pointercancel',e=>ANN._up(e),true)}
     o.addEventListener('click',e=>{if(on){e.stopPropagation();e.preventDefault()}},true)}
-  function up(e){touches.delete(e.pointerId);if(!cur)return;if(cur.st){undo.push({adds:cur.segs});save();drawAll()}else if(cur.er){if(cur.dels.length)undo.push({dels:cur.dels});save()}cur=null}
+  function up(e){touches.delete(e.pointerId);if(touches.size<2)pinching=false;if(!cur)return;if(cur.st){undo.push({adds:cur.segs});save();drawAll()}else if(cur.er){if(cur.dels.length)undo.push({dels:cur.dels});save()}cur=null}
   function erase(sys,p,o){const G=geom(o),r=14/G.k;let hit=false;
     A.strokes=A.strokes.filter(st=>{if(st.sys!==sys)return true;const near=st.pts.some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<r+st.w/2);if(near){(cur&&cur.dels?cur.dels:undo.push({dels:[]})&&undo[undo.length-1].dels).push(st);hit=true}return !near});if(hit)drawAll()}
   // ---- bar notes
@@ -4836,7 +4841,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   // ---- the bar of tools
   const HINT={pen:'손가락·펜·마우스로 그려요 · 저절로 저장돼요',hl:'형광펜으로 칠해요',er:'지울 선을 문질러요',note:'메모할 마디를 톡 누르세요'};
   function setTool(t){tool=t;document.querySelectorAll('#annBar .ab-tools button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$('abCol').style.opacity=t==='pen'?'1':'.25';
-    const h=$('annHint');h.textContent=HINT[t]+(t==='pen'||t==='hl'?' · 두 손가락으로 넘겨요':'');h.hidden=false}
+    const h=$('annHint');h.textContent=HINT[t]+(t==='pen'||t==='hl'?' · 두 손가락: 넘기기·벌려서 확대':'');h.hidden=false;clearTimeout(h._t);h._t=setTimeout(()=>{h.hidden=true},4000)}
   document.querySelectorAll('#annBar .ab-tools button').forEach(b=>b.onclick=()=>setTool(b.dataset.t));
   document.querySelectorAll('#abCol button').forEach(b=>b.onclick=()=>{color=b.dataset.c;document.querySelectorAll('#abCol button').forEach(x=>x.classList.toggle('on',x===b))});
   $('abUndo').onclick=()=>{const u=undo.pop();if(!u)return;if(u.adds)A.strokes=A.strokes.filter(x=>!u.adds.includes(x));else if(u.add)A.strokes=A.strokes.filter(x=>x!==u.add);else if(u.dels)A.strokes.push(...u.dels);else if(u.del)A.strokes.push(u.del);else if(u.note!=null){if(u.old)A.notes[u.note]=u.old;else delete A.notes[u.note]}save();drawAll()};
