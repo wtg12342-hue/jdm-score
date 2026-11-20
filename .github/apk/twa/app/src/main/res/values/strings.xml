@@ -2,5 +2,5 @@
 <resources>
   <string name="app_name">JDM 악보</string>
   <string name="asset_statements" translatable="false">[{\"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": {\"namespace\": \"web\", \"site\": \"https://wtg12342-hue.github.io\"}}]</string>
-  <color name="bg">#0B0A08</color>
+  <color name="bg">#050505</color>
 </resources>
