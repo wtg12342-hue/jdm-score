@@ -1475,6 +1475,7 @@ body .wbrand2 .lgw{display:block;width:126px;height:19px;background:var(--lg-wor
   <div class="ytsearch" id="ytSearch" hidden><div class="ys-panel">
     <div class="ys-head"><svg class="i" style="color:#ff4e45;width:22px;height:22px"><use href="#i-yt"/></svg><b>유튜브에서 노래 찾기</b><button class="sp-x" id="ysClose" aria-label="닫기">✕</button></div>
     <form class="ys-bar" id="ysForm"><input type="search" id="ysQ" placeholder="곡 제목, 가수 (띄어쓰기 안 해도 돼요)" autocomplete="off"><button class="btn play" type="submit">검색</button></form>
+    <div class="ys-hist" id="ysHist" hidden></div>
     <div class="ys-sug" id="ysSug" hidden></div>
     <div class="ys-list" id="ysList"></div>
     <div class="ys-foot"><span>링크가 있으면 여기에 붙여 넣어도 돼요</span><input type="text" id="ysUrl" placeholder="https://youtu.be/..."><button class="btn" id="ysUrlGo">불러오기</button></div>
@@ -4084,6 +4085,23 @@ body .syncask .sa-btns.grp .sa-end .btn{height:38px;padding:0 18px}
 body .syncpop.grp .sp-row,body .syncpop.grp .sp-grid,body .syncpop.grp .sp-actions{display:none!important}
 @media (max-width:900px){body .syncpop{max-height:calc(100% - 16px)!important}body .syncpop .sp-note{display:none}body .syncpop .sp-g button,body .syncpop .sp-g .btn{height:38px}}
 @media (orientation:landscape) and (max-height:500px){body .syncpop.grp .sp-gs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}body .syncpop .sp-g{margin-top:6px}body .syncpop .sp-g>div{grid-template-columns:1fr}body .syncpop .sp-g button,body .syncpop .sp-g .btn{height:32px}}
+
+/* ===== 2.64 recent searches; the 맞추기 buttons by colour: blue moves the cursor left, brown moves it right ===== */
+.ys-hist{display:flex;flex-wrap:wrap;gap:6px;padding:0 4px 10px 6px;align-items:center}.ys-hist[hidden]{display:none}
+.ys-hist em{font-style:normal;font:600 12.5px var(--f-ui);color:var(--muted);margin-right:2px}
+.ys-hist button{height:32px;max-width:100%;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#e9e5dd;font:500 13px var(--f-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ys-hist button.x{border:0;background:none;color:var(--muted);padding:0 6px}
+.mv2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.mv2[hidden]{display:none}
+.mv2 .mvc>em{display:block;font-style:normal;font:700 12.5px/1.35 var(--f-ui);margin:0 0 6px}
+.mv2 .mvc>em small{display:block;font:500 11.5px var(--f-ui);color:#a9a194}
+.mv2 .mvc.l>em{color:#8fb4ff}.mv2 .mvc.r>em{color:#d8b67a;text-align:right}.mv2 .mvc.r>em small{text-align:right}
+.mv2 .mvc>div{display:grid;gap:6px}
+.mv2 button{height:40px;border-radius:10px;font:700 13.5px var(--f-ui);cursor:pointer;color:#f3ead8}
+.mv2 .mvc.l button{background:linear-gradient(180deg,#1b2433,#161c26);border:1px solid #33507a}
+.mv2 .mvc.r button{background:linear-gradient(180deg,#2a2213,#1f1a10);border:1px solid #6b5630}
+body .syncpop.grp .sp-gs>.sp-g.mvold,body .syncask .sa-grp.mvold{display:none!important}
+@media (orientation:landscape) and (max-height:500px){body .syncpop.grp .sp-gs{display:block}body .syncpop .mv2{grid-template-columns:1fr 1fr;margin-top:6px}body .syncpop .mv2 .mvc>div{grid-template-columns:repeat(3,1fr)}body .syncpop .mv2 button{height:34px}
+  body .syncpop .sp-g.more>div{grid-template-columns:1fr 1fr}body .syncask .sa-btns.grp>.mv2{grid-column:span 2;margin-top:0}body .syncask .mv2 .mvc>div{grid-template-columns:repeat(2,1fr)}body .syncask .mv2 button{height:34px}}
 </style>
 <div class="metropop" id="metroPop" hidden><div class="mp-card">
   <div class="mp-row"><b>메트로놈</b><button class="mp-sw" id="mpSw" role="switch" aria-checked="true"><span></span><em id="mpSwT">켜짐</em></button></div>
@@ -4209,7 +4227,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
 <script>
 /* ===== app behaviour (installed on a phone / from the store) ===== */
 (function(){const $=id=>document.getElementById(id);
-  const APP_VER='2.63.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
+  const APP_VER='2.64.0';{const v=$('appVer');if(v)v.textContent='v'+APP_VER}
   // ---- Android back button: closes what is open (menu, settings, search...) instead of leaving the app
   const OV=[['moreSheet',()=>$('msClose').click()],['ytSearch',()=>closeSearch()],['syncPop',()=>$('spClose').click()],['tapFix',()=>$('tfCancel').click()],
     ['metroPop',()=>{$('metroPop').hidden=true}],['proOv',()=>{$('proOv').hidden=true}],
@@ -4619,6 +4637,32 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   row.appendChild(b1);row.appendChild(b2);if(!$('spAuto').hidden&&!(typeof isPhoneUI==='function'&&isPhoneUI()))row.appendChild(b3);more.appendChild(em);more.appendChild(row);
   const wrap=document.createElement('div');wrap.className='sp-gs';[late,early,more].forEach(e=>wrap.appendChild(e));
   pop.insertBefore(wrap,pop.querySelector('.sp-note'));
+})();
+</script>
+<script>
+/* 2.64: recent searches, and the move buttons as two coloured columns (blue ◀ left, brown ▶ right) */
+(function(){const $=id=>document.getElementById(id);
+  // ---- recent searches
+  const H=()=>store.get('ysHist',[])||[],put=q=>{q=String(q||'').trim();if(!q||(typeof ytId==='function'&&ytId(q)))return;const h=H().filter(x=>x!==q);h.unshift(q);store.set('ysHist',h.slice(0,8))};
+  function hist(){const box=$('ysHist'),h=H();box.innerHTML='';if(!h.length){box.hidden=true;return}const em=document.createElement('em');em.textContent='최근 검색';box.appendChild(em);
+    for(const q of h.slice(0,6)){const b=document.createElement('button');b.type='button';b.textContent=q;b.onclick=()=>{$('ysQ').value=q;typed=true;runSearch()};box.appendChild(b)}
+    const x=document.createElement('button');x.type='button';x.className='x';x.textContent='지우기';x.onclick=()=>{store.set('ysHist',[]);hist()};box.appendChild(x);box.hidden=false}
+  let typed=false;$('ysQ').addEventListener('input',()=>{typed=true});
+  const rs=window.runSearch;window.runSearch=async function(){const mine=typed;const r=await rs.apply(this,arguments);if(mine)put($('ysQ').value);hist();return r};
+  const os=window.openSearch;window.openSearch=function(){typed=false;hist();return os.apply(this,arguments)};
+  // ---- move buttons: left column blue = cursor goes left (earlier), right column brown = cursor goes right (later)
+  function cols(click,cls){const w=document.createElement('div');w.className='mv2'+(cls?' '+cls:'');
+    const col=(side,title,sub,items)=>{const c=document.createElement('div');c.className='mvc '+side;const em=document.createElement('em');em.innerHTML=title+'<small>'+sub+'</small>';const d=document.createElement('div');
+      items.forEach(([t,k])=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=()=>click(k);d.appendChild(b)});c.appendChild(em);c.appendChild(d);return c};
+    w.appendChild(col('l','◀ 커서 왼쪽으로','커서가 노래보다 빠를 때',[['◀ 0.02초','0.02'],['◀ 1박','beat'],['◀ 1마디','bar']]));
+    w.appendChild(col('r','커서 오른쪽으로 ▶','커서가 노래보다 늦을 때',[['0.02초 ▶','-0.02'],['1박 ▶','-beat'],['1마디 ▶','-bar']]));return w}
+  {const pop=$('syncPop'),gs=pop&&pop.querySelector('.sp-gs');if(gs){const gr=[...gs.querySelectorAll('.sp-g')];gr.slice(0,2).forEach(g=>g.classList.add('mvold'));
+    gs.insertBefore(cols(k=>{const b=pop.querySelector('.sp-grid [data-shift="'+k+'"]');b&&b.click()}),gs.firstChild)}}
+  {const box=document.querySelector('#syncAsk .sa-btns');if(box){const gr=[...box.querySelectorAll('.sa-grp')];gr.slice(0,2).forEach(g=>g.classList.add('mvold'));
+    const w=cols(k=>{if(k==='0.02'||k==='-0.02'){if(typeof shiftSync==='function')shiftSync(k==='0.02'?0.02:-0.02);return}const b=box.querySelector('[data-shift="'+k+'"]');b&&b.click()},'sa');
+    // the panel only has beat/bar: drop the 0.02s row there
+    w.querySelectorAll('.mvc>div').forEach(d=>d.firstChild.remove());box.insertBefore(w,box.firstChild);
+    const sa=window.showSyncAsk;window.showSyncAsk=function(kind){const r=sa.apply(this,arguments);w.hidden=kind==='tap';return r}}}
 })();
 </script>
 </body></html>
