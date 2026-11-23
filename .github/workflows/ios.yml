@@ -1,0 +1,40 @@
+name: ios
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ios.yml', '.github/ios/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: pick the newest Xcode
+        run: |
+          ls -d /Applications/Xcode*.app
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1); [ -z "$X" ] && X=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          sudo xcode-select -s "$X/Contents/Developer"; xcodebuild -version
+      - name: generate project
+        run: brew install xcodegen && cd .github/ios && xcodegen generate
+      - name: build for the simulator (no signing)
+        run: |
+          mkdir -p /tmp/out
+          cd .github/ios && set -o pipefail && xcodebuild -project JDM.xcodeproj -scheme JDM -configuration Debug -sdk iphonesimulator -derivedDataPath /tmp/dd CODE_SIGNING_ALLOWED=NO build 2>&1 | tail -n 200 > /tmp/out/build.log || (echo FAILED >> /tmp/out/build.log)
+          xcodebuild -version >> /tmp/out/build.log
+      - name: run in a simulator and take pictures
+        run: |
+          APP=$(ls -d /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app 2>/dev/null) || exit 0
+          DEV=$(xcrun simctl list devices available | grep -E "iPhone 1[5-9]|iPhone 2" | head -1 | grep -oE "[0-9A-F-]{36}")
+          echo "device $DEV" >> /tmp/out/build.log
+          xcrun simctl boot "$DEV" && xcrun simctl bootstatus "$DEV" -b
+          xcrun simctl install "$DEV" "$APP" && xcrun simctl launch "$DEV" kr.jdmdrum.score
+          sleep 4; xcrun simctl io "$DEV" screenshot /tmp/out/s1-launch.png
+          sleep 20; xcrun simctl io "$DEV" screenshot /tmp/out/s2-home.png
+          xcrun simctl spawn "$DEV" log show --last 2m --predicate 'process == "JDM"' 2>/dev/null | tail -n 80 > /tmp/out/app.log || true
+      - name: publish results to the ioslog branch
+        if: always()
+        run: |
+          mkdir -p /tmp/out && cd /tmp/out && git init -q -b ioslog && git config user.name gh && git config user.email gh@users.noreply.github.com
+          echo "${GITHUB_SHA::7}" > sha.txt && git add . && git commit -qm "ios ${GITHUB_SHA::7}" && git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" ioslog
