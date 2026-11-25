@@ -5065,7 +5065,7 @@ body.ysopen .findsong,body.annon .findsong{display:none!important}
 <div class="gs-bot"><button class="gs-skip" id="gsSkip">건너뛰기</button><div class="gs-dots" id="gsD"></div><button class="gs-next" id="gsNext">다음</button></div></div>
 <script>
 (function(){const N=6,ov=$('guideSl'),T=$('gsT'),D=$('gsD'),nx=$('gsNext');let built=false;
-  function build(){if(built)return;built=true;for(let i=1;i<=N;i++){const p=document.createElement('div');p.className='gs-p';const im=new Image();im.alt='사용법 '+i;im.decoding='async';im.src='vendor/img/guide/g'+i+'.webp';p.appendChild(im);T.appendChild(p);D.appendChild(document.createElement('i'))}}
+  function build(){if(built)return;built=true;for(let i=1;i<=N;i++){const p=document.createElement('div');p.className='gs-p';const im=new Image();im.alt='사용법 '+i;im.decoding='async';im.src='vendor/img/guide/g'+i+(i===1&&typeof IN_IOS_APP!=='undefined'&&IN_IOS_APP?'-ios':'')+'.webp';p.appendChild(im);T.appendChild(p);D.appendChild(document.createElement('i'))}}
   // (2.83) one page per swipe: the browser's own fling could fly past every page at once
   let page=0;const cur=()=>page;
   function upd(){const c=cur();[...D.children].forEach((d,i)=>d.classList.toggle('on',i===c));nx.textContent=c>=N-1?'시작하기':'다음';$('gsSkip').style.visibility=c>=N-1?'hidden':'visible'}
