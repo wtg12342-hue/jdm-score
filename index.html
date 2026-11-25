@@ -4637,7 +4637,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
   // ---- 5. search: spacing does not matter. YouTube's own suggestions put the spaces in; a query typed without them is searched as suggested
   {const sq=t=>String(t||'').replace(/\s+/g,'').toLowerCase();let sugSeq=0,sugT=0;
     async function suggest(q){const a=await suggest1(q,0);return a.length?a:suggest1(q,1)}
-    function suggest1(q,alt){return new Promise(res=>{if(!q||q.length<2)return res([]);const cb='__ys'+Math.random().toString(36).slice(2),sc=document.createElement('script');let done=false;
+    function suggest1(q,alt){return new Promise(res=>{if(!q||q.length<2||(typeof IN_IOS_APP!=='undefined'&&IN_IOS_APP))return res([]);const cb='__ys'+Math.random().toString(36).slice(2),sc=document.createElement('script');let done=false;
       const end=v=>{if(done)return;done=true;try{delete window[cb]}catch(e){}sc.remove();res(v)};
       window[cb]=d=>{try{end(((d&&d[1])||[]).map(x=>Array.isArray(x)?x[0]:x).filter(x=>typeof x==='string').slice(0,6))}catch(e){end([])}};
       sc.onerror=()=>end([]);sc.charset='utf-8';sc.src='https://suggestqueries.google.com/complete/search?client='+(alt?'chrome':'youtube&ds=yt')+'&hl=ko&gl=kr&ie=utf-8&oe=utf-8&q='+encodeURIComponent(q)+'&callback='+cb;document.head.appendChild(sc);setTimeout(()=>end([]),2500)})}
@@ -4934,7 +4934,7 @@ window.addEventListener('load',()=>setTimeout(()=>{try{const lo=document.getElem
       toast(q==='off'?'원장님 모드를 껐어요.':ok?'원장님 모드가 켜졌어요. 유튜브 자동 맞추기를 쓸 수 있어요.':'코드가 맞지 않아요.',4000)}
     setup()})();
   function setup(){
-    if(window.jdm||/Android|iPhone|iPad/i.test(navigator.userAgent))return;
+    if(window.jdm||/Android|iPhone|iPad|JDMiOS/i.test(navigator.userAgent))return;
     const canTab=isOwner()&&!!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia);
     if(canTab)document.body.classList.add('owner');
     // ---- the helper extension inside the YouTube player (records like the PC program: silent, 4x, no sharing) ----
