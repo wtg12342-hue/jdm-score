@@ -2,23 +2,32 @@
 <style>:root{color-scheme:dark}body{margin:0;background:#050505;color:#ece6da;font:15px/1.75 "Pretendard Variable",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
 main{max-width:720px;margin:0 auto;padding:32px 20px 60px}h1{font-size:24px;margin:0 0 4px}h2{font-size:17px;margin:28px 0 6px;color:#f3dfb4}p,li{color:#c9c2b5}small{color:#8a8375}a{color:#d8b67a}</style></head>
 <body><main>
-<h1>개인정보처리방침</h1><small>JDM 악보 플레이어 · 시행일 2026년 11월 20일</small>
+<h1>개인정보처리방침</h1><small>JDM 악보 플레이어 · 시행일 2026년 11월 26일</small>
 <h2>1. 모으는 정보</h2>
-<p>JDM 악보 플레이어(이하 "앱")는 이름, 이메일, 전화번호, 위치 같은 개인정보를 모으지 않습니다. 회원가입도 없습니다.</p>
+<p>JDM 악보 플레이어(이하 "앱")는 <b>로그인 없이도 모든 기본 기능을 쓸 수 있습니다.</b> 로그인하지 않으면 개인정보를 모으지 않습니다.</p>
+<p>사용자가 원해서 <b>"구글로 계속하기"</b>로 로그인하면, 다른 기기에서도 이어서 쓸 수 있도록 아래 정보를 사용자의 계정에 저장합니다.</p>
+<ul><li>계정 정보: 구글 계정의 이메일 주소, 이름, 계정 고유 번호(구글 로그인으로 받아요)</li>
+<li>곡 정보: 악보 파일 이름, 마디 수, 쪽 범위, 유튜브 영상 주소(ID)와 제목, 음원 파일 이름</li>
+<li>연습 정보: 맞춘 박자(템포·첫 박 위치·박 지도), 연주 순서, 시작 위치, 예비박·속도·반복 구간, 폴더 이름, 악보에 적은 표시·메모</li></ul>
 <h2>2. 악보와 음원 파일</h2>
-<p>사용자가 연 악보(PDF·MusicXML)와 음원 파일은 사용자의 기기 안에서만 읽고 분석합니다. 파일은 저희 서버나 다른 곳으로 보내지 않습니다.</p>
-<h2>3. 기기에 저장하는 정보</h2>
-<p>저장한 곡, 템포·첫 박 위치, 화면 설정은 사용자의 기기(브라우저 저장공간)에만 저장됩니다. 앱을 지우거나 사이트 데이터를 지우면 함께 지워집니다.</p>
-<h2>4. 유튜브 사용</h2>
+<p>사용자가 연 악보(PDF·MusicXML)와 음원 파일은 사용자의 기기 안에서만 읽고 분석합니다. 로그인해도 <b>파일 자체는 서버에 올리지 않습니다.</b> 다른 기기에서는 같은 악보 파일을 열면 저장해 둔 박자·메모가 붙습니다.</p>
+<h2>3. 저장하는 곳과 기간</h2>
+<p>로그인한 경우 위 정보는 Google Firebase(Firestore, 서울 지역 서버)에 저장되며, 본인 계정으로만 읽고 쓸 수 있습니다. 계정을 삭제할 때까지 보관하고, 삭제하면 바로 지웁니다.</p>
+<p>로그인하지 않은 경우 저장한 곡, 맞춘 박자, 화면 설정은 사용자의 기기(브라우저 저장공간)에만 저장됩니다. 앱을 지우거나 사이트 데이터를 지우면 함께 지워집니다.</p>
+<h2>4. 계정과 데이터 삭제</h2>
+<p>앱의 <b>설정 → 내 계정 → 계정 삭제</b>, 또는 웹의 <a href="delete.html">계정 삭제 페이지</a>에서 언제든 계정과 저장된 정보를 모두 지울 수 있습니다. 직접 지우기 어려우면 <a href="mailto:wtg12342@gmail.com">wtg12342@gmail.com</a>으로 요청해 주세요. 로그아웃만 하면 기기에 있는 곡은 그대로 남습니다.</p>
+<h2>5. 제3자 제공·처리 위탁</h2>
+<p>정보를 팔거나 다른 회사에 제공하지 않습니다. 로그인과 저장을 위해 Google(Firebase Authentication, Cloud Firestore)을 이용합니다. <a href="https://firebase.google.com/support/privacy">Firebase 개인정보 보호</a></p>
+<h2>6. 유튜브 사용</h2>
 <p>앱은 유튜브 영상을 재생하고 검색하기 위해 <b>YouTube API 서비스</b>를 사용합니다. 유튜브 기능을 쓰면 유튜브와 구글이 자체 정책에 따라 정보를 처리할 수 있습니다.</p>
 <ul><li><a href="https://www.youtube.com/t/terms">YouTube 서비스 약관</a></li><li><a href="https://policies.google.com/privacy">Google 개인정보처리방침</a></li></ul>
-<p>앱은 유튜브의 소리나 영상을 저장하거나 녹음하지 않습니다. 유튜브 데이터 접근 권한은 <a href="https://security.google.com/settings/security/permissions">구글 보안 설정</a>에서 언제든 해제할 수 있습니다(앱은 구글 계정 로그인을 쓰지 않습니다).</p>
-<h2>5. 검색할 때 보내는 정보</h2><p>유튜브 영상을 찾을 때 입력한 검색어는 검색 결과와 추천 검색어를 받기 위해 유튜브(구글)로 보내집니다. 곡 정보(템포 등)를 찾을 때는 영상 제목이나 악보 이름을 Deezer 음악 검색으로 보냅니다. 저희는 이 검색어를 따로 보관하지 않습니다. 앱 안에 남는 최근 검색어는 기기에만 저장됩니다.</p>
-<h2>6. 광고·분석</h2><p>앱에는 광고와 사용 분석 도구가 없습니다.</p>
-<h2>7. 아동</h2><p>앱은 아동의 개인정보를 따로 모으지 않습니다.</p>
-<h2>8. 바뀌는 경우</h2><p>이 방침이 바뀌면 이 페이지에 바로 알립니다.</p>
-<h2>9. 문의</h2><p>JDM 드럼 스튜디오 · <span id="contact">문의는 스토어 페이지의 개발자 연락처로 보내 주세요</span></p>
+<p>앱은 유튜브의 소리나 영상을 저장하거나 녹음하지 않습니다. 유튜브 데이터 접근 권한은 <a href="https://security.google.com/settings/security/permissions">구글 보안 설정</a>에서 언제든 해제할 수 있습니다.</p>
+<h2>7. 검색할 때 보내는 정보</h2><p>유튜브 영상을 찾을 때 입력한 검색어는 검색 결과와 추천 검색어를 받기 위해 유튜브(구글)로 보내집니다. 곡 정보(템포 등)를 찾을 때는 영상 제목이나 악보 이름을 Deezer 음악 검색으로 보냅니다. 저희는 이 검색어를 따로 보관하지 않습니다. 앱 안에 남는 최근 검색어는 기기에만 저장됩니다.</p>
+<h2>8. 광고·분석</h2><p>앱에는 광고와 사용 분석 도구가 없습니다.</p>
+<h2>9. 아동</h2><p>앱은 아동의 개인정보를 따로 모으지 않습니다.</p>
+<h2>10. 바뀌는 경우</h2><p>이 방침이 바뀌면 이 페이지에 바로 알립니다.</p>
+<h2>11. 문의</h2><p>JDM 드럼 스튜디오 · <a href="mailto:wtg12342@gmail.com">wtg12342@gmail.com</a></p>
 <hr style="border:0;border-top:1px solid #2a2722;margin:36px 0 18px">
 <h2>Privacy Policy (English)</h2>
-<p>JDM Score Player collects no personal information and has no accounts. Scores and audio files you open are processed only on your device and are never uploaded. Saved songs and settings stay in your device's browser storage. Words you type to search YouTube are sent to YouTube (Google) to get results and suggestions; a video title or score name may be sent to Deezer's music search to look up song details. We do not keep these searches. The app uses YouTube API Services to play and search videos; see the <a href="https://www.youtube.com/t/terms">YouTube Terms of Service</a> and the <a href="https://policies.google.com/privacy">Google Privacy Policy</a>. The app never records or stores YouTube audio or video. No ads, no analytics. Contact: <span>문의는 스토어 페이지의 개발자 연락처로 보내 주세요</span></p>
+<p>JDM Score Player works fully without an account; without signing in, we collect no personal information. If you choose "Continue with Google", we store, under your account: your Google email, name and user ID; score file names, measure counts, page ranges, YouTube video IDs and titles, audio file names; and your practice data (fitted tempo and beat map, play order, start point, count-in, speed, loop, folders, score annotations/notes). Score and audio files themselves are never uploaded. Data is stored in Google Firebase (Cloud Firestore, Seoul region), readable only by your account, kept until you delete your account. Delete your account and all its data anytime in the app (Settings → 내 계정 → 계정 삭제), on the web at <a href="delete.html">the account deletion page</a>, or by emailing <a href="mailto:wtg12342@gmail.com">wtg12342@gmail.com</a>. We do not sell or share your data. Words you type to search YouTube are sent to YouTube (Google); a video title or score name may be sent to Deezer's music search. The app uses YouTube API Services; see the <a href="https://www.youtube.com/t/terms">YouTube Terms of Service</a> and the <a href="https://policies.google.com/privacy">Google Privacy Policy</a>. No ads, no analytics.</p>
 </main></body></html>

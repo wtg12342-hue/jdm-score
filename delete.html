@@ -1,0 +1,37 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>계정 삭제 · JDM 악보 플레이어</title>
+<style>:root{color-scheme:dark}body{margin:0;background:#050505;color:#ece6da;font:15px/1.75 "Pretendard Variable",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+main{max-width:640px;margin:0 auto;padding:32px 20px 60px}h1{font-size:24px;margin:0 0 4px}h2{font-size:17px;margin:26px 0 6px;color:#f3dfb4}p,li{color:#c9c2b5}small{color:#8a8375}a{color:#d8b67a}
+button{font:inherit;font-weight:650;border:0;border-radius:10px;padding:11px 18px;cursor:pointer;margin:6px 8px 0 0}#in{background:#ece6da;color:#111}#del{background:#c0392b;color:#fff}#out{background:#2a2722;color:#ece6da}
+#msg{margin-top:14px;padding:12px 14px;border-radius:10px;background:#16140f;display:none}</style></head>
+<body><main>
+<h1>계정 삭제</h1><small>JDM 악보 플레이어 (kr.jdmdrum.score)</small>
+<p>JDM 악보 플레이어 계정과 아이디에 저장된 정보를 모두 지울 수 있어요. 앱 안에서는 <b>설정 → 내 계정 → 계정 삭제</b>에서도 할 수 있어요.</p>
+<h2>지워지는 것</h2>
+<ul><li>구글 로그인 계정 연결(이메일, 이름, 계정 번호)</li><li>아이디에 저장한 곡 정보(악보 이름, 마디 수, 유튜브 영상 ID), 맞춘 박자, 메모·표시</li></ul>
+<p>지운 정보는 되돌릴 수 없어요. 따로 보관하는 기간 없이 바로 지워요. 기기 안에만 저장된 곡과 악보 파일은 지워지지 않아요(앱을 지우거나 사이트 데이터를 지우면 함께 지워져요).</p>
+<h2>지우기</h2>
+<p id="who">먼저 앱에서 쓰던 구글 계정으로 로그인해 주세요.</p>
+<button id="in">구글로 로그인</button><button id="del" hidden>계정과 데이터 모두 삭제</button><button id="out" hidden>로그아웃</button>
+<div id="msg"></div>
+<h2>직접 지우기 어렵다면</h2>
+<p><a href="mailto:wtg12342@gmail.com?subject=JDM%20%EC%95%85%EB%B3%B4%20%ED%94%8C%EB%A0%88%EC%9D%B4%EC%96%B4%20%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%9A%94%EC%B2%AD">wtg12342@gmail.com</a>으로 로그인에 쓴 이메일 주소를 적어 보내 주세요. 7일 안에 지우고 알려 드려요.</p>
+<hr style="border:0;border-top:1px solid #2a2722;margin:30px 0 16px">
+<p><small>Account deletion: sign in with the Google account you used in the app and press the red button. This deletes your account and all synced data (song info, fitted tempo, notes) immediately. Files kept only on your device are not affected. Or email <a href="mailto:wtg12342@gmail.com">wtg12342@gmail.com</a>. · <a href="privacy.html">개인정보처리방침 / Privacy Policy</a></small></p>
+</main>
+<script type="module">
+const V='12.6.0',U=n=>`https://www.gstatic.com/firebasejs/${V}/firebase-${n}.js`;
+const [{initializeApp},A,D]=await Promise.all([import(U('app')),import(U('auth')),import(U('firestore'))]);
+const app=initializeApp({apiKey:"AIzaSyDoTyqaCGbF9cJGpf2l8dC7NudK_cwiVyw",authDomain:"jdm-score-778b3.firebaseapp.com",projectId:"jdm-score-778b3",appId:"1:745176821355:web:0bfd318d777173161d4b2e"});
+const auth=A.getAuth(app),db=D.getFirestore(app),$=id=>document.getElementById(id);
+const say=t=>{$('msg').style.display='block';$('msg').textContent=t};
+A.onAuthStateChanged(auth,u=>{$('in').hidden=!!u;$('del').hidden=$('out').hidden=!u;$('who').textContent=u?`${u.email}(으)로 로그인했어요.`:'먼저 앱에서 쓰던 구글 계정으로 로그인해 주세요.'});
+$('in').onclick=()=>A.signInWithPopup(auth,new A.GoogleAuthProvider()).catch(e=>say('로그인하지 못했어요: '+(e.code||e)));
+$('out').onclick=()=>A.signOut(auth);
+$('del').onclick=async()=>{const u=auth.currentUser;if(!u)return;if(!confirm('계정과 아이디에 저장된 정보를 모두 지울까요? 되돌릴 수 없어요.'))return;
+  say('지우는 중…');try{for(const c of ['kv','songs']){const qs=await D.getDocs(D.collection(db,'users',u.uid,c));let b=D.writeBatch(db),n=0;
+      for(const s of qs.docs){b.delete(s.ref);if(++n%400===0){await b.commit();b=D.writeBatch(db)}}await b.commit()}
+    await D.deleteDoc(D.doc(db,'users',u.uid));
+    try{await u.delete()}catch(e){if(e.code==='auth/requires-recent-login'){await A.reauthenticateWithPopup(u,new A.GoogleAuthProvider());await u.delete()}else throw e}
+    say('계정과 저장된 정보를 모두 지웠어요.')}catch(e){say('지우지 못했어요. 다시 로그인한 뒤 한 번 더 눌러 주세요. ('+(e.code||e)+')')}};
+</script>
+</body></html>
