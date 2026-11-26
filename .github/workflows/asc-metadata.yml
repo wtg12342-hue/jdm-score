@@ -1,0 +1,33 @@
+name: asc-metadata
+# App Store Connect 1.0 페이지 채우기 (설명·키워드·스크린샷·빌드·심사 메모·가격). 심사 제출은 하지 않아요.
+on:
+  push:
+    branches: [asc-fill]
+    paths: ['.github/ios/asc_metadata.py', '.github/ios/store/**', '.github/workflows/asc-metadata.yml']
+  workflow_dispatch:
+    inputs:
+      build:
+        description: '붙일 빌드 번호 (비우면 가장 최근 것)'
+        required: false
+        default: ''
+permissions:
+  contents: read
+jobs:
+  fill:
+    runs-on: ubuntu-latest
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      BUILD_NO: ${{ inputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          printf '%s\n' "$ASC_KEY_P8" > /tmp/key.p8
+          echo "KEY=/tmp/key.p8" >> $GITHUB_ENV
+      - run: pip install -q pyjwt cryptography requests
+      - run: python3 .github/ios/asc_metadata.py
+      - if: always()
+        run: rm -f /tmp/key.p8
