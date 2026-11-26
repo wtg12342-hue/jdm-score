@@ -1,0 +1,203 @@
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/DataDetection-28VGMCWYTAW3J60MGFG4RBZSN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/CoreVideo-9L7XQ9ZGBKQEVRT3BUGXGN7BB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/UniformTypeIdentifiers-92HNSJPZQADF5LG79BRAN2VDU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/Accessibility-2QXGM1NJQN2B4229OPRMGZZYG.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/QuartzCore-6ZMRO1CTQXM35R3OWXU1BPQ4L.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/CoreMedia-91S3RI6NX354XST8M35Y8ACVQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/CoreImage-4S06HHTGBO7DWXP9UYZ70BVXV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/SwiftUICore-3CDDGUE9Z3TNTIRDP2GRFJFMJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/MediaToolbox-2BPK45BWD0NMGR5YEAC75DJDU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/AVFAudio-DYRNAQHV4RS0KLPQTJ4DD3YH0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/UIKit-7CV1NW890IUMAIIO3RS7O2LVK.pcm
+
+SwiftCompile normal x86_64 Compiling\ AppDelegate.swift,\ PlayerViewController.swift /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/AppDelegate.swift /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/PlayerViewController.swift (in target 'JDM' from project 'JDM')
+
+SwiftCompile normal x86_64 /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/AppDelegate.swift (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    
+
+SwiftCompile normal x86_64 /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/PlayerViewController.swift (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/AVFoundation-1L0RQNZM863QKOZEEQ1Q9PVWB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/WebKit-4GI95EPQB3M8IOXU00ODYGE3U.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dd/ModuleCache.noindex/SwiftUI-17B29HWVH6D4AE4YFYWHJ9PXZ.pcm
+
+SwiftCompile normal x86_64 Compiling\ SceneDelegate.swift /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/SceneDelegate.swift (in target 'JDM' from project 'JDM')
+
+SwiftCompile normal x86_64 /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/SceneDelegate.swift (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ JDM (in target 'JDM' from project 'JDM')
+
+EmitSwiftModule normal arm64 (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    
+
+SwiftDriverJobDiscovery normal x86_64 Compiling SceneDelegate.swift (in target 'JDM' from project 'JDM')
+
+SwiftCompile normal arm64 Compiling\ GeneratedAssetSymbols.swift /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'JDM' from project 'JDM')
+
+SwiftCompile normal arm64 /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for JDM (in target 'JDM' from project 'JDM')
+
+SwiftDriver\ Compilation\ Requirements JDM normal arm64 com.apple.xcode.tools.swift.compiler (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name JDM -Onone -enforce-exclusivity\=checked @/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dd/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dd/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dd/Build/Products/Debug-iphonesimulator -F /tmp/dd/Build/Products/Debug-iphonesimulator -c -j3 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dd/SDKStatCaches.noindex/iphonesimulator26.2-23C57-dc75598d0054f22ec865fa860f139d72e244bd9a5feaf902f95f61bf06266e52.sdkstatcache -output-file-map /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dd/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dd/ModuleCache.noindex -sdk-module-cache-path /tmp/dd/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/dd/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-generated-files.hmap -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-own-target-headers.hmap -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-project-headers.hmap -Xcc -I/tmp/dd/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources/arm64 -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM-Swift.h -working-directory /Users/runner/work/jdm-score/jdm-score/.github/ios -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal x86_64 Compiling AppDelegate.swift, PlayerViewController.swift (in target 'JDM' from project 'JDM')
+
+SwiftCompile normal arm64 Compiling\ AppDelegate.swift,\ PlayerViewController.swift /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/AppDelegate.swift /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/PlayerViewController.swift (in target 'JDM' from project 'JDM')
+
+SwiftCompile normal arm64 /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/AppDelegate.swift (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    
+
+SwiftCompile normal arm64 /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/PlayerViewController.swift (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    
+
+SwiftMergeGeneratedHeaders /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources/JDM-Swift.h /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM-Swift.h /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM-Swift.h (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-swiftHeaderTool -arch arm64 /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM-Swift.h -arch x86_64 /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM-Swift.h -o /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources/JDM-Swift.h
+
+SwiftDriverJobDiscovery normal arm64 Compiling AppDelegate.swift, PlayerViewController.swift (in target 'JDM' from project 'JDM')
+
+Copy /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.swiftmodule/arm64-apple-ios-simulator.swiftmodule /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.swiftmodule (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.swiftmodule /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.swiftmodule/arm64-apple-ios-simulator.swiftmodule
+
+Copy /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.swiftmodule/arm64-apple-ios-simulator.swiftdoc /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.swiftdoc (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.swiftdoc /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.swiftmodule/arm64-apple-ios-simulator.swiftdoc
+
+Copy /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.swiftmodule/arm64-apple-ios-simulator.abi.json /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.abi.json (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.abi.json /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+Copy /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.swiftsourceinfo (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.swiftsourceinfo /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo
+
+SwiftCompile normal arm64 Compiling\ SceneDelegate.swift /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/SceneDelegate.swift (in target 'JDM' from project 'JDM')
+
+SwiftCompile normal arm64 /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/SceneDelegate.swift (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling SceneDelegate.swift (in target 'JDM' from project 'JDM')
+
+SwiftCompile normal x86_64 Compiling\ GeneratedAssetSymbols.swift /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'JDM' from project 'JDM')
+
+SwiftCompile normal x86_64 /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling GeneratedAssetSymbols.swift (in target 'JDM' from project 'JDM')
+
+SwiftDriver\ Compilation JDM normal arm64 com.apple.xcode.tools.swift.compiler (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-Swift-Compilation -- /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name JDM -Onone -enforce-exclusivity\=checked @/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dd/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dd/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dd/Build/Products/Debug-iphonesimulator -F /tmp/dd/Build/Products/Debug-iphonesimulator -c -j3 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dd/SDKStatCaches.noindex/iphonesimulator26.2-23C57-dc75598d0054f22ec865fa860f139d72e244bd9a5feaf902f95f61bf06266e52.sdkstatcache -output-file-map /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dd/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dd/ModuleCache.noindex -sdk-module-cache-path /tmp/dd/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/dd/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-generated-files.hmap -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-own-target-headers.hmap -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-project-headers.hmap -Xcc -I/tmp/dd/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources/arm64 -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM-Swift.h -working-directory /Users/runner/work/jdm-score/jdm-score/.github/ios -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/Binary/JDM.debug.dylib normal arm64 (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0-simulator -dynamiclib -isysroot /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -O0 -L/tmp/dd/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/tmp/dd/Build/Products/Debug-iphonesimulator -F/tmp/dd/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/tmp/dd/Build/Products/Debug-iphonesimulator -filelist /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.LinkFileList -install_name @rpath/JDM.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.swiftmodule @/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM-linker-args.resp -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -o /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/Binary/JDM.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-ExecutorLinkFileList-normal-arm64.txt (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    construct-stub-executor-link-file-list /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/Binary/JDM.debug.dylib /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'JDM' from project 'JDM')
+
+Ld /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/Binary/JDM normal arm64 (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0-simulator -isysroot /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -O0 -L/tmp/dd/Build/Products/Debug-iphonesimulator -F/tmp/dd/Build/Products/Debug-iphonesimulator -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-ExecutorLinkFileList-normal-arm64.txt /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/Binary/JDM.debug.dylib -o /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/Binary/JDM
+
+SwiftDriverJobDiscovery normal x86_64 Compiling GeneratedAssetSymbols.swift (in target 'JDM' from project 'JDM')
+
+SwiftDriver\ Compilation JDM normal x86_64 com.apple.xcode.tools.swift.compiler (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-Swift-Compilation -- /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name JDM -Onone -enforce-exclusivity\=checked @/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -target x86_64-apple-ios16.0-simulator -g -module-cache-path /tmp/dd/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dd/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dd/Build/Products/Debug-iphonesimulator -F /tmp/dd/Build/Products/Debug-iphonesimulator -c -j3 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dd/SDKStatCaches.noindex/iphonesimulator26.2-23C57-dc75598d0054f22ec865fa860f139d72e244bd9a5feaf902f95f61bf06266e52.sdkstatcache -output-file-map /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dd/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dd/ModuleCache.noindex -sdk-module-cache-path /tmp/dd/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/dd/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-generated-files.hmap -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-own-target-headers.hmap -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-project-headers.hmap -Xcc -I/tmp/dd/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources-normal/x86_64 -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources/x86_64 -Xcc -I/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM-Swift.h -working-directory /Users/runner/work/jdm-score/jdm-score/.github/ios -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/Binary/JDM.debug.dylib normal x86_64 (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target x86_64-apple-ios16.0-simulator -dynamiclib -isysroot /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -O0 -L/tmp/dd/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/tmp/dd/Build/Products/Debug-iphonesimulator -F/tmp/dd/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/tmp/dd/Build/Products/Debug-iphonesimulator -filelist /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM.LinkFileList -install_name @rpath/JDM.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM.swiftmodule @/tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM-linker-args.resp -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -o /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/Binary/JDM.debug.dylib
+
+CreateUniversalBinary /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/JDM.debug.dylib normal arm64\ x86_64 (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo -create /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/Binary/JDM.debug.dylib /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/Binary/JDM.debug.dylib -output /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/JDM.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-ExecutorLinkFileList-normal-x86_64.txt (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    construct-stub-executor-link-file-list /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/Binary/JDM.debug.dylib /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-ExecutorLinkFileList-normal-x86_64.txt
+note: Using stub executor library with Swift entry point. (in target 'JDM' from project 'JDM')
+
+Ld /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/Binary/JDM normal x86_64 (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target x86_64-apple-ios16.0-simulator -isysroot /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -O0 -L/tmp/dd/Build/Products/Debug-iphonesimulator -F/tmp/dd/Build/Products/Debug-iphonesimulator -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-DebugDylibPath-normal-x86_64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-DebugDylibInstallName-normal-x86_64.txt -Xlinker -filelist -Xlinker /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM-ExecutorLinkFileList-normal-x86_64.txt /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/Binary/JDM.debug.dylib -o /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/Binary/JDM
+
+CreateUniversalBinary /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/JDM normal arm64\ x86_64 (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo -create /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/Binary/JDM /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/Binary/JDM -output /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/JDM
+
+LinkAssetCatalog /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/Assets.xcassets (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-linkAssetCatalog --thinned /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/assetcatalog_output/thinned --thinned-dependencies /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/assetcatalog_generated_info.plist_thinned --unthinned /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/assetcatalog_output/unthinned --unthinned-dependencies /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/assetcatalog_generated_info.plist_unthinned --output /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app --plist-output /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/assetcatalog_generated_info.plist
+note: Emplaced /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/AppIcon60x60@2x.png (in target 'JDM' from project 'JDM')
+note: Emplaced /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/AppIcon76x76@2x~ipad.png (in target 'JDM' from project 'JDM')
+note: Emplaced /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/Assets.car (in target 'JDM' from project 'JDM')
+
+ProcessInfoPlistFile /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/Info.plist /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/Info.plist (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-infoPlistUtility /Users/runner/work/jdm-score/jdm-score/.github/ios/JDM/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/assetcatalog_generated_info.plist -o /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/Info.plist
+
+CopySwiftLibs /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/JDM.debug.dylib --scan-folder /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/Frameworks --scan-folder /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/PlugIns --scan-folder /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/SystemExtensions --scan-folder /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/Extensions --platform iphonesimulator --toolchain /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.zD96ln/Metal.xctoolchain --toolchain /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.zD96ln/Metal.xctoolchain --module-name JDM --sdk-root /Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk --xcode-version 17C529 --platform-family iOS --deployment-target 16.0 --bundle-identifier kr.jdmstudio.scoreplayer --output /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app --target-triple arm64-apple-ios16.0-simulator --target-triple x86_64-apple-ios16.0-simulator --binary-file /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/JDM --dependency-file /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM_dependency_info.dat --dependency-file /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM_dependency_info.dat --stringsdata-file /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --stringsdata-file /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.SwiftFileList --source-file-list /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM.SwiftFileList --metadata-file-list /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM.DependencyMetadataFileList --static-metadata-file-list /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/arm64/JDM.SwiftConstValuesFileList --swift-const-vals-list /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/Objects-normal/x86_64/JDM.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-11-26 03:57:51.047 appintentsmetadataprocessor[2729:11184] Starting appintentsmetadataprocessor export
+2026-11-26 03:57:51.082 appintentsmetadataprocessor[2729:11184] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+AppIntentsSSUTraining (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    /Applications/Xcode_26.3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/Info.plist --temp-dir-path /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/ssu --bundle-id kr.jdmstudio.scoreplayer --product-path /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app --extracted-metadata-path /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app/Metadata.appintents --metadata-file-list /tmp/dd/Build/Intermediates.noindex/JDM.build/Debug-iphonesimulator/JDM.build/JDM.DependencyMetadataFileList --archive-ssu-assets
+2026-11-26 03:57:51.130 appintentsnltrainingprocessor[2730:11194] Parsing options for appintentsnltrainingprocessor
+2026-11-26 03:57:51.131 appintentsnltrainingprocessor[2730:11194] No AppShortcuts found - Skipping.
+
+RegisterExecutionPolicyException /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-RegisterExecutionPolicyException /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app
+
+Validate /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    builtin-validationUtility /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app -shallow-bundle -infoplist-subpath Info.plist
+
+Touch /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app (in target 'JDM' from project 'JDM')
+    cd /Users/runner/work/jdm-score/jdm-score/.github/ios
+    /usr/bin/touch -c /tmp/dd/Build/Products/Debug-iphonesimulator/JDM.app
+
+** BUILD SUCCEEDED **
+
+Xcode 26.3
+Build version 17C529
+device DA1C9012-81EC-4C70-B52A-068AEAFBA1DE
