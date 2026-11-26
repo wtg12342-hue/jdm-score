@@ -1,6 +1,6 @@
 name: JDM
 options:
-  bundleIdPrefix: kr.jdmdrum
+  bundleIdPrefix: kr.jdmstudio
   deploymentTarget:
     iOS: "16.0"
 settings:
@@ -46,18 +46,12 @@ targets:
             CFBundleTypeRole: Viewer
             LSHandlerRank: Alternate
             LSItemContentTypes: [com.adobe.pdf]
-          - CFBundleTypeName: 악보 사진
-            CFBundleTypeRole: Viewer
-            LSHandlerRank: Alternate
-            LSItemContentTypes: [public.jpeg, public.png, public.heic, public.image]
           - CFBundleTypeName: MusicXML
             CFBundleTypeRole: Viewer
             LSHandlerRank: Alternate
             LSItemContentTypes: [public.xml, com.recordare.musicxml, com.recordare.musicxml.uncompressed]
-        NSPhotoLibraryUsageDescription: 악보 사진을 불러오기 위해 사진에 접근해요.
-        NSCameraUsageDescription: 종이 악보를 찍어서 바로 열 때 카메라를 써요.
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: kr.jdmdrum.score
+        PRODUCT_BUNDLE_IDENTIFIER: kr.jdmstudio.scoreplayer
         CODE_SIGN_STYLE: Automatic
         INFOPLIST_KEY_UIUserInterfaceStyle: Dark

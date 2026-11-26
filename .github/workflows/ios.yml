@@ -4,10 +4,16 @@ on:
     branches: [main]
     paths: ['.github/workflows/ios.yml', '.github/ios/**']
   workflow_dispatch:
+    inputs:
+      upload:
+        description: 'TestFlight에 올리기'
+        type: boolean
+        default: true
 permissions:
   contents: write
 jobs:
   build:
+    if: github.event_name != 'workflow_dispatch' || !inputs.upload
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +35,7 @@ jobs:
           DEV=$(xcrun simctl list devices available | grep -E "iPhone 1[5-9]|iPhone 2" | head -1 | grep -oE "[0-9A-F-]{36}")
           echo "device $DEV" >> /tmp/out/build.log
           xcrun simctl boot "$DEV" && xcrun simctl bootstatus "$DEV" -b
-          xcrun simctl install "$DEV" "$APP" && xcrun simctl launch "$DEV" kr.jdmdrum.score
+          xcrun simctl install "$DEV" "$APP" && xcrun simctl launch "$DEV" kr.jdmstudio.scoreplayer
           sleep 4; xcrun simctl io "$DEV" screenshot /tmp/out/s1-launch.png
           sleep 20; xcrun simctl io "$DEV" screenshot /tmp/out/s2-home.png
           xcrun simctl spawn "$DEV" log show --last 2m --predicate 'process == "JDM"' 2>/dev/null | tail -n 80 > /tmp/out/app.log || true
@@ -38,3 +44,65 @@ jobs:
         run: |
           mkdir -p /tmp/out && cd /tmp/out && git init -q -b ioslog && git config user.name gh && git config user.email gh@users.noreply.github.com
           echo "${GITHUB_SHA::7}" > sha.txt && git add . && git commit -qm "ios ${GITHUB_SHA::7}" && git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" ioslog
+
+  # ---- 서명 + 아카이브 + TestFlight 업로드 (Actions 탭 → ios → Run workflow 에서만) ----
+  testflight:
+    if: github.event_name == 'workflow_dispatch' && inputs.upload
+    runs-on: macos-15
+    env:
+      TEAM_ID: Y77VBBPT56
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: pick the newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1); [ -z "$X" ] && X=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          sudo xcode-select -s "$X/Contents/Developer"; xcodebuild -version
+      - name: API key file
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_KEY_P8" ] || { echo "GitHub Secrets(ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8)를 먼저 넣어 주세요"; exit 1; }
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s\n' "$ASC_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+          echo "KEY=$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8" >> $GITHUB_ENV
+      - name: generate project (team + build number)
+        run: |
+          brew install xcodegen
+          cd .github/ios
+          sed -i '' "s/DEVELOPMENT_TEAM: \"\"/DEVELOPMENT_TEAM: \"$TEAM_ID\"/" project.yml
+          sed -i '' "s/CURRENT_PROJECT_VERSION: \"1\"/CURRENT_PROJECT_VERSION: \"${{ github.run_number }}\"/" project.yml
+          grep -E "DEVELOPMENT_TEAM|CURRENT_PROJECT_VERSION|MARKETING_VERSION" project.yml
+          xcodegen generate
+      # 개발용 서명은 테스트 기기가 있어야 해서, 아카이브는 서명 없이 만들고
+      # 아래 내보내기 단계에서 API 키로 앱스토어용 인증서·프로파일을 자동으로 만들어 서명해요.
+      - name: archive (unsigned; signed for the App Store on export)
+        run: |
+          cd .github/ios && set -o pipefail
+          xcodebuild -project JDM.xcodeproj -scheme JDM -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath /tmp/JDM.xcarchive \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            archive 2>&1 | tail -n 60
+      - name: export and upload to TestFlight
+        run: |
+          cat > /tmp/export.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+          set -o pipefail
+          xcodebuild -exportArchive -archivePath /tmp/JDM.xcarchive -exportOptionsPlist /tmp/export.plist -exportPath /tmp/export \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" 2>&1 | tail -n 80
+          echo "업로드 끝. 10~30분 뒤 App Store Connect → TestFlight 에 빌드 ${{ github.run_number }} 이 보여요."
+      - name: clean up the key
+        if: always()
+        run: rm -rf ~/.appstoreconnect
